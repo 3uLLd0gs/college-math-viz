@@ -12,9 +12,20 @@ const SURFACES = [
 ];
 
 /* ---- PLAYGROUND: thin wiring specific to "partial derivatives" ---- */
+// Both sliders start off-origin, as fractions of the surface's half-extent `a`.
+// Every surface here has a critical point at the origin, so starting the probe at
+// x = 0 would hand the student a solved challenge before they touch anything. The
+// slice is offset too: on `ripple`, holding y = 0 makes the cross-section z = f(x,0)
+// degenerate (identically zero) in the ∂f/∂y direction, which likewise reads as solved.
+// Both fractions are multiples of the slider step (a/100), so they land exactly.
+const SLICE_START_FRAC = 0.35;
+const PROBE_START_FRAC = 0.6;
+const sliceStart = sf => sf.a * SLICE_START_FRAC;
+const probeStart = sf => sf.a * PROBE_START_FRAC;
+
 const eng = new Surface3D(document.getElementById('scene'));
 const shell = new ScoreShell(createConfetti());
-let state = { surf: SURFACES[0], axis: 'x', slice: 0, probe: 0, solved: false };
+let state = { surf: SURFACES[0], axis: 'x', slice: sliceStart(SURFACES[0]), probe: probeStart(SURFACES[0]), solved: false };
 function point() { return state.axis === 'x' ? { x0: state.probe, y0: state.slice } : { x0: state.slice, y0: state.probe }; }
 function partial(x0, y0) { return state.axis === 'x' ? state.surf.fx(x0, y0) : state.surf.fy(x0, y0); }
 
@@ -25,13 +36,16 @@ SURFACES.forEach((sf, i) => {
 });
 const explored = new Set(['parab']);
 function pickSurface(sf, btn) {
-  state.surf = sf; state.slice = 0; state.probe = 0; state.solved = false;
+  state.surf = sf; state.slice = sliceStart(sf); state.probe = probeStart(sf); state.solved = false;
   document.querySelectorAll('.fbtn').forEach(x => x.classList.remove('on')); btn.classList.add('on');
   eng.setSurface(sf); setSliderRanges(sf); shell.add(5);
   explored.add(sf.id); if (explored.size === SURFACES.length) shell.badge('explorer', 'Cartographer', 'Explored every surface', '🗺️');
   eng.schedule();
 }
-function setSliderRanges(sf) { ['slice', 'probe'].forEach(id => { const el = s(id); el.min = -sf.a; el.max = sf.a; el.step = sf.a / 100; el.value = 0; }); }
+function setSliderRanges(sf) {
+  const starts = { slice: sliceStart(sf), probe: probeStart(sf) };
+  ['slice', 'probe'].forEach(id => { const el = s(id); el.min = -sf.a; el.max = sf.a; el.step = sf.a / 100; el.value = starts[id]; });
+}
 const usedAxes = new Set(['x']);
 function setAxis(ax) {
   state.axis = ax; state.solved = false;
