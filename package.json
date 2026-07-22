@@ -1,0 +1,15 @@
+{
+  "name": "college-math-viz",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vite": "^8.1.5",
+    "vitest": "^4.1.10"
+  }
+}
