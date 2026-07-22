@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { rk4Step, streamline, divergenceAt, curlAt, speedAt } from './vector-field.js';
+import { rk4Step, streamline, divergenceAt, curlAt, speedAt, circulation, curlFlux } from './vector-field.js';
 
 const uniform = { P: () => 1, Q: () => 0, a: 2 };
 const source = { P: (x) => x, Q: (x, y) => y, a: 2 };
@@ -119,5 +119,62 @@ describe('speedAt', () => {
 
   it('is zero exactly at a stagnation point', () => {
     expect(speedAt(source, 0, 0)).toBe(0);
+  });
+});
+
+describe('circulation (the line-integral side of Green)', () => {
+  it('is 2πr² for a rigid rotation, whatever the centre', () => {
+    // curl = 2, so circulation = 2 · area = 2πr²
+    expect(circulation(rotation, 0, 0, 1)).toBeCloseTo(2 * Math.PI, 6);
+    expect(circulation(rotation, 0.7, -1.3, 0.5)).toBeCloseTo(2 * Math.PI * 0.25, 6);
+  });
+
+  it('vanishes for a conservative (irrotational) field', () => {
+    expect(circulation(source, 0.4, 0.9, 0.8)).toBeCloseTo(0, 9);
+  });
+
+  it('is −(area) for a unit clockwise shear', () => {
+    // shear F = (y, 0) has curl -1
+    expect(circulation(shear, 0, 0, 1)).toBeCloseTo(-Math.PI, 6);
+  });
+
+  it('reverses sign when the field reverses', () => {
+    const back = { P: (x, y) => y, Q: (x) => -x };
+    expect(circulation(back, 0, 0, 1)).toBeCloseTo(-circulation(rotation, 0, 0, 1), 6);
+  });
+
+  it('scales with area, not radius, for constant curl', () => {
+    const c1 = circulation(rotation, 0, 0, 1);
+    const c2 = circulation(rotation, 0, 0, 2);
+    expect(c2 / c1).toBeCloseTo(4, 6);
+  });
+});
+
+describe('curlFlux (the area-integral side of Green)', () => {
+  it('is 2πr² for a rigid rotation', () => {
+    expect(curlFlux(rotation, 0, 0, 1)).toBeCloseTo(2 * Math.PI, 4);
+  });
+
+  it('vanishes for an irrotational field', () => {
+    expect(curlFlux(source, -0.3, 0.6, 0.9)).toBeCloseTo(0, 6);
+  });
+});
+
+describe("Green's theorem holds numerically", () => {
+  // ∮ F·dr  ==  ∬ curl F dA, for fields whose curl varies across the disc
+  const cases = [
+    ['quadratic', { P: () => 0, Q: (x) => x * x }],            // curl = 2x
+    ['hyperbolic', { P: (x, y) => y * y, Q: (x) => x * x }],   // curl = 2x - 2y
+    ['wave', { P: (x, y) => Math.sin(y), Q: (x) => Math.sin(x) }], // curl = cos x - cos y
+    ['mixed', { P: (x, y) => -y, Q: (x, y) => x * y }],        // curl = y + 1
+  ];
+  const loops = [[0, 0, 1], [0.6, -0.4, 0.8], [-1.1, 0.7, 1.3], [0.3, 1.2, 0.45]];
+
+  cases.forEach(([name, fd]) => {
+    loops.forEach(([cx, cy, r]) => {
+      it(`${name}: both sides agree on the loop at (${cx}, ${cy}) r=${r}`, () => {
+        expect(circulation(fd, cx, cy, r)).toBeCloseTo(curlFlux(fd, cx, cy, r), 4);
+      });
+    });
   });
 });

@@ -54,6 +54,45 @@ export function curlAt(field, x, y, h = 1e-5) {
 
 export const speedAt = (field, x, y) => Math.hypot(field.P(x, y), field.Q(x, y));
 
+/**
+ * Circulation ∮ F · dr counter-clockwise around the circle of radius `r`
+ * centred at (cx, cy) — the left-hand side of Green's theorem.
+ *
+ * Parametrise by t: dr = (−r sin t, r cos t) dt. The midpoint rule is used
+ * rather than the trapezoid because the integrand is periodic, where midpoint
+ * converges spectrally instead of at O(h²).
+ */
+export function circulation(field, cx, cy, r, n = 720) {
+  const dt = Math.PI * 2 / n;
+  let sum = 0;
+  for (let i = 0; i < n; i++) {
+    const t = (i + 0.5) * dt;
+    const ct = Math.cos(t), st = Math.sin(t);
+    const x = cx + r * ct, y = cy + r * st;
+    sum += (field.P(x, y) * -r * st + field.Q(x, y) * r * ct) * dt;
+  }
+  return sum;
+}
+
+/**
+ * ∬ (∂Q/∂x − ∂P/∂y) dA over the same disc — the right-hand side of Green's
+ * theorem. Sampled in polar coordinates, where dA = ρ dρ dθ and the disc is a
+ * rectangle, so no cells need masking against the boundary.
+ */
+export function curlFlux(field, cx, cy, r, nr = 90, nt = 240) {
+  const dr = r / nr, dt = Math.PI * 2 / nt;
+  let sum = 0;
+  for (let i = 0; i < nr; i++) {
+    const rho = (i + 0.5) * dr;
+    for (let j = 0; j < nt; j++) {
+      const th = (j + 0.5) * dt;
+      const x = cx + rho * Math.cos(th), y = cy + rho * Math.sin(th);
+      sum += curlAt(field, x, y) * rho * dr * dt;
+    }
+  }
+  return sum;
+}
+
 export class VectorFieldView {
   constructor(canvas) {
     this.cv = canvas;

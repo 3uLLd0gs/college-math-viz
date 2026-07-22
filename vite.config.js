@@ -11,6 +11,7 @@ export default defineConfig({
         'riemann-sums': resolve(__dirname, 'playgrounds/riemann-sums/index.html'),
         'gradient': resolve(__dirname, 'playgrounds/gradient/index.html'),
         'vector-fields': resolve(__dirname, 'playgrounds/vector-fields/index.html'),
+        'greens-theorem': resolve(__dirname, 'playgrounds/greens-theorem/index.html'),
       },
     },
   },
