@@ -1,17 +1,5 @@
 import { describe, it, expect } from 'vitest';
-
-// Mirrors the SURFACES registry in playgrounds/partial-derivatives/content.js —
-// verifies each analytic partial against a central-difference numerical approximation.
-const SURFACES = [
-  { id: 'parab', f: (x, y) => x * x + y * y, fx: (x, y) => 2 * x, fy: (x, y) => 2 * y, a: 2, challenge: { tol: 0.06 } },
-  { id: 'saddle', f: (x, y) => x * x - y * y, fx: (x, y) => 2 * x, fy: (x, y) => -2 * y, a: 2, challenge: { tol: 0.06 } },
-  { id: 'ripple', f: (x, y) => Math.sin(x) * Math.cos(y), fx: (x, y) => Math.cos(x) * Math.cos(y), fy: (x, y) => -Math.sin(x) * Math.sin(y), a: 3.1, challenge: { tol: 0.05 } },
-  { id: 'gauss', f: (x, y) => Math.exp(-(x * x + y * y) / 4), fx: (x, y) => -x / 2 * Math.exp(-(x * x + y * y) / 4), fy: (x, y) => -y / 2 * Math.exp(-(x * x + y * y) / 4), a: 3, challenge: { tol: 0.04 } },
-];
-
-// Must mirror SLICE_START_FRAC / PROBE_START_FRAC in content.js.
-const SLICE_START_FRAC = 0.35;
-const PROBE_START_FRAC = 0.6;
+import { SURFACES, SLICE_START_FRAC, PROBE_START_FRAC, sliceStart, probeStart } from './content.js';
 
 function numFx(f, x, y, h = 1e-5) { return (f(x + h, y) - f(x - h, y)) / (2 * h); }
 function numFy(f, x, y, h = 1e-5) { return (f(x, y + h) - f(x, y - h)) / (2 * h); }
@@ -35,8 +23,8 @@ describe('Starting probe position leaves the challenge unsolved', () => {
   // Every surface has a critical point at the origin, so a probe starting at 0 would
   // fire the win state on page load. Each start must sit clearly off the flat spot.
   SURFACES.forEach(surf => {
-    const slice = surf.a * SLICE_START_FRAC;
-    const probe = surf.a * PROBE_START_FRAC;
+    const slice = sliceStart(surf);
+    const probe = probeStart(surf);
 
     it(`${surf.id}: |∂f/∂x| at the start exceeds tolerance ${surf.challenge.tol}`, () => {
       // axis 'x' holds y = slice and moves x = probe
@@ -53,6 +41,43 @@ describe('Starting probe position leaves the challenge unsolved', () => {
       [slice, probe].forEach(v => {
         expect(Math.abs(((v + surf.a) / step) - Math.round((v + surf.a) / step))).toBeLessThan(1e-9);
       });
+    });
+
+    it(`${surf.id}: both starts sit inside the slider range`, () => {
+      [slice, probe].forEach(v => {
+        expect(v).toBeGreaterThan(-surf.a);
+        expect(v).toBeLessThan(surf.a);
+      });
+    });
+  });
+
+  it('start fractions are ordered so the two sliders do not coincide', () => {
+    expect(SLICE_START_FRAC).not.toBe(PROBE_START_FRAC);
+  });
+});
+
+describe('Each challenge stays solvable', () => {
+  // The student wins by driving the moving variable to a flat spot. That spot is
+  // NOT always the origin — on `ripple`, ∂f/∂x = cos x · cos y vanishes at
+  // x = ±π/2, which is exactly what the "a crest or a trough" hint points at. So
+  // walk the actual slider positions (step = a/100) and require that at least one
+  // reachable position clears the tolerance.
+  const solvable = (surf, partial, hold) => {
+    const step = surf.a / 100;
+    for (let v = -surf.a; v <= surf.a + 1e-9; v += step) {
+      if (Math.abs(partial(surf, v, hold)) < surf.challenge.tol) return v;
+    }
+    return null;
+  };
+
+  SURFACES.forEach(surf => {
+    it(`${surf.id}: some reachable x zeroes ∂f/∂x with y held at its start`, () => {
+      const at = solvable(surf, (s, v, h) => s.fx(v, h), sliceStart(surf));
+      expect(at).not.toBeNull();
+    });
+    it(`${surf.id}: some reachable y zeroes ∂f/∂y with x held at its start`, () => {
+      const at = solvable(surf, (s, v, h) => s.fy(h, v), sliceStart(surf));
+      expect(at).not.toBeNull();
     });
   });
 });
