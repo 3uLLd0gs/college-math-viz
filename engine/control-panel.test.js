@@ -37,6 +37,31 @@ describe('buttonGroup', () => {
     expect(g.item.id).toBe('b');
   });
 
+  it('ignores a re-click of the already-active button', () => {
+    const onSelect = vi.fn();
+    const g = buttonGroup('box', ITEMS, onSelect);
+    g.buttons[1].click();
+    g.buttons[1].click();
+    g.buttons[1].click();
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(g.buttons[1].classList.contains('on')).toBe(true);
+  });
+
+  it('opts back into re-select notifications', () => {
+    const onSelect = vi.fn();
+    const g = buttonGroup('box', ITEMS, onSelect, { reselect: true });
+    g.buttons[1].click();
+    g.buttons[1].click();
+    expect(onSelect).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not fire for a re-click of the initially-active button', () => {
+    const onSelect = vi.fn();
+    const g = buttonGroup('box', ITEMS, onSelect);
+    g.buttons[0].click();
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
   it('scopes selection to its own container', () => {
     const g1 = buttonGroup('box', ITEMS, () => {});
     const g2 = buttonGroup('box2', ITEMS, () => {});

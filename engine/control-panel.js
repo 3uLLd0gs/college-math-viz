@@ -14,14 +14,17 @@ const resolve = target => (typeof target === 'string' ? document.getElementById(
  *
  * @param mount     container element or its id; buttons are appended to it
  * @param items     array of `{ label, id? }` — `label` is the button text
- * @param onSelect  called as (item, index) on every click, including re-clicks
- *                  of the already-active button
+ * @param onSelect  called as (item, index) when the selection changes
  * @param opts.className  button class (default 'fbtn'; the axis toggle uses 'tbtn')
  * @param opts.selected   index active on construction (default 0, no callback fired)
+ * @param opts.reselect   fire onSelect when the active button is clicked again
+ *                        (default false — otherwise a handler that awards points
+ *                        turns the active button into a score farm)
  */
 export function buttonGroup(mount, items, onSelect, opts = {}) {
   const el = resolve(mount);
   const className = opts.className ?? 'fbtn';
+  const reselect = opts.reselect ?? false;
   let current = -1;
 
   const buttons = items.map((item, i) => {
@@ -36,9 +39,10 @@ export function buttonGroup(mount, items, onSelect, opts = {}) {
   });
 
   function select(i, { notify = true } = {}) {
+    const unchanged = i === current;
     buttons.forEach((b, k) => b.classList.toggle('on', k === i));
     current = i;
-    if (notify) onSelect(items[i], i);
+    if (notify && (reselect || !unchanged)) onSelect(items[i], i);
   }
 
   select(opts.selected ?? 0, { notify: false });

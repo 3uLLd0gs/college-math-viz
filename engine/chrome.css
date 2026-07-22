@@ -14,6 +14,7 @@
      --fbtn-pad        function-button padding              (default 11px 4px)
      --goal-size       challenge goal font size             (default 13.5px)
      --cbar-ms         challenge meter fill transition      (default .25s)
+     --toggle-cols     columns in a .toggle button row       (default 2)
 
    Sliders default to the blue --accent. Add class="mint" to an
    <input type=range> to switch it to the green --approx treatment. */
@@ -75,6 +76,11 @@ h1 em{font-style:italic;color:var(--true)}
 .row .action{flex:1}
 .action:hover{border-color:var(--accent);color:var(--accent)}
 .action.primary{background:rgba(122,162,255,.14);border-color:var(--accent);color:var(--accent)}
+
+.toggle{display:grid;grid-template-columns:repeat(var(--toggle-cols,2),1fr);gap:7px}
+.tbtn{font-family:"Fraunces",serif;font-weight:700;font-size:16px;color:var(--ink);cursor:pointer;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:10px;transition:.15s}
+.tbtn:hover{border-color:var(--accent)}
+.tbtn.on{background:rgba(122,162,255,.14);border-color:var(--accent);color:var(--accent)}
 
 /* ---- sliders ---- */
 input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:6px;background:linear-gradient(90deg,var(--slider,var(--accent)) var(--fill,0%),#1b2436 var(--fill,0%));outline:none;cursor:pointer}

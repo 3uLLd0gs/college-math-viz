@@ -74,6 +74,20 @@ export class Grapher2D {
     c.beginPath(); c.arc(this.sx(x), this.sy(y), rInner, 0, 7); c.fill(); c.restore();
   }
 
+  /** Filled bar from the x-axis up to y, spanning [xa, xb]. Handles y < 0 by
+   *  drawing downward from the axis, so signed-area sums render correctly. */
+  bar(xa, xb, y, { fill, stroke, alpha = 1 } = {}) {
+    const c = this.ctx;
+    if (!Number.isFinite(y)) return;
+    const x0 = this.sx(xa);
+    const yTop = this.sy(Math.max(y, 0));
+    const w = this.sx(xb) - x0, h = this.sy(Math.min(y, 0)) - yTop;
+    c.save(); c.globalAlpha = alpha;
+    if (fill) { c.fillStyle = fill; c.fillRect(x0, yTop, w, h); }
+    if (stroke) { c.strokeStyle = stroke; c.lineWidth = 1; c.strokeRect(x0, yTop, w, h); }
+    c.restore();
+  }
+
   vline(x, color) {
     const c = this.ctx;
     c.save(); c.strokeStyle = color; c.globalAlpha = 0.5;
