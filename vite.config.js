@@ -9,6 +9,7 @@ export default defineConfig({
         'taylor-series': resolve(__dirname, 'playgrounds/taylor-series/index.html'),
         'partial-derivatives': resolve(__dirname, 'playgrounds/partial-derivatives/index.html'),
         'riemann-sums': resolve(__dirname, 'playgrounds/riemann-sums/index.html'),
+        'gradient': resolve(__dirname, 'playgrounds/gradient/index.html'),
       },
     },
   },

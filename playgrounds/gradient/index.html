@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gradient &amp; Directional Derivative · Contour Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  @import url("../../engine/chrome.css");
+  /* Gradient-specific: the contour canvas, the θ dial readout, the sweep inset. */
+  :root{
+    --graph-min:480px;
+    --graph-min-sm:380px;
+    --panel-gap:16px;
+    --readout-max:440px;
+    --fbtn-cols:3;
+    --goal-size:13px;
+  }
+  #map{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair}
+  /* Unlike the other playgrounds this canvas is a bright heat map, so the
+     overlay labels need lifting off it rather than sitting in --muted. */
+  .graph-tag,.legend{color:rgba(255,255,255,.82);text-shadow:0 1px 4px rgba(0,0,0,.9),0 0 10px rgba(0,0,0,.7)}
+  .legend .swatch{box-shadow:0 1px 4px rgba(0,0,0,.9)}
+  .readout .pd{color:var(--approx);font-weight:700}
+  .slabel{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;color:var(--muted);margin-bottom:7px}
+  .slabel b{color:var(--ink);font-family:"Fraunces",serif;font-weight:700;font-size:15px}
+  .facts{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .fact{background:#080b12;border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .fact .k{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .fact .v{font-family:"Fraunces",serif;font-weight:700;font-size:17px;margin-top:2px}
+  .fact.du .v{color:var(--approx)}
+  .fact.mag .v{color:var(--error)}
+  .inset-wrap{background:#080b12;border:1px solid var(--line);border-radius:11px;padding:10px 12px 6px}
+  .inset-wrap .cap{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .inset-wrap .cap b{color:var(--true);font-weight:500}
+  #inset{display:block;width:100%;height:104px}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div class="toast-wrap" id="toasts"></div>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="kicker">Math · Visual Studio</div>
+      <h1>Gradient <em>&amp; Direction</em></h1>
+    </div>
+    <div class="scoreboard">
+      <div class="chip pts"><div class="lab">Points</div><div class="val" id="s-pts">0</div></div>
+      <div class="chip streak"><div class="lab">Streak</div><div class="val" id="s-streak">0</div></div>
+      <div class="chip"><div class="lab">Badges</div><div class="val" id="s-badges">0</div></div>
+    </div>
+  </header>
+  <div class="studio">
+    <div class="card graph-card">
+      <canvas id="map"></canvas>
+      <div class="graph-tag">drag anywhere on the map to move the probe</div>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--error)"></i> ∇f · steepest uphill</span>
+        <span><i class="swatch" style="background:var(--approx)"></i> u · your direction</span>
+      </div>
+      <div class="readout" id="readout"></div>
+    </div>
+    <div class="card panel">
+      <div>
+        <div class="sect-lab">Field z = f(x, y)</div>
+        <div class="fbtns" id="fbtns"></div>
+      </div>
+      <div>
+        <div class="slabel"><span>direction θ</span> <b id="theta-val">0°</b></div>
+        <input type="range" class="mint" id="theta" min="0" max="359" value="0" step="1" aria-label="Direction angle in degrees">
+      </div>
+      <div class="facts">
+        <div class="fact du"><div class="k">Dᵤf</div><div class="v" id="du-val">—</div></div>
+        <div class="fact mag"><div class="k">|∇f|</div><div class="v" id="mag-val">—</div></div>
+      </div>
+      <div class="inset-wrap">
+        <div class="cap">Dᵤf as θ sweeps a full turn — <b>peaks at |∇f|</b></div>
+        <canvas id="inset"></canvas>
+      </div>
+      <div class="challenge">
+        <div class="lab">◆ Steepest-ascent challenge</div>
+        <div class="goal" id="c-goal"></div>
+        <div class="cmeter"><span>off by <b id="c-val">—</b></span><span>target <b id="c-tol">—</b></span></div>
+        <div class="cbar"><i id="c-bar"></i></div>
+        <div class="cstate" id="c-state">Turn the direction dial to point the mint arrow uphill.</div>
+      </div>
+      <div class="row">
+        <button class="action primary" id="snap">Snap to ∇f</button>
+        <button class="action" id="reset">Reset probe</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module" src="./playground.js"></script>
+</body>
+</html>
