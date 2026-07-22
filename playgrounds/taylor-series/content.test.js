@@ -27,6 +27,9 @@ describe('Taylor partial sums converge to the true function', () => {
     expect(polyAt(coeffs.ln, 30, 0.5)).toBeCloseTo(Math.log(1.5), 3);
   });
   it('1/(1-x) at x=0.5, N=20 matches the closed form within 1e-6', () => {
-    expect(polyAt(coeffs.geo, 20, 0.5)).toBeCloseTo(1 / (1 - 0.5), 6);
+    // Assert the documented 1e-6 tolerance explicitly. toBeCloseTo(x, 6) uses a
+    // stricter 0.5e-6 threshold; the geometric partial-sum error here is 0.5^20 ≈
+    // 9.54e-7, which meets the stated 1e-6 bound but not toBeCloseTo's tighter one.
+    expect(Math.abs(polyAt(coeffs.geo, 20, 0.5) - 1 / (1 - 0.5))).toBeLessThan(1e-6);
   });
 });
