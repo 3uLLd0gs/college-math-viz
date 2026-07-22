@@ -79,8 +79,6 @@
   .toast .ico{font-size:20px}
   .toast .t1{font-family:"Fraunces",serif;font-weight:700;font-size:14px;color:var(--gold)}
   .toast .t2{font-size:11px;color:var(--muted);margin-top:1px}
-  footer{margin-top:16px;font-size:11.5px;color:var(--muted);line-height:1.7}
-  footer b{color:var(--approx);font-weight:500}
   @media(max-width:840px){body{padding:14px}.studio{grid-template-columns:1fr}.graph-card{min-height:360px}header{align-items:flex-start}}
 </style>
 </head>
@@ -144,12 +142,6 @@
       <button class="action" id="reset">Reset view</button>
     </div>
   </div>
-  <footer>
-    <b>Template note.</b> Same three layers as the 2-D studio. The <b>Engine</b> here is <b>Surface3D</b>
-    (canvas orbit camera + painter's-algorithm mesh + slice planes) — but <b>ScoreShell</b>, <b>Confetti</b>
-    and every design token are reused unchanged. <b>Content</b> is the SURFACES registry (f, fₓ, f_y per row);
-    <b>Playground</b> is the thin wiring. Calc 3 rows swap Content; the Engine stays.
-  </footer>
 </div>
 <script type="module" src="./content.js"></script>
 </body>
