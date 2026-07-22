@@ -1,19 +1,26 @@
 # College Math Viz — Phase 1 (Engine Extraction & Repo Bootstrap) Implementation Plan
 
-> **Status as of 2026-07-22:** Tasks 1–12 complete and merged to `main` (merge commit `4b6a967`).
+> **Status as of 2026-07-22: Phase 1 COMPLETE.** Tasks 1–13 done, all merged to `main`.
 > 42 unit tests pass; production build verified (all routes 200, assets resolve, no external
-> requests beyond Google Fonts). Two items remain open:
+> requests beyond Google Fonts).
 >
-> - **Task 13 (deploy)** — blocked. The Vercel API returns 403 `forbidden` on deployment creation
->   for both `production` and `preview` targets; the account's MCP connection lacks rights to
->   create a new project on team `minsubs-projects-8d20aa28`. Unblock via `npx vercel login` then
->   `npx vercel deploy dist --prod`, by re-authorizing the Vercel integration with team-wide scope,
->   or by switching to Cloudflare Pages (Step 1a below).
-> - **Manual interaction parity check** (Task 9 Step 4 / Task 10 Step 4) — not performed by the
->   agent; both browser-automation bridges were disconnected. Needs a human pass or a reconnected
->   Chrome extension.
+> **Live URL:** https://college-math-viz-minsubs-projects-8d20aa28.vercel.app/
+> — both playgrounds are public (Vercel Deployment Protection disabled).
 >
-> Phase 1's definition of done is therefore not yet met (it requires one live deployed URL).
+> **Deploy setup:** Vercel project `college-math-viz` on team `minsubs-projects-8d20aa28`, git-linked
+> to `github.com/3uLLd0gs/college-math-viz` with `main` as the production branch, framework `vite`,
+> build `npm run build`, output `dist`. Pushes to `main` now auto-deploy — Phase 2 needs no manual
+> upload step.
+>
+> **Tooling note for future sessions:** the Vercel *MCP* connection is scoped to `msstate-ath` only.
+> It returns 404/403 for this project and its `list_projects` omits it — do not read that as the
+> project being absent. Use the authenticated `vercel` CLI, which sees all six team projects.
+>
+> **One item still open:** the manual interaction parity check (Task 9 Step 4 / Task 10 Step 4) was
+> never performed — both browser-automation bridges were disconnected. Tests prove the math; nobody
+> has confirmed the refactored playgrounds *render and feel* identical to the originals. The
+> originals were removed in the cleanup commit; recover one for comparison with
+> `git show 309a9c9:taylor-series-studio.html`.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
