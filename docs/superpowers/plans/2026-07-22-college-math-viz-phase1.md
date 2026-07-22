@@ -1,5 +1,20 @@
 # College Math Viz — Phase 1 (Engine Extraction & Repo Bootstrap) Implementation Plan
 
+> **Status as of 2026-07-22:** Tasks 1–12 complete and merged to `main` (merge commit `4b6a967`).
+> 42 unit tests pass; production build verified (all routes 200, assets resolve, no external
+> requests beyond Google Fonts). Two items remain open:
+>
+> - **Task 13 (deploy)** — blocked. The Vercel API returns 403 `forbidden` on deployment creation
+>   for both `production` and `preview` targets; the account's MCP connection lacks rights to
+>   create a new project on team `minsubs-projects-8d20aa28`. Unblock via `npx vercel login` then
+>   `npx vercel deploy dist --prod`, by re-authorizing the Vercel integration with team-wide scope,
+>   or by switching to Cloudflare Pages (Step 1a below).
+> - **Manual interaction parity check** (Task 9 Step 4 / Task 10 Step 4) — not performed by the
+>   agent; both browser-automation bridges were disconnected. Needs a human pass or a reconnected
+>   Chrome extension.
+>
+> Phase 1's definition of done is therefore not yet met (it requires one live deployed URL).
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Stand up the `college-math-viz` repo, extract the two templates' duplicated Engine code into shared ES modules, refactor both templates to import from that shared Engine while rendering identically to the originals, and prove the authoring → build → host loop by deploying one playground live.
