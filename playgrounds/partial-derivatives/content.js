@@ -2,6 +2,7 @@ import { Surface3D } from '../../engine/surface-3d.js';
 import { ScoreShell } from '../../engine/score-shell.js';
 import { createConfetti } from '../../engine/confetti.js';
 import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
+import { buttonGroup, slider } from '../../engine/control-panel.js';
 
 /* ---- CONTENT: the SURFACES registry — the only part that changes per concept ---- */
 const SURFACES = [
@@ -29,22 +30,22 @@ let state = { surf: SURFACES[0], axis: 'x', slice: sliceStart(SURFACES[0]), prob
 function point() { return state.axis === 'x' ? { x0: state.probe, y0: state.slice } : { x0: state.slice, y0: state.probe }; }
 function partial(x0, y0) { return state.axis === 'x' ? state.surf.fx(x0, y0) : state.surf.fy(x0, y0); }
 
-const fbox = s('fbtns');
-SURFACES.forEach((sf, i) => {
-  const b = document.createElement('button');
-  b.className = 'fbtn' + (i === 0 ? ' on' : ''); b.textContent = sf.label; b.onclick = () => pickSurface(sf, b); fbox.appendChild(b);
-});
+buttonGroup('fbtns', SURFACES, sf => pickSurface(sf));
+
+const sliceSlider = slider('slice', { onInput: v => { state.slice = v; eng.schedule(); } });
+const probeSlider = slider('probe', { onInput: v => { state.probe = v; eng.schedule(); } });
+
 const explored = new Set(['parab']);
-function pickSurface(sf, btn) {
+function pickSurface(sf) {
   state.surf = sf; state.slice = sliceStart(sf); state.probe = probeStart(sf); state.solved = false;
-  document.querySelectorAll('.fbtn').forEach(x => x.classList.remove('on')); btn.classList.add('on');
   eng.setSurface(sf); setSliderRanges(sf); shell.add(5);
   explored.add(sf.id); if (explored.size === SURFACES.length) shell.badge('explorer', 'Cartographer', 'Explored every surface', '🗺️');
   eng.schedule();
 }
 function setSliderRanges(sf) {
-  const starts = { slice: sliceStart(sf), probe: probeStart(sf) };
-  ['slice', 'probe'].forEach(id => { const el = s(id); el.min = -sf.a; el.max = sf.a; el.step = sf.a / 100; el.value = starts[id]; });
+  const bounds = { min: -sf.a, max: sf.a, step: sf.a / 100 };
+  sliceSlider.range({ ...bounds, value: sliceStart(sf) });
+  probeSlider.range({ ...bounds, value: probeStart(sf) });
 }
 const usedAxes = new Set(['x']);
 function setAxis(ax) {
@@ -57,8 +58,6 @@ function setAxis(ax) {
   eng.schedule();
 }
 s('ax-x').onclick = () => setAxis('x'); s('ax-y').onclick = () => setAxis('y');
-s('slice').addEventListener('input', e => { state.slice = +e.target.value; eng.schedule(); });
-s('probe').addEventListener('input', e => { state.probe = +e.target.value; eng.schedule(); });
 s('reset').onclick = () => { eng.az = -0.75; eng.el = 0.52; eng.dist = 7; eng.schedule(); };
 
 eng.onrender = function () {
@@ -115,8 +114,6 @@ function drawInset(sf, x0, y0, m) {
 
 function updatePanel(sf, x0, y0, m) {
   s('slice-val').textContent = fmt(state.slice); s('probe-val').textContent = fmt(state.probe);
-  s('slice').style.setProperty('--fill', ((state.slice + sf.a) / (2 * sf.a) * 100) + '%');
-  s('probe').style.setProperty('--fill', ((state.probe + sf.a) / (2 * sf.a) * 100) + '%');
   const f0 = sf.f(x0, y0), sym = state.axis === 'x' ? '∂f/∂x' : '∂f/∂y';
   s('readout').innerHTML = 'at (' + fmt(x0) + ', ' + fmt(y0) + ') &nbsp;·&nbsp; f = <b>' + f0.toFixed(3) +
     '</b> &nbsp;·&nbsp; ' + sym + ' = <span class="pd">' + m.toFixed(3) + '</span>';

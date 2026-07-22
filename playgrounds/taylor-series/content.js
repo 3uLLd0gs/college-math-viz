@@ -3,6 +3,7 @@ import { ScoreShell } from '../../engine/score-shell.js';
 import { createConfetti } from '../../engine/confetti.js';
 import { fact, sup } from '../../engine/math.js';
 import { getCSS, fmtAxis as fmt } from '../../engine/dom.js';
+import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
 
 /* ---- CONTENT: the FUNCTIONS registry — the only part that changes per concept ---- */
 const FUNCTIONS = [
@@ -60,26 +61,28 @@ function formula(fn, N) {
 function moreTerms(fn, N) { let c = 0; for (let n = 0; n <= N; n++) if (fn.term(n)) c++; return c > 7; }
 
 /* ---- PLAYGROUND: thin wiring specific to "Taylor series" ---- */
+const MAX_TERMS = 14;   // must match the #terms slider max in index.html
+
 const g = new Grapher2D(document.getElementById('graph'));
 const shell = new ScoreShell(createConfetti());
 let state = { fn: FUNCTIONS[0], N: 1, probe: 2, solved: false };
 g.setView(state.fn.view);
 
-const fbox = document.getElementById('fbtns');
-FUNCTIONS.forEach((fn, i) => {
-  const b = document.createElement('button');
-  b.className = 'fbtn' + (i === 0 ? ' on' : ''); b.textContent = fn.label; b.dataset.id = fn.id;
-  b.onclick = () => selectFn(fn, b);
-  fbox.appendChild(b);
-});
+buttonGroup('fbtns', FUNCTIONS, fn => selectFn(fn));
 
-const terms = document.getElementById('terms');
 const nLab = document.getElementById('n-lab');
 
-function selectFn(fn, btn) {
+const terms = slider('terms', {
+  onInput: n => {
+    state.N = n;
+    if (state.N >= 1) shell.badge('first', 'First Term', 'You started an approximation', '✳️');
+    if (state.N === MAX_TERMS) shell.badge('deep', 'Convergence Master', `Pushed to ${MAX_TERMS} terms`, '♾️');
+    render();
+  },
+});
+
+function selectFn(fn) {
   state.fn = fn; state.probe = fn.challenge.x0; state.solved = false;
-  document.querySelectorAll('.fbtn').forEach(x => x.classList.remove('on'));
-  btn.classList.add('on');
   g.setView(fn.view);
   shell.add(5);
   markExplored(fn.id);
@@ -92,25 +95,18 @@ function markExplored(id) {
   if (explored.size === FUNCTIONS.length) shell.badge('explorer', 'Explorer', 'Tried every function', '🧭');
 }
 
-terms.addEventListener('input', () => {
-  state.N = +terms.value;
-  if (state.N >= 1) shell.badge('first', 'First Term', 'You started an approximation', '✳️');
-  if (state.N === 14) shell.badge('deep', 'Convergence Master', 'Pushed to 14 terms', '♾️');
-  render();
+document.getElementById('reset').onclick = () => { state.N = 1; terms.set(1); render(); };
+
+ticker('build', {
+  intervalMs: 260,
+  playLabel: '▸ Animate build',
+  pauseLabel: '⏸ Pause',
+  onStart: () => { state.N = 0; terms.set(0); render(); },
+  onTick: () => {
+    if (state.N >= MAX_TERMS) return false;
+    state.N++; terms.set(state.N); render();
+  },
 });
-
-document.getElementById('reset').onclick = () => { state.N = 1; terms.value = 1; render(); };
-
-let building = null;
-document.getElementById('build').onclick = (e) => {
-  if (building) { clearInterval(building); building = null; e.target.textContent = '▸ Animate build'; return; }
-  e.target.textContent = '⏸ Pause';
-  state.N = 0; terms.value = 0; render();
-  building = setInterval(() => {
-    if (state.N >= 14) { clearInterval(building); building = null; e.target.textContent = '▸ Animate build'; return; }
-    state.N++; terms.value = state.N; render();
-  }, 260);
-};
 
 const gc = document.getElementById('graph');
 let dragging = false;
@@ -130,7 +126,6 @@ g.onresize = render;
 function render() {
   const fn = state.fn, N = state.N, px = state.probe;
   nLab.innerHTML = `${N}<small> deg</small>`;
-  terms.style.setProperty('--fill', (N / 14 * 100) + '%');
 
   g.clear(); g.grid();
   g.plot(x => fn.f(x), { color: getCSS('--true'), width: 2.6 });
