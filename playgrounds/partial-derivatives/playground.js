@@ -3,12 +3,25 @@ import { ScoreShell } from '../../engine/score-shell.js';
 import { createConfetti } from '../../engine/confetti.js';
 import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider } from '../../engine/control-panel.js';
+import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
 import { SURFACES, sliceStart, probeStart } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "partial derivatives" ---- */
 const eng = new Surface3D(document.getElementById('scene'));
 const shell = new ScoreShell(createConfetti());
-let state = { surf: SURFACES[0], axis: 'x', slice: sliceStart(SURFACES[0]), probe: probeStart(SURFACES[0]), solved: false };
+let state = { surf: SURFACES[0], axis: 'x', slice: sliceStart(SURFACES[0]), probe: probeStart(SURFACES[0]) };
+
+const meter = challengeMeter({
+  format: v => v.toFixed(3),
+  formatTol: t => t.toFixed(2),
+  progress: linearProgress(6),
+  onSolve: () => {
+    const sym = state.axis === 'x' ? '∂f/∂x' : '∂f/∂y';
+    shell.add(60); shell.hitStreak(); shell.celebrate();
+    shell.toast('Critical point!', sym + ' ≈ 0 · +60', '🎯');
+    shell.badge('flat', 'Flatliner', 'Zeroed a partial derivative', '📐');
+  },
+});
 function point() { return state.axis === 'x' ? { x0: state.probe, y0: state.slice } : { x0: state.slice, y0: state.probe }; }
 function partial(x0, y0) { return state.axis === 'x' ? state.surf.fx(x0, y0) : state.surf.fy(x0, y0); }
 
@@ -19,7 +32,7 @@ const probeSlider = slider('probe', { onInput: v => { state.probe = v; eng.sched
 
 const explored = new Set(['parab']);
 function pickSurface(sf) {
-  state.surf = sf; state.slice = sliceStart(sf); state.probe = probeStart(sf); state.solved = false;
+  state.surf = sf; state.slice = sliceStart(sf); state.probe = probeStart(sf); meter.reset();
   eng.setSurface(sf); setSliderRanges(sf); shell.add(5);
   explored.add(sf.id); if (explored.size === SURFACES.length) shell.badge('explorer', 'Cartographer', 'Explored every surface', '🗺️');
   eng.schedule();
@@ -31,7 +44,7 @@ function setSliderRanges(sf) {
 }
 const usedAxes = new Set(['x']);
 function setAxis(ax) {
-  state.axis = ax; state.solved = false;
+  state.axis = ax; meter.reset();
   s('ax-x').classList.toggle('on', ax === 'x'); s('ax-y').classList.toggle('on', ax === 'y');
   s('slice-name').textContent = ax === 'x' ? 'hold y =' : 'hold x =';
   s('probe-name').textContent = ax === 'x' ? 'move x =' : 'move y =';
@@ -100,18 +113,12 @@ function updatePanel(sf, x0, y0, m) {
   s('readout').innerHTML = 'at (' + fmt(x0) + ', ' + fmt(y0) + ') &nbsp;·&nbsp; f = <b>' + f0.toFixed(3) +
     '</b> &nbsp;·&nbsp; ' + sym + ' = <span class="pd">' + m.toFixed(3) + '</span>';
   const ch = sf.challenge, av = Math.abs(m);
-  s('c-goal').innerHTML = 'Make the highlighted tangent <b>flat</b> (' + sym + ' = 0) — try ' + ch.hint + '.';
-  s('c-val').textContent = av.toFixed(3); s('c-tol').textContent = ch.tol.toFixed(2);
-  const ratio = Math.max(0, Math.min(1, 1 - av / (ch.tol * 6))); s('c-bar').style.width = (ratio * 100) + '%';
-  const st = s('c-state');
-  if (av < ch.tol) {
-    if (!state.solved) {
-      state.solved = true; shell.add(60); shell.hitStreak(); shell.celebrate();
-      shell.toast('Critical point!', sym + ' ≈ 0 · +60', '🎯');
-      shell.badge('flat', 'Flatliner', 'Zeroed a partial derivative', '📐');
-    }
-    st.textContent = '✓ Tangent is flat — ' + sym + ' ≈ 0 here.'; st.className = 'cstate win';
-  } else { st.textContent = 'Slope still ' + (m > 0 ? 'positive' : 'negative') + ' — keep moving the probe.'; st.className = 'cstate'; }
+  meter.update({
+    value: av, tol: ch.tol,
+    goal: 'Make the highlighted tangent <b>flat</b> (' + sym + ' = 0) — try ' + ch.hint + '.',
+    solvedText: '✓ Tangent is flat — ' + sym + ' ≈ 0 here.',
+    hintText: 'Slope still ' + (m > 0 ? 'positive' : 'negative') + ' — keep moving the probe.',
+  });
 }
 
 eng.setSurface(state.surf); setSliderRanges(state.surf); setAxis('x'); eng.schedule();

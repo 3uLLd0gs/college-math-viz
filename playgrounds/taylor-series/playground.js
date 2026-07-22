@@ -3,6 +3,7 @@ import { ScoreShell } from '../../engine/score-shell.js';
 import { createConfetti } from '../../engine/confetti.js';
 import { getCSS, fmtAxis as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
+import { challengeMeter, logProgress } from '../../engine/challenge-meter.js';
 import { FUNCTIONS, polyAt, formula } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "Taylor series" ---- */
@@ -10,7 +11,20 @@ const MAX_TERMS = 14;   // must match the #terms slider max in index.html
 
 const g = new Grapher2D(document.getElementById('graph'));
 const shell = new ScoreShell(createConfetti());
-let state = { fn: FUNCTIONS[0], N: 1, probe: 2, solved: false };
+let state = { fn: FUNCTIONS[0], N: 1, probe: 2 };
+
+const meter = challengeMeter({
+  format: v => v.toExponential(2),
+  formatTol: t => t.toExponential(0),
+  progress: logProgress(6),
+  onSolve: () => {
+    const bonus = Math.max(10, 60 - state.N * 4);
+    shell.add(50 + bonus); shell.hitStreak(); shell.celebrate();
+    shell.toast('Target hit!', `Solved with ${state.N} terms · +${50 + bonus}`, '🎯');
+    if (state.N <= 4) shell.badge('efficient', 'Efficient', 'Solved in ≤ 4 terms', '⚡');
+    shell.badge('sharp', 'Sharpshooter', 'Cleared a precision challenge', '🎯');
+  },
+});
 g.setView(state.fn.view);
 
 buttonGroup('fbtns', FUNCTIONS, fn => selectFn(fn));
@@ -27,7 +41,7 @@ const terms = slider('terms', {
 });
 
 function selectFn(fn) {
-  state.fn = fn; state.probe = fn.challenge.x0; state.solved = false;
+  state.fn = fn; state.probe = fn.challenge.x0; meter.reset();
   g.setView(fn.view);
   shell.add(5);
   markExplored(fn.id);
@@ -90,25 +104,12 @@ function render() {
 
   const ch = fn.challenge;
   const cErr = Math.abs(fn.f(ch.x0) - polyAt(fn, N, ch.x0));
-  document.getElementById('c-goal').innerHTML = `Approximate <b>${ch.label}</b> at x = ${fmt(ch.x0)} to within the target error.`;
-  document.getElementById('c-err').textContent = cErr.toExponential(2);
-  document.getElementById('c-tol').textContent = ch.tol.toExponential(0);
-  const ratio = Math.min(1, Math.log10(ch.tol / Math.max(cErr, 1e-16)) / 6 + 0.5);
-  document.getElementById('c-bar').style.width = (Math.max(0, ratio) * 100) + '%';
-  const cst = document.getElementById('c-state');
-  if (cErr < ch.tol) {
-    if (!state.solved) {
-      state.solved = true;
-      const bonus = Math.max(10, 60 - state.N * 4);
-      shell.add(50 + bonus); shell.hitStreak(); shell.celebrate();
-      shell.toast('Target hit!', `Solved with ${state.N} terms · +${50 + bonus}`, '🎯');
-      if (state.N <= 4) shell.badge('efficient', 'Efficient', 'Solved in ≤ 4 terms', '⚡');
-      shell.badge('sharp', 'Sharpshooter', 'Cleared a precision challenge', '🎯');
-    }
-    cst.textContent = `✓ Within target with ${state.N} terms.`; cst.className = 'cstate win';
-  } else {
-    cst.textContent = `Add terms — error still above target.`; cst.className = 'cstate';
-  }
+  meter.update({
+    value: cErr, tol: ch.tol,
+    goal: `Approximate <b>${ch.label}</b> at x = ${fmt(ch.x0)} to within the target error.`,
+    solvedText: `✓ Within target with ${N} terms.`,
+    hintText: 'Add terms — error still above target.',
+  });
 }
 
 render();

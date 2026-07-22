@@ -3,6 +3,7 @@ import { ScoreShell } from '../../engine/score-shell.js';
 import { createConfetti } from '../../engine/confetti.js';
 import { getCSS, fmtAxis as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
+import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
 import { INTEGRANDS, RULES, riemannSum, rectangles } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "Riemann sums" ---- */
@@ -10,14 +11,27 @@ const MAX_N = 80;   // must match the #n slider max in index.html
 
 const g = new Grapher2D(document.getElementById('graph'));
 const shell = new ScoreShell(createConfetti());
-const state = { fn: INTEGRANDS[0], rule: RULES[0], n: 4, solved: false };
+const state = { fn: INTEGRANDS[0], rule: RULES[0], n: 4 };
+
+const meter = challengeMeter({
+  format: v => v.toExponential(2),
+  formatTol: t => t.toExponential(1),
+  progress: linearProgress(8),
+  onSolve: () => {
+    const bonus = Math.max(10, 80 - state.n);
+    shell.add(40 + bonus); shell.hitStreak(); shell.celebrate();
+    shell.toast('Converged!', `${state.rule.label} sum on target at n = ${state.n} · +${40 + bonus}`, '🎯');
+    if (state.n <= 12) shell.badge('smart', 'Smart Sampling', 'Hit the target with ≤ 12 rectangles', '🎯');
+    shell.badge('converge', 'Convergence', 'Cleared a Riemann challenge', '🏅');
+  },
+});
 g.setView(state.fn.view);
 
 const explored = new Set(['square']);
 const usedRules = new Set(['left']);
 
 buttonGroup('fbtns', INTEGRANDS, fn => {
-  state.fn = fn; state.solved = false;
+  state.fn = fn; meter.reset();
   g.setView(fn.view);
   shell.add(5);
   markExplored(fn.id);
@@ -25,7 +39,7 @@ buttonGroup('fbtns', INTEGRANDS, fn => {
 });
 
 buttonGroup('rules', RULES, rule => {
-  state.rule = rule; state.solved = false;
+  state.rule = rule; meter.reset();
   usedRules.add(rule.id);
   if (usedRules.size === RULES.length) shell.badge('rules', 'Rule Breaker', 'Tried every sampling rule', '📐');
   render();
@@ -83,27 +97,12 @@ function render() {
     ` &nbsp;·&nbsp; exact = <b>${fn.exact.toFixed(5)}</b>` +
     ` &nbsp;·&nbsp; error = <b class="er">${err.toExponential(2)}</b>`;
 
-  const cst = document.getElementById('c-state');
-  document.getElementById('c-goal').innerHTML =
-    `Squeeze the sum for <b>${fn.tex}</b> down to the target error — a smarter sampling rule gets there with far fewer rectangles.`;
-  document.getElementById('c-err').textContent = err.toExponential(2);
-  document.getElementById('c-tol').textContent = fn.tol.toExponential(1);
-  document.getElementById('c-bar').style.width =
-    (Math.max(0, Math.min(1, 1 - err / (fn.tol * 8))) * 100) + '%';
-
-  if (err < fn.tol) {
-    if (!state.solved) {
-      state.solved = true;
-      const bonus = Math.max(10, 80 - state.n);
-      shell.add(40 + bonus); shell.hitStreak(); shell.celebrate();
-      shell.toast('Converged!', `${rule.label} sum on target at n = ${state.n} · +${40 + bonus}`, '🎯');
-      if (state.n <= 12) shell.badge('smart', 'Smart Sampling', 'Hit the target with ≤ 12 rectangles', '🎯');
-      shell.badge('converge', 'Convergence', 'Cleared a Riemann challenge', '🏅');
-    }
-    cst.textContent = `✓ On target with ${n} rectangles.`; cst.className = 'cstate win';
-  } else {
-    cst.textContent = 'Add rectangles — the sum is still off the true area.'; cst.className = 'cstate';
-  }
+  meter.update({
+    value: err, tol: fn.tol,
+    goal: `Squeeze the sum for <b>${fn.tex}</b> down to the target error — a smarter sampling rule gets there with far fewer rectangles.`,
+    solvedText: `✓ On target with ${n} rectangles.`,
+    hintText: 'Add rectangles — the sum is still off the true area.',
+  });
 }
 
 render();
