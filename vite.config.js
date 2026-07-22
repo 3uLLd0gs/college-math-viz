@@ -10,6 +10,7 @@ export default defineConfig({
         'partial-derivatives': resolve(__dirname, 'playgrounds/partial-derivatives/index.html'),
         'riemann-sums': resolve(__dirname, 'playgrounds/riemann-sums/index.html'),
         'gradient': resolve(__dirname, 'playgrounds/gradient/index.html'),
+        'vector-fields': resolve(__dirname, 'playgrounds/vector-fields/index.html'),
       },
     },
   },
