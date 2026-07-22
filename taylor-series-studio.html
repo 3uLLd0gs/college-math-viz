@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taylor Series · Live Approximation Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* =========================================================================
+     DESIGN TOKENS  — the visual language every playground in the series shares.
+     Aesthetic: warm laboratory oscilloscope. Near-black panel, phosphor-glow
+     traces, monospace instrument readouts, a characterful serif for headings.
+     ========================================================================= */
+  :root{
+    --bg:#0b0e14;
+    --bg2:#0e121b;
+    --panel:#111726;
+    --panel-2:#0d1320;
+    --line:rgba(126,152,196,.14);
+    --grid:rgba(126,152,196,.075);
+    --ink:#eaeff8;
+    --muted:#8b95ab;
+    --true:#ffb454;      /* target function — warm amber */
+    --approx:#3df2c0;    /* the Taylor polynomial — mint phosphor */
+    --error:#ff5d73;     /* the gap / remainder — hot coral */
+    --accent:#7aa2ff;    /* UI accent — cool blue */
+    --gold:#ffd76a;
+    --radius:14px;
+    --shadow:0 24px 60px -20px rgba(0,0,0,.7);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:"JetBrains Mono",ui-monospace,monospace;
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 700px at 78% -10%, rgba(61,242,192,.06), transparent 60%),
+      radial-gradient(1000px 600px at -5% 110%, rgba(122,162,255,.07), transparent 55%),
+      linear-gradient(var(--bg), var(--bg2));
+    background-attachment:fixed;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    padding:22px;
+  }
+  .wrap{max-width:1180px;margin:0 auto}
+
+  /* ---- header / scoreboard ---- */
+  header{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    gap:18px;flex-wrap:wrap;margin-bottom:16px;
+  }
+  .brand .kicker{
+    font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--approx);
+    display:flex;align-items:center;gap:8px;margin-bottom:6px;
+  }
+  .kicker::before{content:"";width:26px;height:1px;background:var(--approx);display:inline-block}
+  h1{
+    font-family:"Fraunces",serif;font-weight:900;font-size:clamp(26px,4.6vw,44px);
+    line-height:.98;margin:0;letter-spacing:-.01em;
+  }
+  h1 em{font-style:italic;color:var(--true)}
+  .scoreboard{display:flex;gap:10px;flex-wrap:wrap}
+  .chip{
+    background:var(--panel);border:1px solid var(--line);border-radius:11px;
+    padding:8px 13px;min-width:78px;
+  }
+  .chip .lab{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .chip .val{font-size:19px;font-weight:700;margin-top:2px}
+  .chip.pts .val{color:var(--gold)}
+  .chip.streak .val{color:var(--approx)}
+
+  /* ---- main layout ---- */
+  .studio{
+    display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:stretch;
+  }
+  .card{
+    background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+  }
+  .graph-card{position:relative;overflow:hidden;min-height:440px}
+  #graph{display:block;width:100%;height:100%}
+  .graph-tag{
+    position:absolute;top:14px;left:16px;font-size:11px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--muted);pointer-events:none;
+  }
+  .legend{
+    position:absolute;top:12px;right:14px;display:flex;flex-direction:column;gap:6px;
+    font-size:11.5px;pointer-events:none;
+  }
+  .legend span{display:flex;align-items:center;gap:7px;justify-content:flex-end}
+  .swatch{width:16px;height:3px;border-radius:2px;display:inline-block}
+  .readout{
+    position:absolute;left:16px;bottom:14px;font-size:12px;color:var(--muted);
+    background:rgba(9,12,19,.72);backdrop-filter:blur(4px);
+    border:1px solid var(--line);border-radius:10px;padding:9px 12px;line-height:1.6;
+    pointer-events:none;max-width:min(92%,360px);
+  }
+  .readout b{color:var(--ink);font-weight:500}
+  .readout .er{color:var(--error)}
+
+  /* ---- controls ---- */
+  .panel{padding:18px;display:flex;flex-direction:column;gap:18px}
+  .sect-lab{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+  .fbtns{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+  .fbtn{
+    font-family:inherit;font-size:14px;color:var(--ink);cursor:pointer;
+    background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:11px 4px;
+    transition:.15s;
+  }
+  .fbtn:hover{border-color:var(--accent);transform:translateY(-1px)}
+  .fbtn.on{
+    background:rgba(61,242,192,.12);border-color:var(--approx);color:var(--approx);
+    box-shadow:0 0 0 1px rgba(61,242,192,.25),0 8px 20px -8px rgba(61,242,192,.5);
+  }
+  .terms-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+  .terms-head .n{font-family:"Fraunces",serif;font-weight:900;font-size:30px;color:var(--approx);line-height:1}
+  .terms-head .n small{font-family:"JetBrains Mono";font-size:12px;color:var(--muted);font-weight:400;letter-spacing:.06em}
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:6px;
+    background:linear-gradient(90deg,var(--approx) var(--fill,0%),#1b2436 var(--fill,0%));
+    outline:none;cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+    background:var(--approx);border:3px solid #08221b;cursor:pointer;
+    box-shadow:0 0 12px rgba(61,242,192,.7);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:18px;height:18px;border-radius:50%;background:var(--approx);
+    border:3px solid #08221b;cursor:pointer;box-shadow:0 0 12px rgba(61,242,192,.7);
+  }
+  .row{display:flex;gap:8px}
+  .action{
+    flex:1;font-family:inherit;font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--ink);cursor:pointer;background:var(--panel-2);border:1px solid var(--line);
+    border-radius:9px;padding:11px;transition:.15s;
+  }
+  .action:hover{border-color:var(--accent);color:var(--accent)}
+  .action.primary{background:rgba(122,162,255,.14);border-color:var(--accent);color:var(--accent)}
+
+  .formula{
+    background:#080b12;border:1px solid var(--line);border-radius:11px;padding:14px 15px;
+  }
+  .formula .lhs{color:var(--muted);font-size:13px;margin-bottom:6px}
+  .formula .rhs{color:var(--approx);font-size:16px;line-height:1.7;word-spacing:2px}
+  .formula .rhs .dots{color:var(--muted)}
+
+  .challenge{
+    border:1px solid rgba(255,215,106,.3);background:rgba(255,215,106,.05);
+    border-radius:11px;padding:14px 15px;
+  }
+  .challenge .lab{color:var(--gold);font-size:10px;letter-spacing:.22em;text-transform:uppercase;margin-bottom:8px}
+  .challenge .goal{font-size:13.5px;color:var(--ink);line-height:1.5;margin-bottom:10px}
+  .challenge .goal b{color:var(--gold)}
+  .cmeter{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px}
+  .cmeter b{color:var(--ink);font-weight:500}
+  .cbar{height:8px;border-radius:6px;background:#151d2c;overflow:hidden}
+  .cbar > i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--error),var(--gold),var(--approx));width:0%;transition:width .25s}
+  .cstate{margin-top:9px;font-size:12px;color:var(--muted);min-height:16px}
+  .cstate.win{color:var(--approx)}
+
+  /* ---- toast + fx ---- */
+  #fx{position:fixed;inset:0;pointer-events:none;z-index:60}
+  .toast-wrap{position:fixed;top:18px;right:18px;display:flex;flex-direction:column;gap:9px;z-index:70}
+  .toast{
+    display:flex;align-items:center;gap:11px;background:rgba(17,23,38,.96);
+    border:1px solid rgba(255,215,106,.45);border-left:3px solid var(--gold);
+    border-radius:11px;padding:11px 15px;box-shadow:var(--shadow);
+    transform:translateX(130%);animation:slide 3.6s cubic-bezier(.2,.9,.2,1) forwards;
+    max-width:290px;
+  }
+  @keyframes slide{8%{transform:translateX(0)}88%{transform:translateX(0)}100%{transform:translateX(130%)}}
+  .toast .ico{font-size:20px}
+  .toast .t1{font-family:"Fraunces",serif;font-weight:700;font-size:14px;color:var(--gold)}
+  .toast .t2{font-size:11px;color:var(--muted);margin-top:1px}
+
+  footer{margin-top:16px;font-size:11.5px;color:var(--muted);line-height:1.7}
+  footer b{color:var(--approx);font-weight:500}
+
+  @media(max-width:840px){
+    body{padding:14px}
+    .studio{grid-template-columns:1fr}
+    .graph-card{min-height:340px}
+    header{align-items:flex-start}
+  }
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div class="toast-wrap" id="toasts"></div>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="kicker">Math · Visual Studio</div>
+      <h1>Taylor Series <em>Studio</em></h1>
+    </div>
+    <div class="scoreboard">
+      <div class="chip pts"><div class="lab">Points</div><div class="val" id="s-pts">0</div></div>
+      <div class="chip streak"><div class="lab">Streak</div><div class="val" id="s-streak">0</div></div>
+      <div class="chip"><div class="lab">Badges</div><div class="val" id="s-badges">0</div></div>
+    </div>
+  </header>
+
+  <div class="studio">
+    <!-- GRAPH -->
+    <div class="card graph-card">
+      <canvas id="graph"></canvas>
+      <div class="graph-tag">approximation ⟶ drag the graph to probe any x</div>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--true)"></i> true f(x)</span>
+        <span><i class="swatch" style="background:var(--approx)"></i> Taylor P<sub>N</sub>(x)</span>
+        <span><i class="swatch" style="background:var(--error)"></i> error</span>
+      </div>
+      <div class="readout" id="readout"></div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="card panel">
+      <div>
+        <div class="sect-lab">Function to approximate</div>
+        <div class="fbtns" id="fbtns"></div>
+      </div>
+
+      <div>
+        <div class="terms-head">
+          <div class="sect-lab" style="margin:0">Terms included</div>
+          <div class="n" id="n-lab">1<small> deg</small></div>
+        </div>
+        <input type="range" id="terms" min="0" max="14" value="1" step="1" aria-label="Number of Taylor series terms">
+        <div class="row" style="margin-top:12px">
+          <button class="action primary" id="build">▸ Animate build</button>
+          <button class="action" id="reset">Reset</button>
+        </div>
+      </div>
+
+      <div class="formula">
+        <div class="lhs" id="f-lhs">P<sub>N</sub>(x) ≈</div>
+        <div class="rhs" id="f-rhs"></div>
+      </div>
+
+      <div class="challenge">
+        <div class="lab">◆ Precision challenge</div>
+        <div class="goal" id="c-goal"></div>
+        <div class="cmeter"><span>error <b id="c-err">—</b></span><span>target <b id="c-tol">—</b></span></div>
+        <div class="cbar"><i id="c-bar"></i></div>
+        <div class="cstate" id="c-state">Add terms until the error drops below target.</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <b>Template note.</b> The code is split into three layers — <b>Engine</b> (Grapher2D + ScoreShell, reused by every playground),
+    <b>Content</b> (the FUNCTIONS registry: what changes per concept), and <b>Playground</b> (thin wiring).
+    To build the next map row, Claude Code swaps Content + wiring and keeps the Engine.
+  </footer>
+</div>
+
+<script>
+/* ==========================================================================
+   LAYER 1 — ENGINE  ▸ reused unchanged across every playground in the series
+   ========================================================================== */
+
+/* ---- factorial (memoised) ---- */
+const _fac=[1];
+function fact(n){ for(let i=_fac.length;i<=n;i++) _fac[i]=_fac[i-1]*i; return _fac[n]; }
+
+/* ---- unicode superscript for pretty formulas ---- */
+const SUP={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+const sup=n=>String(n).split('').map(d=>SUP[d]).join('');
+
+/* ---- Grapher2D : a reusable hiDPI canvas plotter (axes, grid, curves, probe) ---- */
+class Grapher2D{
+  constructor(canvas){
+    this.cv=canvas; this.ctx=canvas.getContext('2d');
+    this.view={xmin:-8,xmax:8,ymin:-2.6,ymax:2.6};
+    this.pad={l:34,r:16,t:16,b:26};
+    this._resize();
+    new ResizeObserver(()=>{this._resize(); this.onresize&&this.onresize();}).observe(canvas.parentElement);
+  }
+  _resize(){
+    const r=this.cv.parentElement.getBoundingClientRect();
+    this.dpr=window.devicePixelRatio||1;
+    this.W=r.width; this.H=r.height;
+    this.cv.width=this.W*this.dpr; this.cv.height=this.H*this.dpr;
+    this.ctx.setTransform(this.dpr,0,0,this.dpr,0,0);
+  }
+  setView(v){ this.view={...v}; }
+  // world -> screen
+  sx(x){ const {xmin,xmax}=this.view,{l,r}=this.pad; return l+(x-xmin)/(xmax-xmin)*(this.W-l-r); }
+  sy(y){ const {ymin,ymax}=this.view,{t,b}=this.pad; return t+(ymax-y)/(ymax-ymin)*(this.H-t-b); }
+  ux(px){ const {xmin,xmax}=this.view,{l,r}=this.pad; return xmin+(px-l)/(this.W-l-r)*(xmax-xmin); }
+  clear(){ this.ctx.clearRect(0,0,this.W,this.H); }
+  grid(){
+    const c=this.ctx,{xmin,xmax,ymin,ymax}=this.view;
+    c.lineWidth=1;
+    const stepX=this._nice((xmax-xmin)/9), stepY=this._nice((ymax-ymin)/6);
+    c.strokeStyle=getCSS('--grid'); c.fillStyle=getCSS('--muted');
+    c.font='10px "JetBrains Mono"'; c.textAlign='center'; c.textBaseline='top';
+    for(let x=Math.ceil(xmin/stepX)*stepX; x<=xmax; x+=stepX){
+      c.beginPath(); c.moveTo(this.sx(x),this.pad.t); c.lineTo(this.sx(x),this.H-this.pad.b); c.stroke();
+      if(Math.abs(x)>1e-9) c.fillText(fmt(x), this.sx(x), this.sy(0)+4);
+    }
+    c.textAlign='right'; c.textBaseline='middle';
+    for(let y=Math.ceil(ymin/stepY)*stepY; y<=ymax; y+=stepY){
+      c.beginPath(); c.moveTo(this.pad.l,this.sy(y)); c.lineTo(this.W-this.pad.r,this.sy(y)); c.stroke();
+      if(Math.abs(y)>1e-9) c.fillText(fmt(y), this.pad.l-6, this.sy(y));
+    }
+    // axes
+    c.strokeStyle=getCSS('--line'); c.lineWidth=1.4;
+    c.beginPath(); c.moveTo(this.pad.l,this.sy(0)); c.lineTo(this.W-this.pad.r,this.sy(0)); c.stroke();
+    c.beginPath(); c.moveTo(this.sx(0),this.pad.t); c.lineTo(this.sx(0),this.H-this.pad.b); c.stroke();
+  }
+  _nice(v){ const p=Math.pow(10,Math.floor(Math.log10(v))); const f=v/p;
+    return (f<1.5?1:f<3?2:f<7?5:10)*p; }
+  // plot a function; breaks the path where it leaves the frame (shows divergence peeling off)
+  plot(fn,{color,width=2.5,glow=0,dash=null}={}){
+    const c=this.ctx,{ymin,ymax}=this.view; const margin=(ymax-ymin)*1.2;
+    c.save(); c.strokeStyle=color; c.lineWidth=width; c.lineJoin='round'; c.lineCap='round';
+    if(dash) c.setLineDash(dash);
+    if(glow){ c.shadowColor=color; c.shadowBlur=glow; }
+    c.beginPath(); let pen=false;
+    for(let px=this.pad.l; px<=this.W-this.pad.r; px+=1.5){
+      const x=this.ux(px), y=fn(x);
+      const ok=Number.isFinite(y) && y>ymin-margin && y<ymax+margin;
+      if(!ok){ pen=false; continue; }
+      const sxp=px, syp=this.sy(y);
+      if(!pen){ c.moveTo(sxp,syp); pen=true; } else c.lineTo(sxp,syp);
+    }
+    c.stroke(); c.restore();
+  }
+  dot(x,y,color,rInner=4){
+    const c=this.ctx; if(!Number.isFinite(y)) return;
+    c.save(); c.fillStyle=color; c.shadowColor=color; c.shadowBlur=10;
+    c.beginPath(); c.arc(this.sx(x),this.sy(y),rInner,0,7); c.fill(); c.restore();
+  }
+  vline(x,color){ const c=this.ctx; c.save(); c.strokeStyle=color; c.globalAlpha=.5;
+    c.setLineDash([4,4]); c.beginPath(); c.moveTo(this.sx(x),this.pad.t); c.lineTo(this.sx(x),this.H-this.pad.b); c.stroke(); c.restore(); }
+  gap(x,y1,y2,color){ // vertical error segment between the two curves
+    const c=this.ctx; if(!Number.isFinite(y1)||!Number.isFinite(y2)) return;
+    c.save(); c.strokeStyle=color; c.lineWidth=2.5; c.globalAlpha=.9;
+    c.beginPath(); c.moveTo(this.sx(x),this.sy(y1)); c.lineTo(this.sx(x),this.sy(y2)); c.stroke(); c.restore();
+  }
+}
+
+/* ---- ScoreShell : reusable gamification (points, streak, badges, toast, confetti) ---- */
+class ScoreShell{
+  constructor(){ this.pts=0; this.streak=0; this.badges=new Set(); }
+  add(n){ this.pts+=n; this._paint(); }
+  hitStreak(){ this.streak++; this._paint(); }
+  resetStreak(){ this.streak=0; this._paint(); }
+  badge(id,title,sub,ico='🏅'){
+    if(this.badges.has(id)) return; this.badges.add(id);
+    this.add(25); this.toast(title,sub,ico); this._paint();
+  }
+  _paint(){
+    document.getElementById('s-pts').textContent=this.pts;
+    document.getElementById('s-streak').textContent=this.streak;
+    document.getElementById('s-badges').textContent=this.badges.size;
+  }
+  toast(t1,t2,ico){
+    const el=document.createElement('div'); el.className='toast';
+    el.innerHTML=`<div class="ico">${ico}</div><div><div class="t1">${t1}</div><div class="t2">${t2}</div></div>`;
+    document.getElementById('toasts').appendChild(el);
+    setTimeout(()=>el.remove(),3700);
+  }
+  celebrate(){ Confetti.burst(); }
+}
+
+/* ---- Confetti : tiny dependency-free particle burst on the #fx overlay ---- */
+const Confetti=(()=>{
+  const cv=document.getElementById('fx'), ctx=cv.getContext('2d');
+  let parts=[], raf=null, dpr=window.devicePixelRatio||1;
+  function size(){ cv.width=innerWidth*dpr; cv.height=innerHeight*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); }
+  addEventListener('resize',size); size();
+  const cols=['#3df2c0','#ffb454','#7aa2ff','#ffd76a','#ff5d73'];
+  function burst(){
+    const cx=innerWidth*0.66, cy=innerHeight*0.32;
+    for(let i=0;i<90;i++){
+      const a=Math.random()*Math.PI*2, sp=3+Math.random()*8;
+      parts.push({x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-4,
+        g:.16+Math.random()*.12,life:1,rot:Math.random()*6,
+        vr:(Math.random()-.5)*.4,s:4+Math.random()*5,c:cols[i%cols.length]});
+    }
+    if(!raf) loop();
+  }
+  function loop(){
+    ctx.clearRect(0,0,innerWidth,innerHeight);
+    parts.forEach(p=>{ p.vy+=p.g; p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr; p.life-=.012; });
+    parts=parts.filter(p=>p.life>0 && p.y<innerHeight+40);
+    parts.forEach(p=>{ ctx.save(); ctx.globalAlpha=Math.max(0,p.life); ctx.translate(p.x,p.y);
+      ctx.rotate(p.rot); ctx.fillStyle=p.c; ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6); ctx.restore(); });
+    if(parts.length) raf=requestAnimationFrame(loop); else { raf=null; ctx.clearRect(0,0,innerWidth,innerHeight); }
+  }
+  return {burst};
+})();
+
+/* small shared helpers */
+function getCSS(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+function fmt(v){ const r=Math.round(v*100)/100; return Object.is(r,-0)?'0':String(r); }
+
+/* ==========================================================================
+   LAYER 2 — CONTENT  ▸ the ONLY part that changes to make a new concept
+   Each entry supplies: the true function, the nth Taylor coefficient (about 0),
+   a pretty term formatter, a viewport, and a precision challenge.
+   ========================================================================== */
+const FUNCTIONS=[
+  { id:'exp', label:'eˣ',
+    f:x=>Math.exp(x),
+    coeff:n=>1/fact(n),
+    term:n=> n===0?{neg:false,body:'1'} : n===1?{neg:false,body:'x'} : {neg:false,body:`x${sup(n)}/${n}!`},
+    view:{xmin:-3,xmax:3.4,ymin:-1.6,ymax:14},
+    challenge:{x0:2, tol:0.05, label:'e²'} },
+
+  { id:'sin', label:'sin x',
+    f:x=>Math.sin(x),
+    coeff:n=> n%2===1 ? (((n-1)/2)%2===0?1:-1)/fact(n) : 0,
+    term:n=>{ if(n%2===0) return null; if(n===1) return {neg:false,body:'x'};
+      return {neg:((n-1)/2)%2!==0, body:`x${sup(n)}/${n}!`}; },
+    view:{xmin:-8,xmax:8,ymin:-2.6,ymax:2.6},
+    challenge:{x0:3, tol:0.02, label:'sin 3'} },
+
+  { id:'cos', label:'cos x',
+    f:x=>Math.cos(x),
+    coeff:n=> n%2===0 ? ((n/2)%2===0?1:-1)/fact(n) : 0,
+    term:n=>{ if(n%2===1) return null; if(n===0) return {neg:false,body:'1'};
+      return {neg:(n/2)%2!==0, body:`x${sup(n)}/${n}!`}; },
+    view:{xmin:-8,xmax:8,ymin:-2.6,ymax:2.6},
+    challenge:{x0:3, tol:0.02, label:'cos 3'} },
+
+  { id:'ln', label:'ln(1+x)',
+    f:x=> x>-1?Math.log(1+x):NaN,
+    coeff:n=> n===0?0:(n%2===1?1:-1)/n,
+    term:n=>{ if(n===0) return null; if(n===1) return {neg:false,body:'x'};
+      return {neg:n%2===0, body:`x${sup(n)}/${n}`}; },
+    view:{xmin:-0.95,xmax:3,ymin:-4,ymax:2.2},
+    challenge:{x0:0.8, tol:0.01, label:'ln 1.8'} },
+
+  { id:'geo', label:'1/(1−x)',
+    f:x=> x<1?1/(1-x):NaN,
+    coeff:n=>1,
+    term:n=> n===0?{neg:false,body:'1'} : n===1?{neg:false,body:'x'} : {neg:false,body:`x${sup(n)}`},
+    view:{xmin:-3,xmax:0.97,ymin:-2,ymax:9},
+    challenge:{x0:0.5, tol:0.005, label:'1/(1−½) = 2'} },
+];
+
+/* evaluate the degree-N Taylor polynomial of a function config */
+function polyAt(fn,N,x){ let s=0; for(let n=0;n<=N;n++) s+=fn.coeff(n)*Math.pow(x,n); return s; }
+
+/* build the pretty formula string up to degree N */
+function formula(fn,N){
+  let parts=[],shown=0;
+  for(let n=0;n<=N && shown<7;n++){
+    const t=fn.term(n); if(!t) continue;
+    if(parts.length===0) parts.push((t.neg?'−':'')+t.body);
+    else parts.push((t.neg?' − ':' + ')+t.body);
+    shown++;
+  }
+  return parts.join('') + (moreTerms(fn,N)?' <span class="dots">+ …</span>':'');
+}
+function moreTerms(fn,N){ let c=0; for(let n=0;n<=N;n++) if(fn.term(n)) c++; return c>7; }
+
+/* ==========================================================================
+   LAYER 3 — PLAYGROUND  ▸ thin wiring specific to "Taylor series"
+   ========================================================================== */
+const g=new Grapher2D(document.getElementById('graph'));
+const shell=new ScoreShell();
+let state={ fn:FUNCTIONS[0], N:1, probe:2, solved:false };
+g.setView(state.fn.view);
+
+/* build function buttons */
+const fbox=document.getElementById('fbtns');
+FUNCTIONS.forEach((fn,i)=>{
+  const b=document.createElement('button');
+  b.className='fbtn'+(i===0?' on':''); b.textContent=fn.label; b.dataset.id=fn.id;
+  b.onclick=()=>selectFn(fn,b);
+  fbox.appendChild(b);
+});
+
+const terms=document.getElementById('terms');
+const nLab=document.getElementById('n-lab');
+
+function selectFn(fn,btn){
+  state.fn=fn; state.probe=fn.challenge.x0; state.solved=false;
+  document.querySelectorAll('.fbtn').forEach(x=>x.classList.remove('on'));
+  btn.classList.add('on');
+  g.setView(fn.view);
+  shell.add(5);
+  markExplored(fn.id);
+  render();
+}
+
+const explored=new Set(['exp']);
+function markExplored(id){
+  explored.add(id);
+  if(explored.size===FUNCTIONS.length) shell.badge('explorer','Explorer','Tried every function','🧭');
+}
+
+terms.addEventListener('input',()=>{
+  state.N=+terms.value;
+  if(state.N>=1) shell.badge('first','First Term','You started an approximation','✳️');
+  if(state.N===14) shell.badge('deep','Convergence Master','Pushed to 14 terms','♾️');
+  render();
+});
+
+document.getElementById('reset').onclick=()=>{ state.N=1; terms.value=1; render(); };
+
+let building=null;
+document.getElementById('build').onclick=(e)=>{
+  if(building){ clearInterval(building); building=null; e.target.textContent='▸ Animate build'; return; }
+  e.target.textContent='⏸ Pause';
+  state.N=0; terms.value=0; render();
+  building=setInterval(()=>{
+    if(state.N>=14){ clearInterval(building); building=null; e.target.textContent='▸ Animate build'; return; }
+    state.N++; terms.value=state.N; render();
+  },260);
+};
+
+/* probe by dragging on the graph */
+const gc=document.getElementById('graph');
+let dragging=false;
+function setProbe(clientX){
+  const r=gc.getBoundingClientRect();
+  let x=g.ux(clientX-r.left);
+  x=Math.max(state.fn.view.xmin+0.02,Math.min(state.fn.view.xmax-0.02,x));
+  state.probe=x; render();
+}
+gc.addEventListener('pointerdown',e=>{dragging=true; gc.setPointerCapture(e.pointerId); setProbe(e.clientX);});
+gc.addEventListener('pointermove',e=>{ if(dragging) setProbe(e.clientX); });
+gc.addEventListener('pointerup',()=>dragging=false);
+gc.addEventListener('pointercancel',()=>dragging=false);
+
+g.onresize=render;
+
+/* ---- the render pass ---- */
+function render(){
+  const fn=state.fn, N=state.N, px=state.probe;
+  nLab.innerHTML=`${N}<small> deg</small>`;
+  terms.style.setProperty('--fill', (N/14*100)+'%');
+
+  g.clear(); g.grid();
+  g.plot(x=>fn.f(x), {color:getCSS('--true'), width:2.6});
+  g.plot(x=>polyAt(fn,N,x), {color:getCSS('--approx'), width:2.6, glow:9});
+
+  // probe: values + error
+  const yt=fn.f(px), ya=polyAt(fn,N,px), err=Math.abs(yt-ya);
+  g.vline(px,getCSS('--muted'));
+  if(Number.isFinite(yt)&&Number.isFinite(ya)) g.gap(px,yt,ya,getCSS('--error'));
+  g.dot(px,yt,getCSS('--true')); g.dot(px,ya,getCSS('--approx'));
+
+  document.getElementById('readout').innerHTML=
+    `at x = <b>${fmt(px)}</b> &nbsp;·&nbsp; f = <b>${Number.isFinite(yt)?yt.toFixed(4):'—'}</b>`+
+    ` &nbsp;·&nbsp; P<sub>${N}</sub> = <b>${Number.isFinite(ya)?ya.toFixed(4):'—'}</b>`+
+    ` &nbsp;·&nbsp; error = <b class="er">${Number.isFinite(err)?err.toExponential(2):'—'}</b>`;
+
+  // formula
+  document.getElementById('f-rhs').innerHTML=formula(fn,N);
+
+  // challenge (evaluated at the fixed target x0, independent of the probe)
+  const ch=fn.challenge;
+  const cErr=Math.abs(fn.f(ch.x0)-polyAt(fn,N,ch.x0));
+  document.getElementById('c-goal').innerHTML=`Approximate <b>${ch.label}</b> at x = ${fmt(ch.x0)} to within the target error.`;
+  document.getElementById('c-err').textContent=cErr.toExponential(2);
+  document.getElementById('c-tol').textContent=ch.tol.toExponential(0);
+  const ratio=Math.min(1, Math.log10(ch.tol/Math.max(cErr,1e-16))/6 + 0.5);
+  document.getElementById('c-bar').style.width=(Math.max(0,ratio)*100)+'%';
+  const cst=document.getElementById('c-state');
+  if(cErr<ch.tol){
+    if(!state.solved){
+      state.solved=true;
+      const bonus=Math.max(10,60-state.N*4);
+      shell.add(50+bonus); shell.hitStreak(); shell.celebrate();
+      shell.toast('Target hit!',`Solved with ${state.N} terms · +${50+bonus}`,'🎯');
+      if(state.N<=4) shell.badge('efficient','Efficient','Solved in ≤ 4 terms','⚡');
+      shell.badge('sharp','Sharpshooter','Cleared a precision challenge','🎯');
+    }
+    cst.textContent=`✓ Within target with ${state.N} terms.`; cst.className='cstate win';
+  }else{
+    cst.textContent=`Add terms — error still above target.`; cst.className='cstate';
+  }
+}
+
+render();
+</script>
+</body>
+</html>
