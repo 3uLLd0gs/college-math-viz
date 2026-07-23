@@ -6,7 +6,8 @@ import { createConfetti } from '../../engine/confetti.js';
 import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
-import { FIELDS, curlGrid } from './content.js';
+import { mountLesson } from '../../engine/lesson.js';
+import { FIELDS, curlGrid, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "Green's theorem" ---- */
 
@@ -44,7 +45,7 @@ function useField(fd) {
 useField(FIELDS[0]);
 explored.add(FIELDS[0].id);
 
-buttonGroup('fbtns', FIELDS, fd => {
+const fieldButtons = buttonGroup('fbtns', FIELDS, fd => {
   useField(fd);
   shell.award(`explore:${fd.id}`, 5);
   explored.add(fd.id);
@@ -176,3 +177,17 @@ function render() {
 render();
 
 mountNav('greens-theorem');
+
+mountLesson(LESSON, {
+  slug: 'greens-theorem',
+  onJump: st => {
+    if (st.field) {
+      const fd = FIELDS.find(f => f.id === st.field);
+      if (fd) { useField(fd); fieldButtons.select(FIELDS.indexOf(fd), { notify: false }); }
+    }
+    if (typeof st.x === 'number') state.x = st.x;
+    if (typeof st.y === 'number') state.y = st.y;
+    if (typeof st.r === 'number') { state.r = st.r; radius.set(st.r); }
+    render();
+  },
+});
