@@ -6,12 +6,19 @@
    is the teaching order, which is NOT the order the playgrounds were built in. */
 
 export const COURSES = [
+  { id: 'precalc', label: 'Trigonometry & Pre-Calculus' },
   { id: 'calc1', label: 'Calculus 1' },
   { id: 'calc2', label: 'Calculus 2' },
   { id: 'calc3', label: 'Calculus 3' },
 ];
 
 export const PLAYGROUNDS = [
+  {
+    slug: 'unit-circle', course: 'precalc',
+    title: 'Unit Circle Unwrap',
+    tag: 'Where the sine wave comes from',
+    blurb: 'Drag the radius around the circle and watch the height it marks unwrap, point by point, into the sine curve. Same for cosine and tangent.',
+  },
   {
     slug: 'secant-tangent', course: 'calc1',
     title: 'Secant → Tangent',

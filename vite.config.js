@@ -10,6 +10,7 @@ export default defineConfig({
         'solids-of-revolution': resolve(__dirname, 'playgrounds/solids-of-revolution/index.html'),
         'partial-derivatives': resolve(__dirname, 'playgrounds/partial-derivatives/index.html'),
         'riemann-sums': resolve(__dirname, 'playgrounds/riemann-sums/index.html'),
+        'unit-circle': resolve(__dirname, 'playgrounds/unit-circle/index.html'),
         'secant-tangent': resolve(__dirname, 'playgrounds/secant-tangent/index.html'),
         'gradient': resolve(__dirname, 'playgrounds/gradient/index.html'),
         'vector-fields': resolve(__dirname, 'playgrounds/vector-fields/index.html'),
