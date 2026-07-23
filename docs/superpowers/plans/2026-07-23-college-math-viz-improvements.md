@@ -1010,29 +1010,41 @@ body.present .pgnav,body.present .lesson,body.present .scoreboard{display:none}
 }
 ```
 
-- [ ] **Step 2: Presenter toggle**
+- [ ] **Step 2: Presenter as a URL flag (decision: `?present`)**
 
-In each `index.html` header `.scoreboard` (or a small actions cluster), add:
+Presenter mode is driven by the URL, not a per-page toggle, so a professor sets it once and links to it — and it composes with the deep-link params from Tasks 1–3 (`?field=saddle&x=0.9&present=1`). A toggle button is still offered as a convenience, but it works by editing the URL flag, keeping the URL the single source of truth.
 
-```html
-<button class="chip" id="present" title="Presenter mode" style="cursor:pointer">Present</button>
-```
-
-Add a shared snippet — put it in `engine/dom.js` as an exported helper `mountPresenter()` and call it from each `playground.js` (one line), or inline the four lines. Reference implementation:
+Add a shared helper in `engine/dom.js` and call it once from each `playground.js`:
 
 ```js
 // engine/dom.js
 export function mountPresenter() {
+  const params = new URLSearchParams(location.search);
+  const on = params.get('present') === '1';
+  document.body.classList.toggle('present', on);
+
   const btn = document.getElementById('present');
   if (!btn) return;
-  const on = localStorage.getItem('cmv:present') === '1';
-  document.body.classList.toggle('present', on);
+  btn.setAttribute('aria-pressed', String(on));
   btn.addEventListener('click', () => {
-    const now = document.body.classList.toggle('present');
-    localStorage.setItem('cmv:present', now ? '1' : '0');
+    const p = new URLSearchParams(location.search);
+    const now = p.get('present') !== '1';
+    if (now) p.set('present', '1'); else p.delete('present');
+    // replaceState, so toggling does not stack history entries
+    history.replaceState(null, '', `${location.pathname}${p.toString() ? '?' + p : ''}`);
+    document.body.classList.toggle('present', now);
+    btn.setAttribute('aria-pressed', String(now));
   });
 }
 ```
+
+In each `index.html`, add the optional toggle to the header actions:
+
+```html
+<button class="chip" id="present" title="Presenter mode" aria-pressed="false" style="cursor:pointer">Present</button>
+```
+
+Note for the roll-out: `mountPresenter()` must read the flag on load *after* any deep-link `applyState`, so opening `?present=1` alone (no other params) still enlarges the current default view. Call it as the last line of each `playground.js`.
 
 - [ ] **Step 3: Verify**
 
@@ -1183,8 +1195,8 @@ git commit -m "feat: export/import progress code on the landing page"
 
 **Type/name consistency:** `applyState(st)` is the seam name used consistently in Tasks 2, 3, 6, 8, 9. `URL_SCHEMA` / `urlState()` / `pushUrl` used consistently in Tasks 2–3, 5. `keyboardControl(el, {nudge, step, home})` matches between Task 4's definition and Task 5's use. `check` step shape matches between Task 6 (`lesson.js`) and Task 7 (content). `neighbours(slug)` and `prereq` match between Task 8's sequencer changes and its lesson use. `exportProgress`/`importProgress` match between Task 11's engine and landing-page use.
 
-## Open decisions for the user
+## Decisions (settled)
 
-1. **Self-check placement:** one check at the `use` level per playground (this plan), or a check at the end of each level? One keeps it light; more makes it a real formative-assessment layer.
-2. **Presenter mode default:** a per-page toggle (this plan), or a site-wide `?present` URL flag a professor sets once and links to? The latter pairs naturally with deep-linking.
-3. **Phase 2 topic:** differentiation-rules is proposed as the first drill (most tractable checker). Confirm, or prefer factoring / integration-by-parts.
+1. **Self-check placement:** one check at the `use` level per playground. (Task 7 as written.)
+2. **Presenter mode:** a `?present` URL flag, source of truth in the URL, with a convenience toggle that edits the flag. (Task 10 Step 2 updated.)
+3. **Phase 2 topic:** undecided — settle in the Phase 2 brainstorm. differentiation-rules remains the proposal (most tractable answer-checker).
