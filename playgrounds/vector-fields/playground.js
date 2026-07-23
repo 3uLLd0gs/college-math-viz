@@ -6,6 +6,7 @@ import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
 import { mountLesson } from '../../engine/lesson.js';
+import { readState, makeUrlSync, stateToParams } from '../../engine/deep-link.js';
 import { FIELDS, speed, classify, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "vector fields" ---- */
@@ -13,6 +14,7 @@ import { FIELDS, speed, classify, LESSON } from './content.js';
 const DOMAIN = 2;                 // half-extent of the visible square
 const FIND_TOL = 0.12;            // |F| below this counts as finding the equilibrium
 const START = { x: -1.5, y: 1.5 };  // a corner, well away from every equilibrium
+const URL_SCHEMA = { field: 'string', x: 'number', y: 'number' };
 
 const view = new VectorFieldView(document.getElementById('field'));
 const shell = new ScoreShell(createConfetti(), { slug: 'vector-fields' });
@@ -51,6 +53,7 @@ const fieldButtons = buttonGroup('fbtns', FIELDS, fd => {
   if (explored.size === FIELDS.length) shell.badge('explorer', 'Field Marshal', 'Surveyed every field', '🗺️');
   if (seenKinds.size >= 4) shell.badge('taxonomy', 'Taxonomist', 'Saw four kinds of flow', '🔬');
   render();
+  pushUrl();
 });
 
 const density = slider('density', {
@@ -75,7 +78,7 @@ ticker('release', {
   },
 });
 
-s('reset').onclick = () => { state.x = START.x; state.y = START.y; anim = null; meter.reset(); render(); };
+s('reset').onclick = () => { state.x = START.x; state.y = START.y; anim = null; meter.reset(); render(); pushUrl(); };
 
 /* drag the probe */
 const cv = document.getElementById('field');
@@ -86,6 +89,7 @@ function moveProbe(clientX, clientY) {
   state.y = Math.max(-DOMAIN, Math.min(DOMAIN, view.uy(clientY - r.top)));
   anim = null;
   render();
+  pushUrl();
 }
 cv.addEventListener('pointerdown', e => { dragging = true; cv.setPointerCapture(e.pointerId); moveProbe(e.clientX, e.clientY); });
 cv.addEventListener('pointermove', e => { if (dragging) moveProbe(e.clientX, e.clientY); });
@@ -153,16 +157,32 @@ render();
 
 mountNav('vector-fields');
 
-mountLesson(LESSON, {
-  slug: 'vector-fields',
-  onJump: st => {
-    if (st.field) {
-      const fd = FIELDS.find(f => f.id === st.field);
-      if (fd) { useField(fd); fieldButtons.select(FIELDS.indexOf(fd), { notify: false }); }
-    }
-    if (typeof st.x === 'number') state.x = st.x;
-    if (typeof st.y === 'number') state.y = st.y;
-    anim = null;
-    render();
-  },
-});
+/** Drive the playground to a described configuration. Shared by lesson jumps,
+ *  shareable URLs, and self-checks — all of which speak the same state object. */
+function applyState(st) {
+  if (st.field) {
+    const fd = FIELDS.find(f => f.id === st.field);
+    if (fd) { useField(fd); fieldButtons.select(FIELDS.indexOf(fd), { notify: false }); }
+  }
+  if (typeof st.x === 'number') state.x = st.x;
+  if (typeof st.y === 'number') state.y = st.y;
+  anim = null;
+  render();
+  pushUrl();
+}
+
+/** A shareable snapshot of the current view (only the URL_SCHEMA keys). */
+const urlState = () => ({ field: state.field.id, x: state.x, y: state.y });
+const pushUrl = makeUrlSync(() => stateToParams(urlState()));
+
+mountLesson(LESSON, { slug: 'vector-fields', onJump: applyState });
+
+// A link with parameters opens the playground in that exact configuration.
+const linked = readState(URL_SCHEMA);
+if (Object.keys(linked).length) applyState(linked);
+
+s('copylink').onclick = async () => {
+  const url = `${location.origin}${location.pathname}?${stateToParams(urlState())}`;
+  try { await navigator.clipboard.writeText(url); shell.toast('Link copied', 'Opens this exact view', '🔗'); }
+  catch { shell.toast('Copy failed', url, '🔗'); }
+};

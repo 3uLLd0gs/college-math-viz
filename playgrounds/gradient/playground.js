@@ -74,9 +74,10 @@ s('snap').onclick = () => {
   dial.set(deg);
   shell.badge('cheat', 'Compass', 'Used snap-to-gradient at least once', '🧲');
   render();
+  pushUrl();
 };
 
-s('reset').onclick = () => { placeProbe(state.field); meter.reset(); render(); };
+s('reset').onclick = () => { placeProbe(state.field); meter.reset(); render(); pushUrl(); };
 
 /* drag the probe around the map */
 const cv = document.getElementById('map');

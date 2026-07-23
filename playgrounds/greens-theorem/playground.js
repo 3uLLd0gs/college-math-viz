@@ -7,12 +7,14 @@ import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
 import { mountLesson } from '../../engine/lesson.js';
+import { readState, makeUrlSync, stateToParams } from '../../engine/deep-link.js';
 import { FIELDS, curlGrid, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "Green's theorem" ---- */
 
 const DOMAIN = 2;
 const CANCEL_TOL = 0.12;      // |∮F·dr| below this counts as cancelled
+const URL_SCHEMA = { field: 'string', x: 'number', y: 'number', r: 'number' };
 const CURL_GRID = 72;         // resolution used to trace the curl = 0 locus
 const START = { x: 0.8, y: 0.6, r: 0.7 };
 
@@ -51,13 +53,14 @@ const fieldButtons = buttonGroup('fbtns', FIELDS, fd => {
   explored.add(fd.id);
   if (explored.size === FIELDS.length) shell.badge('explorer', 'Circuit Rider', 'Tested every field', '🗺️');
   render();
+  pushUrl();
 });
 
 const radius = slider('radius', {
-  onInput: v => { state.r = v; render(); },
+  onInput: v => { state.r = v; render(); pushUrl(); },
 });
 
-s('reset').onclick = () => { state.x = START.x; state.y = START.y; state.r = START.r; radius.set(START.r); meter.reset(); render(); };
+s('reset').onclick = () => { state.x = START.x; state.y = START.y; state.r = START.r; radius.set(START.r); meter.reset(); render(); pushUrl(); };
 
 /* drag the loop */
 const cv = document.getElementById('field');
@@ -67,6 +70,7 @@ function moveLoop(clientX, clientY) {
   state.x = Math.max(-DOMAIN, Math.min(DOMAIN, view.ux(clientX - b.left)));
   state.y = Math.max(-DOMAIN, Math.min(DOMAIN, view.uy(clientY - b.top)));
   render();
+  pushUrl();
 }
 cv.addEventListener('pointerdown', e => { dragging = true; cv.setPointerCapture(e.pointerId); moveLoop(e.clientX, e.clientY); });
 cv.addEventListener('pointermove', e => { if (dragging) moveLoop(e.clientX, e.clientY); });
@@ -178,16 +182,32 @@ render();
 
 mountNav('greens-theorem');
 
-mountLesson(LESSON, {
-  slug: 'greens-theorem',
-  onJump: st => {
-    if (st.field) {
-      const fd = FIELDS.find(f => f.id === st.field);
-      if (fd) { useField(fd); fieldButtons.select(FIELDS.indexOf(fd), { notify: false }); }
-    }
-    if (typeof st.x === 'number') state.x = st.x;
-    if (typeof st.y === 'number') state.y = st.y;
-    if (typeof st.r === 'number') { state.r = st.r; radius.set(st.r); }
-    render();
-  },
-});
+/** Drive the playground to a described configuration. Shared by lesson jumps,
+ *  shareable URLs, and self-checks — all of which speak the same state object. */
+function applyState(st) {
+  if (st.field) {
+    const fd = FIELDS.find(f => f.id === st.field);
+    if (fd) { useField(fd); fieldButtons.select(FIELDS.indexOf(fd), { notify: false }); }
+  }
+  if (typeof st.x === 'number') state.x = st.x;
+  if (typeof st.y === 'number') state.y = st.y;
+  if (typeof st.r === 'number') { state.r = st.r; radius.set(st.r); }
+  render();
+  pushUrl();
+}
+
+/** A shareable snapshot of the current view (only the URL_SCHEMA keys). */
+const urlState = () => ({ field: state.field.id, x: state.x, y: state.y, r: state.r });
+const pushUrl = makeUrlSync(() => stateToParams(urlState()));
+
+mountLesson(LESSON, { slug: 'greens-theorem', onJump: applyState });
+
+// A link with parameters opens the playground in that exact configuration.
+const linked = readState(URL_SCHEMA);
+if (Object.keys(linked).length) applyState(linked);
+
+s('copylink').onclick = async () => {
+  const url = `${location.origin}${location.pathname}?${stateToParams(urlState())}`;
+  try { await navigator.clipboard.writeText(url); shell.toast('Link copied', 'Opens this exact view', '🔗'); }
+  catch { shell.toast('Copy failed', url, '🔗'); }
+};

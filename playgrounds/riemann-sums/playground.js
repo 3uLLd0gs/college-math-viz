@@ -6,10 +6,12 @@ import { getCSS, fmtAxis as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
 import { mountLesson } from '../../engine/lesson.js';
+import { readState, makeUrlSync, stateToParams } from '../../engine/deep-link.js';
 import { INTEGRANDS, RULES, riemannSum, rectangles, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "Riemann sums" ---- */
 const MAX_N = 80;   // must match the #n slider max in index.html
+const URL_SCHEMA = { fn: 'string', rule: 'string', n: 'number' };
 
 const g = new Grapher2D(document.getElementById('graph'));
 const shell = new ScoreShell(createConfetti(), { slug: 'riemann-sums' });
@@ -41,6 +43,7 @@ const fnButtons = buttonGroup('fbtns', INTEGRANDS, fn => {
   shell.award(`explore:${fn.id}`, 5);
   markExplored(fn.id);
   render();
+  pushUrl();
 });
 
 const ruleButtons = buttonGroup('rules', RULES, rule => {
@@ -48,6 +51,7 @@ const ruleButtons = buttonGroup('rules', RULES, rule => {
   usedRules.add(rule.id);
   if (usedRules.size === RULES.length) shell.badge('rules', 'Rule Breaker', 'Tried every sampling rule', '📐');
   render();
+  pushUrl();
 }, { className: 'tbtn' });
 
 const nSlider = slider('n', {
@@ -56,6 +60,7 @@ const nSlider = slider('n', {
     if (state.n >= 20) shell.badge('fine', 'Fine Mesh', 'Pushed past 20 rectangles', '🧱');
     if (state.n === MAX_N) shell.badge('limit', 'To the Limit', `Reached ${MAX_N} rectangles`, '♾️');
     render();
+    pushUrl();
   },
 });
 
@@ -64,16 +69,17 @@ function markExplored(id) {
   if (explored.size === INTEGRANDS.length) shell.badge('explorer', 'Integrator', 'Tried every function', '🧭');
 }
 
-document.getElementById('reset').onclick = () => { state.n = 4; nSlider.set(4); render(); };
+document.getElementById('reset').onclick = () => { state.n = 4; nSlider.set(4); render(); pushUrl(); };
 
 ticker('refine', {
   intervalMs: 90,
   playLabel: '▸ Refine n → ∞',
   pauseLabel: '⏸ Pause',
-  onStart: () => { state.n = 1; nSlider.set(1); render(); },
+  onStart: () => { state.n = 1; nSlider.set(1); render(); pushUrl(); },
   onTick: () => {
     if (state.n >= MAX_N) return false;
     state.n++; nSlider.set(state.n); render();
+    pushUrl();
   },
 });
 
@@ -114,19 +120,35 @@ render();
 
 mountNav('riemann-sums');
 
-mountLesson(LESSON, {
-  slug: 'riemann-sums',
-  onJump: st => {
-    if (st.fn) {
-      const fn = INTEGRANDS.find(f => f.id === st.fn);
-      if (fn) { state.fn = fn; fnButtons.select(INTEGRANDS.indexOf(fn), { notify: false }); g.setView(fn.view); }
-    }
-    if (st.rule) {
-      const r = RULES.find(x => x.id === st.rule);
-      if (r) { state.rule = r; ruleButtons.select(RULES.indexOf(r), { notify: false }); }
-    }
-    if (typeof st.n === 'number') { state.n = st.n; nSlider.set(st.n); }
-    meter.reset();
-    render();
-  },
-});
+/** Drive the playground to a described configuration. Shared by lesson jumps,
+ *  shareable URLs, and self-checks — all of which speak the same state object. */
+function applyState(st) {
+  if (st.fn) {
+    const fn = INTEGRANDS.find(f => f.id === st.fn);
+    if (fn) { state.fn = fn; fnButtons.select(INTEGRANDS.indexOf(fn), { notify: false }); g.setView(fn.view); }
+  }
+  if (st.rule) {
+    const r = RULES.find(x => x.id === st.rule);
+    if (r) { state.rule = r; ruleButtons.select(RULES.indexOf(r), { notify: false }); }
+  }
+  if (typeof st.n === 'number') { state.n = st.n; nSlider.set(st.n); }
+  meter.reset();
+  render();
+  pushUrl();
+}
+
+/** A shareable snapshot of the current view (only the URL_SCHEMA keys). */
+const urlState = () => ({ fn: state.fn.id, rule: state.rule.id, n: state.n });
+const pushUrl = makeUrlSync(() => stateToParams(urlState()));
+
+mountLesson(LESSON, { slug: 'riemann-sums', onJump: applyState });
+
+// A link with parameters opens the playground in that exact configuration.
+const linked = readState(URL_SCHEMA);
+if (Object.keys(linked).length) applyState(linked);
+
+document.getElementById('copylink').onclick = async () => {
+  const url = `${location.origin}${location.pathname}?${stateToParams(urlState())}`;
+  try { await navigator.clipboard.writeText(url); shell.toast('Link copied', 'Opens this exact view', '🔗'); }
+  catch { shell.toast('Copy failed', url, '🔗'); }
+};

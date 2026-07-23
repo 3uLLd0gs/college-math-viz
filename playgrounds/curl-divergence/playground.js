@@ -6,12 +6,14 @@ import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
 import { mountLesson } from '../../engine/lesson.js';
+import { readState, makeUrlSync, stateToParams } from '../../engine/deep-link.js';
 import { FIELDS, readingsAt, stillness, canGoStill, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "curl & divergence" ---- */
 
 const DOMAIN = 2;
 const STILL_TOL = 0.12;       // |div| and |curl| both under this counts as still
+const URL_SCHEMA = { field: 'string', x: 'number', y: 'number', r: 'number' };
 const RING_POINTS = 44;
 const RING_PERIOD = 2600;     // ms before the tracer ring is re-seeded
 // A strongly divergent field grows the ring exponentially — e^(div·t) — so after
@@ -53,11 +55,12 @@ const fieldButtons = buttonGroup('fbtns', FIELDS, fd => {
   explored.add(fd.id);
   if (explored.size === FIELDS.length) shell.badge('explorer', 'Flow Reader', 'Studied every field', '🗺️');
   render();
+  pushUrl();
 });
 
-const radius = slider('radius', { onInput: v => { state.r = v; seedRing(); render(); } });
+const radius = slider('radius', { onInput: v => { state.r = v; seedRing(); render(); pushUrl(); } });
 
-s('reset').onclick = () => { state.x = -1.3; state.y = 1.2; seedRing(); meter.reset(); render(); };
+s('reset').onclick = () => { state.x = -1.3; state.y = 1.2; seedRing(); meter.reset(); render(); pushUrl(); };
 
 /* drag the probe */
 const cv = document.getElementById('field');
@@ -68,6 +71,7 @@ function moveProbe(clientX, clientY) {
   state.y = Math.max(-DOMAIN, Math.min(DOMAIN, view.uy(clientY - b.top)));
   seedRing();
   render();
+  pushUrl();
 }
 cv.addEventListener('pointerdown', e => { dragging = true; cv.setPointerCapture(e.pointerId); moveProbe(e.clientX, e.clientY); });
 cv.addEventListener('pointermove', e => { if (dragging) moveProbe(e.clientX, e.clientY); });
@@ -206,17 +210,33 @@ requestAnimationFrame(frame);
 
 mountNav('curl-divergence');
 
-mountLesson(LESSON, {
-  slug: 'curl-divergence',
-  onJump: st => {
-    if (st.field) {
-      const fd = FIELDS.find(f => f.id === st.field);
-      if (fd) { useField(fd); fieldButtons.select(FIELDS.indexOf(fd), { notify: false }); }
-    }
-    if (typeof st.x === 'number') state.x = st.x;
-    if (typeof st.y === 'number') state.y = st.y;
-    if (typeof st.r === 'number') { state.r = st.r; radius.set(st.r); }
-    seedRing();
-    render();
-  },
-});
+/** Drive the playground to a described configuration. Shared by lesson jumps,
+ *  shareable URLs, and self-checks — all of which speak the same state object. */
+function applyState(st) {
+  if (st.field) {
+    const fd = FIELDS.find(f => f.id === st.field);
+    if (fd) { useField(fd); fieldButtons.select(FIELDS.indexOf(fd), { notify: false }); }
+  }
+  if (typeof st.x === 'number') state.x = st.x;
+  if (typeof st.y === 'number') state.y = st.y;
+  if (typeof st.r === 'number') { state.r = st.r; radius.set(st.r); }
+  seedRing();
+  render();
+  pushUrl();
+}
+
+/** A shareable snapshot of the current view (only the URL_SCHEMA keys). */
+const urlState = () => ({ field: state.field.id, x: state.x, y: state.y, r: state.r });
+const pushUrl = makeUrlSync(() => stateToParams(urlState()));
+
+mountLesson(LESSON, { slug: 'curl-divergence', onJump: applyState });
+
+// A link with parameters opens the playground in that exact configuration.
+const linked = readState(URL_SCHEMA);
+if (Object.keys(linked).length) applyState(linked);
+
+s('copylink').onclick = async () => {
+  const url = `${location.origin}${location.pathname}?${stateToParams(urlState())}`;
+  try { await navigator.clipboard.writeText(url); shell.toast('Link copied', 'Opens this exact view', '🔗'); }
+  catch { shell.toast('Copy failed', url, '🔗'); }
+};

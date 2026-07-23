@@ -5,6 +5,7 @@ import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
 import { mountLesson } from '../../engine/lesson.js';
+import { readState, makeUrlSync, stateToParams } from '../../engine/deep-link.js';
 import { TRACES, TWO_PI, MAX_ANGLE, wrap, valueAt, missBy, solutionsHit, deg, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "unit circle unwrap" ----
@@ -15,6 +16,7 @@ import { TRACES, TWO_PI, MAX_ANGLE, wrap, valueAt, missBy, solutionsHit, deg, LE
 
 const HIT_TOL = 0.02;     // |value − target| that clears the challenge
 const START = 0.35;       // opening angle: away from every solution
+const URL_SCHEMA = { trace: 'string', deg: 'number' };
 
 const cv = document.getElementById('scene');
 const ctx = cv.getContext('2d');
@@ -47,10 +49,11 @@ const traceButtons = buttonGroup('fbtns', TRACES, t => {
   explored.add(t.id);
   if (explored.size === TRACES.length) shell.badge('explorer', 'Circle Rider', 'Unwrapped all three', '🧭');
   render();
+  pushUrl();
 });
 
 const dial = slider('theta', {
-  onInput: d => { setTheta(d * Math.PI / 180); render(); },
+  onInput: d => { setTheta(d * Math.PI / 180); render(); pushUrl(); },
 });
 
 function setTheta(t) {
@@ -62,18 +65,20 @@ function setTheta(t) {
 s('reset').onclick = () => {
   state.theta = START; state.visited = [START];
   dial.set(deg(START)); meter.reset(); render();
+  pushUrl();
 };
 
 ticker('sweep', {
   intervalMs: 26,
   playLabel: '▸ Sweep the angle',
   pauseLabel: '⏸ Pause',
-  onStart: () => { setTheta(0); dial.set(0); render(); },
+  onStart: () => { setTheta(0); dial.set(0); render(); pushUrl(); },
   onTick: () => {
     if (state.theta >= MAX_ANGLE - 1e-9) return false;
     setTheta(state.theta + 0.035);
     dial.set(deg(state.theta));
     render();
+    pushUrl();
   },
 });
 
@@ -97,6 +102,7 @@ function grab(e) {
   if (state.theta - next > Math.PI) next += TWO_PI;
   setTheta(next);
   render();
+  pushUrl();
 }
 
 /** Geometry of the two panes, recomputed each frame so resizing just works. */
@@ -256,22 +262,38 @@ window.addEventListener('resize', render);
 
 mountNav('unit-circle');
 
-mountLesson(LESSON, {
-  slug: 'unit-circle',
-  onJump: st => {
-    if (st.trace) {
-      const t = TRACES.find(x => x.id === st.trace);
-      if (t) {
-        state.trace = t;
-        traceButtons.select(TRACES.indexOf(t), { notify: false });
-        state.visited = [];
-        meter.reset();
-      }
+/** Drive the playground to a described configuration. Shared by lesson jumps,
+ *  shareable URLs, and self-checks — all of which speak the same state object. */
+function applyState(st) {
+  if (st.trace) {
+    const t = TRACES.find(x => x.id === st.trace);
+    if (t) {
+      state.trace = t;
+      traceButtons.select(TRACES.indexOf(t), { notify: false });
+      state.visited = [];
+      meter.reset();
     }
-    if (typeof st.deg === 'number') {
-      setTheta(st.deg * Math.PI / 180);
-      dial.set(st.deg);
-    }
-    render();
-  },
-});
+  }
+  if (typeof st.deg === 'number') {
+    setTheta(st.deg * Math.PI / 180);
+    dial.set(st.deg);
+  }
+  render();
+  pushUrl();
+}
+
+/** A shareable snapshot of the current view (only the URL_SCHEMA keys). */
+const urlState = () => ({ trace: state.trace.id, deg: state.theta * 180 / Math.PI });
+const pushUrl = makeUrlSync(() => stateToParams(urlState()));
+
+mountLesson(LESSON, { slug: 'unit-circle', onJump: applyState });
+
+// A link with parameters opens the playground in that exact configuration.
+const linked = readState(URL_SCHEMA);
+if (Object.keys(linked).length) applyState(linked);
+
+s('copylink').onclick = async () => {
+  const url = `${location.origin}${location.pathname}?${stateToParams(urlState())}`;
+  try { await navigator.clipboard.writeText(url); shell.toast('Link copied', 'Opens this exact view', '🔗'); }
+  catch { shell.toast('Copy failed', url, '🔗'); }
+};
