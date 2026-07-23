@@ -88,26 +88,33 @@ export function mountLesson(lesson, opts = {}) {
 
   function renderSteps(levelId) {
     const steps = lesson.steps.filter(s => s.level === levelId);
-    stepsEl.innerHTML = steps.map((s, i) => `
-      <article class="lesson-step${s.figure ? ' has-fig' : ''}">
-        <div class="lesson-step-n">${i + 1}</div>
-        <div class="lesson-step-main">
-          <h3>${s.title}</h3>
-          <div class="lesson-step-cols">
-            <div>
-              <div class="lesson-step-body">${s.body}</div>
-              ${s.state ? `<button class="action lesson-jump" type="button" data-i="${i}">${s.jump ?? 'Show me on the graph'} →</button>` : ''}
-            </div>
-            ${s.figure ? `<figure class="lesson-fig">${s.figure}</figure>` : ''}
-          </div>
-        </div>
-      </article>`).join('');
+    stepsEl.innerHTML = steps.map((s, i) => s.check ? checkHtml(s, i) : proseHtml(s, i)).join('');
 
     stepsEl.querySelectorAll('.lesson-jump').forEach(btn => {
       btn.addEventListener('click', () => {
         const step = steps[+btn.dataset.i];
         if (step?.state && opts.onJump) opts.onJump(step.state, step);
         toGraph();   // the change happens in the playground, so go look at it
+      });
+    });
+
+    stepsEl.querySelectorAll('.lesson-check').forEach(art => {
+      const step = steps[+art.dataset.i], c = step.check;
+      const why = art.querySelector('.lesson-why');
+      const seeit = art.querySelector('.lesson-seeit');
+      art.querySelectorAll('.lesson-opt').forEach(opt => {
+        opt.addEventListener('click', () => {
+          const o = c.options[+opt.dataset.k];
+          art.querySelectorAll('.lesson-opt').forEach(b => b.classList.remove('right', 'wrong'));
+          opt.classList.add(o.correct ? 'right' : 'wrong');
+          why.innerHTML = o.why ?? '';
+          why.hidden = false;
+          if (seeit) seeit.hidden = false;
+        });
+      });
+      if (seeit) seeit.addEventListener('click', () => {
+        if (opts.onJump) opts.onJump(c.state, step);
+        toGraph();
       });
     });
   }
@@ -138,4 +145,37 @@ export function mountLesson(lesson, opts = {}) {
   setOpen(prefs.open);
 
   return { el, setOpen, showLevel: renderSteps };
+}
+
+function proseHtml(s, i) {
+  return `
+    <article class="lesson-step${s.figure ? ' has-fig' : ''}">
+      <div class="lesson-step-n">${i + 1}</div>
+      <div class="lesson-step-main">
+        <h3>${s.title}</h3>
+        <div class="lesson-step-cols">
+          <div>
+            <div class="lesson-step-body">${s.body}</div>
+            ${s.state ? `<button class="action lesson-jump" type="button" data-i="${i}">${s.jump ?? 'Show me on the graph'} →</button>` : ''}
+          </div>
+          ${s.figure ? `<figure class="lesson-fig">${s.figure}</figure>` : ''}
+        </div>
+      </div>
+    </article>`;
+}
+
+function checkHtml(s, i) {
+  const c = s.check;
+  return `
+    <article class="lesson-step lesson-check" data-i="${i}">
+      <div class="lesson-step-n">?</div>
+      <div class="lesson-step-main">
+        <div class="lesson-check-q">${c.q}</div>
+        <div class="lesson-opts">
+          ${c.options.map((o, k) => `<button class="lesson-opt" type="button" data-k="${k}">${o.text}</button>`).join('')}
+        </div>
+        <div class="lesson-why" hidden></div>
+        ${c.state ? `<button class="action lesson-seeit" type="button" hidden>See it on the graph →</button>` : ''}
+      </div>
+    </article>`;
 }
