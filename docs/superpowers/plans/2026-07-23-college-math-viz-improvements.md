@@ -347,6 +347,10 @@ Mechanical repeat of Task 2's shape. Each playground already has a `mountLesson(
 - `curl-divergence` — `{ field:'string', x:'number', y:'number', r:'number' }`; `urlState = () => ({ field: state.field.id, x: state.x, y: state.y, r: state.r })`.
 - `greens-theorem` — `{ field:'string', x:'number', y:'number', r:'number' }`; `urlState = () => ({ field: state.field.id, x: state.x, y: state.y, r: state.r })`.
 
+- [ ] **Step 0: Backfill gradient**
+
+Add `pushUrl();` to gradient's `snap` and `reset` click handlers (`playgrounds/gradient/playground.js`), so all eleven follow the same "every user handler syncs the URL" rule. Commit alone or fold into the Task-3 commit.
+
 - [ ] **Step 1: Apply the Task-2 transformation to each of the ten files**
 
 For each slug: import the three helpers, add its `URL_SCHEMA` and `urlState()`, convert `onJump` arrow to `function applyState(st)` ending in `pushUrl()`, add `const pushUrl = makeUrlSync(() => stateToParams(urlState()));   // ignores its arg; reads live state`, wire `mountLesson(LESSON, { slug, onJump: applyState })`, add the on-load `readState(URL_SCHEMA)` apply, append `pushUrl()` to each user-initiated control callback (button `onSelect`, slider `onInput`, canvas drag), and add the Copy-link button to a header/panel `.row` with the identical handler from Task 2 Step 3 (swap `urlState`).
