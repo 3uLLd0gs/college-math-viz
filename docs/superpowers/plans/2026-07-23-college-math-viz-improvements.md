@@ -282,7 +282,7 @@ const urlState = () => ({
   x: state.x, y: state.y,
   thetaDeg: (state.theta * 180 / Math.PI) % 360,
 });
-const pushUrl = makeUrlSync(st => stateToParams(st));
+const pushUrl = makeUrlSync(() => stateToParams(urlState()));   // ignores its arg; reads live state
 
 mountLesson(LESSON, { slug: 'gradient', onJump: applyState });
 
@@ -349,7 +349,7 @@ Mechanical repeat of Task 2's shape. Each playground already has a `mountLesson(
 
 - [ ] **Step 1: Apply the Task-2 transformation to each of the ten files**
 
-For each slug: import the three helpers, add its `URL_SCHEMA` and `urlState()`, convert `onJump` arrow to `function applyState(st)` ending in `pushUrl()`, add `const pushUrl = makeUrlSync(st => stateToParams(st));`, wire `mountLesson(LESSON, { slug, onJump: applyState })`, add the on-load `readState(URL_SCHEMA)` apply, append `pushUrl()` to each user-initiated control callback (button `onSelect`, slider `onInput`, canvas drag), and add the Copy-link button to a header/panel `.row` with the identical handler from Task 2 Step 3 (swap `urlState`).
+For each slug: import the three helpers, add its `URL_SCHEMA` and `urlState()`, convert `onJump` arrow to `function applyState(st)` ending in `pushUrl()`, add `const pushUrl = makeUrlSync(() => stateToParams(urlState()));   // ignores its arg; reads live state`, wire `mountLesson(LESSON, { slug, onJump: applyState })`, add the on-load `readState(URL_SCHEMA)` apply, append `pushUrl()` to each user-initiated control callback (button `onSelect`, slider `onInput`, canvas drag), and add the Copy-link button to a header/panel `.row` with the identical handler from Task 2 Step 3 (swap `urlState`).
 
 - [ ] **Step 2: Run the unit suite**
 
