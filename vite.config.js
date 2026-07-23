@@ -13,6 +13,7 @@ export default defineConfig({
         'secant-tangent': resolve(__dirname, 'playgrounds/secant-tangent/index.html'),
         'gradient': resolve(__dirname, 'playgrounds/gradient/index.html'),
         'vector-fields': resolve(__dirname, 'playgrounds/vector-fields/index.html'),
+        'curl-divergence': resolve(__dirname, 'playgrounds/curl-divergence/index.html'),
         'greens-theorem': resolve(__dirname, 'playgrounds/greens-theorem/index.html'),
       },
     },

@@ -75,6 +75,28 @@ export function circulation(field, cx, cy, r, n = 720) {
 }
 
 /**
+ * Outward flux ∮ F · n ds through the circle of radius `r` centred at (cx, cy).
+ *
+ * On the circle the outward normal is just (cos t, sin t) and ds = r dt, so the
+ * integral is ∫ (P cos t + Q sin t) r dt. Midpoint again, for the same reason as
+ * circulation: the integrand is periodic.
+ *
+ * Divided by the enclosed area this is the DEFINITION of divergence in the limit
+ * r → 0, which is what makes it worth computing separately from the partial
+ * derivatives rather than deriving one from the other.
+ */
+export function outwardFlux(field, cx, cy, r, n = 720) {
+  const dt = Math.PI * 2 / n;
+  let sum = 0;
+  for (let i = 0; i < n; i++) {
+    const t = (i + 0.5) * dt;
+    const ct = Math.cos(t), st = Math.sin(t);
+    sum += (field.P(cx + r * ct, cy + r * st) * ct + field.Q(cx + r * ct, cy + r * st) * st) * r * dt;
+  }
+  return sum;
+}
+
+/**
  * ∬ (∂Q/∂x − ∂P/∂y) dA over the same disc — the right-hand side of Green's
  * theorem. Sampled in polar coordinates, where dA = ρ dρ dθ and the disc is a
  * rectangle, so no cells need masking against the boundary.

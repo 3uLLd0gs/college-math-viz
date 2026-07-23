@@ -55,6 +55,12 @@ export const PLAYGROUNDS = [
     blurb: 'Release a particle into a field and follow it. Divergence and curl classify what the flow is doing at every point.',
   },
   {
+    slug: 'curl-divergence', course: 'calc3',
+    title: 'Curl & Divergence',
+    tag: 'Spin and spread, made visible',
+    blurb: 'A paddle wheel that turns at curl/2 and a ring of tracers whose area changes at rate div. Find the one spot where both go completely still.',
+  },
+  {
     slug: 'greens-theorem', course: 'calc3',
     title: "Green's Theorem",
     tag: 'Boundary equals interior',

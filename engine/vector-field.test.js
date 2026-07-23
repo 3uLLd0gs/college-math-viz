@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { rk4Step, streamline, divergenceAt, curlAt, speedAt, circulation, curlFlux } from './vector-field.js';
+import { rk4Step, streamline, divergenceAt, curlAt, speedAt, circulation, curlFlux, outwardFlux } from './vector-field.js';
 
 const uniform = { P: () => 1, Q: () => 0, a: 2 };
 const source = { P: (x) => x, Q: (x, y) => y, a: 2 };
@@ -176,5 +176,76 @@ describe("Green's theorem holds numerically", () => {
         expect(circulation(fd, cx, cy, r)).toBeCloseTo(curlFlux(fd, cx, cy, r), 4);
       });
     });
+  });
+});
+
+describe('outwardFlux, and the definitions of div and curl', () => {
+  const AREA = r => Math.PI * r * r;
+
+  it('a radial source pushes flux out; a sink pulls it in', () => {
+    expect(outwardFlux(source, 0, 0, 1)).toBeGreaterThan(0);
+    expect(outwardFlux({ P: x => -x, Q: (x, y) => -y }, 0, 0, 1)).toBeLessThan(0);
+  });
+
+  it('a rigid rotation pushes no flux through any circle', () => {
+    expect(outwardFlux(rotation, 0.4, -0.9, 1.1)).toBeCloseTo(0, 8);
+  });
+
+  it('a uniform flow pushes nothing net through a closed curve', () => {
+    expect(outwardFlux(uniform, 0.3, 0.2, 0.8)).toBeCloseTo(0, 8);
+  });
+
+  it('flux per unit area IS the divergence, for constant divergence at any radius', () => {
+    for (const r of [0.2, 1, 2.5]) {
+      expect(outwardFlux(source, 0.5, -0.3, r) / AREA(r)).toBeCloseTo(2, 6);
+    }
+  });
+
+  it('circulation per unit area IS the curl, for constant curl at any radius', () => {
+    for (const r of [0.2, 1, 2.5]) {
+      expect(circulation(rotation, -0.6, 0.4, r) / AREA(r)).toBeCloseTo(2, 6);
+    }
+  });
+
+  it('both ratios converge to the pointwise values when div and curl VARY', () => {
+    // F = (x² − y², 2xy): div = 4x, curl = 4y — neither is constant, so the
+    // ratios only match at a point in the limit of a shrinking circle
+    const fd = { P: (x, y) => x * x - y * y, Q: (x, y) => 2 * x * y };
+    const [cx, cy] = [0.7, -0.45];
+    const fluxRatio = r => outwardFlux(fd, cx, cy, r) / AREA(r);
+    const circRatio = r => circulation(fd, cx, cy, r) / AREA(r);
+    expect(fluxRatio(0.01)).toBeCloseTo(divergenceAt(fd, cx, cy), 6);
+    expect(circRatio(0.01)).toBeCloseTo(curlAt(fd, cx, cy), 6);
+    expect(fluxRatio(0.01)).toBeCloseTo(4 * cx, 6);
+    expect(circRatio(0.01)).toBeCloseTo(4 * cy, 6);
+  });
+
+  it('a LINEAR divergence gives the exact value at every radius, not just the limit', () => {
+    // F = (x², 0) has div = 2x. The mean of a linear function over a disc equals
+    // its value at the centre, so flux/area is exact at any r — shrinking the
+    // circle changes nothing. Worth pinning: it is easy to assume the ratio is
+    // only ever approximate.
+    const fd = { P: (x) => x * x, Q: () => 0 };
+    const at = r => outwardFlux(fd, 1, 0, r) / AREA(r);
+    for (const r of [0.02, 0.5, 1.5]) expect(at(r)).toBeCloseTo(2, 8);
+  });
+
+  it('a NONLINEAR divergence only matches in the limit', () => {
+    // F = (x³, 0) has div = 3x². Averaged over a disc of radius r about (c, 0)
+    // that is 3c² + 3r²/4, so the ratio overshoots by a term in r².
+    const fd = { P: (x) => x * x * x, Q: () => 0 };
+    const c = 1;
+    const at = r => outwardFlux(fd, c, 0, r) / AREA(r);
+    const predicted = r => 3 * c * c + 3 * r * r / 4;
+    for (const r of [0.01, 0.4, 1.2]) expect(at(r)).toBeCloseTo(predicted(r), 8);
+    // and the r² term really is what stops a big circle from reporting the point value
+    expect(at(1.2)).not.toBeCloseTo(3 * c * c, 2);
+    expect(Math.abs(at(0.01) - 3 * c * c)).toBeLessThan(Math.abs(at(1.2) - 3 * c * c) / 1000);
+  });
+
+  it('scales with area, not radius, for constant divergence', () => {
+    const f1 = outwardFlux(source, 0, 0, 1);
+    const f2 = outwardFlux(source, 0, 0, 2);
+    expect(f2 / f1).toBeCloseTo(4, 6);
   });
 });

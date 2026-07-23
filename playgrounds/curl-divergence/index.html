@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Curl &amp; Divergence · Spin and Spread, Made Visible</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  @import url("../../engine/chrome.css");
+  :root{
+    --graph-min:470px;
+    --graph-min-sm:370px;
+    --graph-max:76vh;
+    --panel-gap:14px;
+    --readout-max:460px;
+    --fbtn-cols:2;
+    --fbtn-size:12px;
+    --goal-size:13px;
+  }
+  #field{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair}
+  .readout .dv{color:var(--true);font-weight:700}
+  .readout .cl{color:var(--gold);font-weight:700}
+  .slabel{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;color:var(--muted);margin-bottom:7px}
+  .slabel b{color:var(--ink);font-family:"Fraunces",serif;font-weight:700;font-size:15px}
+  .facts{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .fact{background:#080b12;border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .fact .k{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .fact .v{font-family:"Fraunces",serif;font-weight:700;font-size:17px;margin-top:2px}
+  .fact.dv .v{color:var(--true)}
+  .fact.cl .v{color:var(--gold)}
+  .defn{background:#080b12;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .defn .k{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .defn .r{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted)}
+  .defn .r + .r{margin-top:4px}
+  .defn .r b{color:var(--ink);font-weight:500}
+  .note{font-size:11.5px;color:var(--muted);line-height:1.55}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div class="toast-wrap" id="toasts"></div>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="kicker">Math · Visual Studio</div>
+      <h1>Curl <em>&amp; Divergence</em></h1>
+    </div>
+    <div class="scoreboard">
+      <div class="chip pts"><div class="lab">Points</div><div class="val" id="s-pts">0</div></div>
+      <div class="chip streak"><div class="lab">Streak</div><div class="val" id="s-streak">0</div></div>
+      <div class="chip"><div class="lab">Badges</div><div class="val" id="s-badges">0</div></div>
+    </div>
+  </header>
+  <div class="studio">
+    <div class="card graph-card">
+      <canvas id="field"></canvas>
+      <div class="graph-tag">drag the probe · the wheel spins at curl/2, the ring rides the flow</div>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--gold)"></i> paddle wheel · curl</span>
+        <span><i class="swatch" style="background:var(--approx)"></i> tracer ring · divergence</span>
+      </div>
+      <div class="readout" id="readout"></div>
+    </div>
+    <div class="card panel">
+      <div>
+        <div class="sect-lab">Field F(x, y)</div>
+        <div class="fbtns" id="fbtns"></div>
+      </div>
+      <div class="facts">
+        <div class="fact dv"><div class="k">div F · spread</div><div class="v" id="div-val">—</div></div>
+        <div class="fact cl"><div class="k">curl F · spin</div><div class="v" id="curl-val">—</div></div>
+      </div>
+      <div class="defn">
+        <div class="k">where those numbers come from</div>
+        <div class="r"><span>flux out ÷ area</span><b id="flux-val">—</b></div>
+        <div class="r"><span>circulation ÷ area</span><b id="circ-val">—</b></div>
+        <div class="r"><span>wheel rate = curl / 2</span><b id="omega-val">—</b></div>
+        <div class="r"><span>ring area now</span><b id="grow-val">—</b></div>
+      </div>
+      <div>
+        <div class="slabel"><span>test circle radius</span> <b id="rad-val">—</b></div>
+        <input type="range" class="mint" id="radius" min="0.08" max="0.7" value="0.32" step="0.01" aria-label="Radius of the test circle">
+      </div>
+      <div class="note" id="note"></div>
+      <div class="challenge">
+        <div class="lab">◆ Stillness challenge</div>
+        <div class="goal" id="c-goal"></div>
+        <div class="cmeter"><span>worst of the two <b id="c-val">—</b></span><span>target <b id="c-tol">—</b></span></div>
+        <div class="cbar"><i id="c-bar"></i></div>
+        <div class="cstate" id="c-state">Watch both readouts — one of them is still non-zero.</div>
+      </div>
+      <button class="action" id="reset">Reset probe</button>
+    </div>
+  </div>
+</div>
+<script type="module" src="./playground.js"></script>
+</body>
+</html>
