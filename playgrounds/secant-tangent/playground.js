@@ -5,7 +5,8 @@ import { createConfetti } from '../../engine/confetti.js';
 import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
 import { challengeMeter, logProgress } from '../../engine/challenge-meter.js';
-import { FUNCTIONS, secantSlope, slopeError, clampProbe, clampStep } from './content.js';
+import { mountLesson } from '../../engine/lesson.js';
+import { FUNCTIONS, secantSlope, slopeError, clampProbe, clampStep, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "secant → tangent" ---- */
 
@@ -39,7 +40,7 @@ const meter = challengeMeter({
 const h = () => Math.pow(10, state.logH);
 const fmtH = v => (v >= 0.01 ? v.toFixed(3) : v.toExponential(1));
 
-buttonGroup('fbtns', FUNCTIONS, fn => {
+const fnButtons = buttonGroup('fbtns', FUNCTIONS, fn => {
   state.fn = fn;
   state.x0 = fn.probe;
   state.logH = LOG_H_MAX;
@@ -180,3 +181,25 @@ function drawInset(fn, x0, mTan) {
 render();
 
 mountNav('secant-tangent');
+
+mountLesson(LESSON, {
+  slug: 'secant-tangent',
+  onJump: st => {
+    if (st.fn) {
+      const fn = FUNCTIONS.find(f => f.id === st.fn);
+      if (fn) {
+        state.fn = fn;
+        fnButtons.select(FUNCTIONS.indexOf(fn), { notify: false });
+        g.setView(fn.view);
+        state.x0 = fn.probe;
+      }
+    }
+    if (typeof st.x0 === 'number') state.x0 = clampProbe(state.fn, st.x0);
+    if (typeof st.h === 'number') {
+      state.logH = Math.max(LOG_H_MIN, Math.min(LOG_H_MAX, Math.log10(st.h)));
+      hSlider.set(state.logH);
+    }
+    meter.reset();
+    render();
+  },
+});

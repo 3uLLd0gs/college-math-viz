@@ -5,7 +5,8 @@ import { createConfetti } from '../../engine/confetti.js';
 import { getCSS, fmtAxis as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
 import { challengeMeter, logProgress } from '../../engine/challenge-meter.js';
-import { FUNCTIONS, polyAt, formula } from './content.js';
+import { mountLesson } from '../../engine/lesson.js';
+import { FUNCTIONS, polyAt, formula, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "Taylor series" ---- */
 const MAX_TERMS = 14;   // must match the #terms slider max in index.html
@@ -31,7 +32,7 @@ const meter = challengeMeter({
 });
 g.setView(state.fn.view);
 
-buttonGroup('fbtns', FUNCTIONS, fn => selectFn(fn));
+const fnButtons = buttonGroup('fbtns', FUNCTIONS, fn => selectFn(fn));
 
 const nLab = document.getElementById('n-lab');
 
@@ -119,3 +120,22 @@ function render() {
 render();
 
 mountNav('taylor-series');
+
+mountLesson(LESSON, {
+  slug: 'taylor-series',
+  onJump: st => {
+    if (st.fn) {
+      const fn = FUNCTIONS.find(f => f.id === st.fn);
+      if (fn) {
+        state.fn = fn;
+        fnButtons.select(FUNCTIONS.indexOf(fn), { notify: false });
+        g.setView(fn.view);
+        state.probe = fn.challenge.x0;
+      }
+    }
+    if (typeof st.N === 'number') { state.N = st.N; terms.set(st.N); }
+    if (typeof st.probe === 'number') state.probe = st.probe;
+    meter.reset();
+    render();
+  },
+});

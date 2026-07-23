@@ -5,7 +5,8 @@ import { createConfetti } from '../../engine/confetti.js';
 import { getCSS, fmtAxis as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
-import { INTEGRANDS, RULES, riemannSum, rectangles } from './content.js';
+import { mountLesson } from '../../engine/lesson.js';
+import { INTEGRANDS, RULES, riemannSum, rectangles, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "Riemann sums" ---- */
 const MAX_N = 80;   // must match the #n slider max in index.html
@@ -34,7 +35,7 @@ g.setView(state.fn.view);
 const explored = new Set(['square']);
 const usedRules = new Set(['left']);
 
-buttonGroup('fbtns', INTEGRANDS, fn => {
+const fnButtons = buttonGroup('fbtns', INTEGRANDS, fn => {
   state.fn = fn; meter.reset();
   g.setView(fn.view);
   shell.award(`explore:${fn.id}`, 5);
@@ -42,7 +43,7 @@ buttonGroup('fbtns', INTEGRANDS, fn => {
   render();
 });
 
-buttonGroup('rules', RULES, rule => {
+const ruleButtons = buttonGroup('rules', RULES, rule => {
   state.rule = rule; meter.reset();
   usedRules.add(rule.id);
   if (usedRules.size === RULES.length) shell.badge('rules', 'Rule Breaker', 'Tried every sampling rule', '📐');
@@ -112,3 +113,20 @@ function render() {
 render();
 
 mountNav('riemann-sums');
+
+mountLesson(LESSON, {
+  slug: 'riemann-sums',
+  onJump: st => {
+    if (st.fn) {
+      const fn = INTEGRANDS.find(f => f.id === st.fn);
+      if (fn) { state.fn = fn; fnButtons.select(INTEGRANDS.indexOf(fn), { notify: false }); g.setView(fn.view); }
+    }
+    if (st.rule) {
+      const r = RULES.find(x => x.id === st.rule);
+      if (r) { state.rule = r; ruleButtons.select(RULES.indexOf(r), { notify: false }); }
+    }
+    if (typeof st.n === 'number') { state.n = st.n; nSlider.set(st.n); }
+    meter.reset();
+    render();
+  },
+});

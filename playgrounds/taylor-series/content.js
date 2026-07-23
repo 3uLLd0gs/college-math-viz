@@ -54,3 +54,84 @@ export function formula(fn, N) {
   return parts.join('') + (moreTerms(fn, N) ? ' <span class="dots">+ …</span>' : '');
 }
 function moreTerms(fn, N) { let c = 0; for (let n = 0; n <= N; n++) if (fn.term(n)) c++; return c > 7; }
+
+/* ---- LESSON: the teaching layer ---- */
+export const LESSON = {
+  title: 'Turning a curve into a polynomial you can actually compute',
+  intro: `Your calculator cannot "do" <code>sin</code> or <code>eˣ</code> directly — it has adders and
+    multipliers and nothing else. A <b>Taylor series</b> is the bridge: it rebuilds a curve out of
+    powers of x, using nothing but the function's derivatives <em>at a single point</em>. Add terms
+    and the polynomial grips the curve over a wider and wider stretch.`,
+  steps: [
+    { level: 'intro', title: 'One term is a horizontal line',
+      body: `At <code>N = 0</code> the polynomial is just <code>f(0)</code> — a flat line at the
+        function's height at the origin. It is right at exactly one point and wrong everywhere else.
+        That is the honest starting position.`,
+      state: { fn: 'exp', N: 0, probe: 1.5 }, jump: 'Show me N = 0' },
+
+    { level: 'intro', title: 'Two terms is the tangent line',
+      body: `Adding <code>f′(0)·x</code> gives the polynomial the right <em>slope</em> at the origin as
+        well as the right height. That is precisely the tangent line — so the first Taylor polynomial
+        is an idea you already met in Calculus 1 under another name.`,
+      state: { fn: 'exp', N: 1, probe: 1.5 }, jump: 'Show me the tangent' },
+
+    { level: 'use', title: 'Each new term fixes one more derivative',
+      body: `The <code>xⁿ/n!</code> term is built so the polynomial's <b>n-th derivative</b> matches the
+        function's at the origin, without disturbing any of the lower ones. That is what the factorial
+        is doing — it cancels the n! that <code>d ⁿ/dxⁿ</code> drops on <code>xⁿ</code>.`,
+      state: { fn: 'exp', N: 5, probe: 2 }, jump: 'Stack five terms' },
+
+    { level: 'use', title: 'Accuracy is local, and it spreads',
+      body: `Drag the probe outward and watch the error grow. The approximation is always best near
+        the centre and decays away from it — but every extra term pushes the region where it is
+        usable further out. Watch the red error bar shrink as N climbs.`,
+      state: { fn: 'sin', N: 7, probe: 4 }, jump: 'Probe far from centre' },
+
+    { level: 'advanced', title: 'Some series simply stop working',
+      body: `<code>1/(1−x)</code> has a wall at <code>x = 1</code>. Its series <code>1 + x + x² + …</code>
+        converges only for <code>|x| < 1</code> — that is the <b>radius of convergence</b>. Add a
+        hundred terms and it still tells you nothing past the wall. <code>ln(1+x)</code> is the same
+        story, which is why it needs so many terms to reach even modest accuracy.`,
+      state: { fn: 'geo', N: 14, probe: 0.9 }, jump: 'Push against the wall' },
+
+    { level: 'real', title: 'How your calculator finds sin(37°)',
+      body: `It does not look anything up. It reduces the angle into a small range using symmetry, then
+        evaluates a short polynomial — Taylor's, or a close relative tuned to spread the error more
+        evenly. Five or six terms buy full display precision, and every one of them is a multiply and
+        an add. The same trick computes <code>exp</code>, <code>log</code> and square roots inside
+        every language's standard library.`,
+      figure: `<svg viewBox="0 0 260 130" role="img" aria-label="A short polynomial evaluated by repeated multiply and add">
+  <rect x="14" y="18" width="232" height="46" rx="8" fill="none" stroke="#7e98c4" stroke-opacity=".4"/>
+  <text x="130" y="46" fill="#3df2c0" font-family="JetBrains Mono, monospace" font-size="11" text-anchor="middle">x − x³/6 + x⁵/120 − x⁷/5040</text>
+  <g stroke="#ffb454" stroke-width="1.6" fill="#ffb454">
+    <path d="M50 70 v14"/><path d="M50 86 l-3 -6 h6 z"/>
+    <path d="M130 70 v14"/><path d="M130 86 l-3 -6 h6 z"/>
+    <path d="M210 70 v14"/><path d="M210 86 l-3 -6 h6 z"/>
+  </g>
+  <g font-family="JetBrains Mono, monospace" font-size="9" fill="#8b95ab" text-anchor="middle">
+    <text x="50" y="100">×</text><text x="130" y="100">×</text><text x="210" y="100">+</text>
+    <text x="130" y="120" fill="#ffd76a">4 multiplies, 3 adds — that is the whole of sin</text>
+  </g>
+</svg>`,
+      state: { fn: 'sin', N: 7, probe: 0.65 }, jump: 'Show me sin to 7 terms' },
+
+    { level: 'real', title: 'Why physics keeps saying "for small angles"',
+      body: `A pendulum's equation involves <code>sin θ</code>, which has no clean solution. Keep only the
+        first Taylor term — <code>sin θ ≈ θ</code> — and it becomes the simple harmonic oscillator every
+        textbook solves. That single truncation is where "for small oscillations" comes from, and it is
+        why a grandfather clock keeps time but a wildly swinging one does not.`,
+      figure: `<svg viewBox="0 0 260 130" role="img" aria-label="sin theta and the line theta agreeing for small angles and parting for large ones">
+  <path d="M20 100 H240" stroke="#7e98c4" stroke-opacity=".35"/>
+  <path d="M20 100 L240 12" stroke="#3df2c0" stroke-width="2" fill="none"/>
+  <path d="M20 100 Q120 24 240 60" stroke="#ffb454" stroke-width="2" fill="none"/>
+  <rect x="20" y="72" width="58" height="28" fill="#3df2c0" fill-opacity=".10"/>
+  <g font-family="JetBrains Mono, monospace" font-size="9" fill="#8b95ab">
+    <text x="48" y="118" text-anchor="middle">small θ</text>
+    <text x="212" y="112" fill="#ff5d73" text-anchor="middle">they part</text>
+    <text x="238" y="22" fill="#3df2c0" text-anchor="end">θ</text>
+    <text x="238" y="72" fill="#ffb454" text-anchor="end">sin θ</text>
+  </g>
+</svg>`,
+      state: { fn: 'sin', N: 1, probe: 0.4 }, jump: 'Show me sin θ ≈ θ' },
+  ],
+};
