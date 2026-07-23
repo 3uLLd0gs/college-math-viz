@@ -13,6 +13,12 @@ export const COURSES = [
 
 export const PLAYGROUNDS = [
   {
+    slug: 'secant-tangent', course: 'calc1',
+    title: 'Secant → Tangent',
+    tag: 'The derivative, defined',
+    blurb: 'Shrink the step h and watch a secant line through two points collapse onto the tangent. The difference quotient becoming f′(x₀), live.',
+  },
+  {
     slug: 'riemann-sums', course: 'calc1',
     title: 'Riemann Sums',
     tag: 'Area converges to the integral',
