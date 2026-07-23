@@ -5,7 +5,8 @@ import { createConfetti } from '../../engine/confetti.js';
 import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
-import { SURFACES, sliceStart, probeStart } from './content.js';
+import { mountLesson } from '../../engine/lesson.js';
+import { SURFACES, sliceStart, probeStart, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "partial derivatives" ---- */
 const eng = new Surface3D(document.getElementById('scene'));
@@ -27,7 +28,7 @@ const meter = challengeMeter({
 function point() { return state.axis === 'x' ? { x0: state.probe, y0: state.slice } : { x0: state.slice, y0: state.probe }; }
 function partial(x0, y0) { return state.axis === 'x' ? state.surf.fx(x0, y0) : state.surf.fy(x0, y0); }
 
-buttonGroup('fbtns', SURFACES, sf => pickSurface(sf));
+const surfButtons = buttonGroup('fbtns', SURFACES, sf => pickSurface(sf));
 
 const sliceSlider = slider('slice', { onInput: v => { state.slice = v; eng.schedule(); } });
 const probeSlider = slider('probe', { onInput: v => { state.probe = v; eng.schedule(); } });
@@ -126,3 +127,24 @@ function updatePanel(sf, x0, y0, m) {
 eng.setSurface(state.surf); setSliderRanges(state.surf); setAxis('x'); eng.schedule();
 
 mountNav('partial-derivatives');
+
+mountLesson(LESSON, {
+  slug: 'partial-derivatives',
+  onJump: st => {
+    if (st.surf) {
+      const sf = SURFACES.find(x => x.id === st.surf);
+      if (sf) {
+        state.surf = sf;
+        surfButtons.select(SURFACES.indexOf(sf), { notify: false });
+        eng.setSurface(sf);
+        setSliderRanges(sf);
+        state.slice = sliceStart(sf); state.probe = probeStart(sf);
+      }
+    }
+    if (st.axis) setAxis(st.axis);
+    if (typeof st.slice === 'number') { state.slice = st.slice; sliceSlider.set(st.slice); }
+    if (typeof st.probe === 'number') { state.probe = st.probe; probeSlider.set(st.probe); }
+    meter.reset();
+    eng.schedule();
+  },
+});

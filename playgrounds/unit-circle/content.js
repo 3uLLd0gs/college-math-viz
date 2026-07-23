@@ -69,3 +69,75 @@ export const solutionsHit = (trace, angles, tol = 0.06) =>
 
 /** Degrees, for the readout — students meet the circle in degrees first. */
 export const deg = rad => rad * 180 / Math.PI;
+
+/* ---- LESSON: the teaching layer ---- */
+export const LESSON = {
+  title: 'Where the sine wave actually comes from',
+  intro: `Sine is not a squiggle someone drew. It is a <b>coordinate</b>. Put a point on a circle of
+    radius 1, walk it round, and record how high it is at each angle — that record, unrolled along a
+    line, is the sine curve. Every property it has, including the repeating, is a fact about walking
+    in circles.`,
+  steps: [
+    { level: 'intro', title: 'The angle is a distance, not a corner',
+      body: `Turning by θ moves the point a distance θ <em>along the arc</em>, because the radius is 1.
+        That is what radians are, and why <code>2π</code> is once round. Degrees are a human convention
+        laid on top.`,
+      state: { trace: 'sin', deg: 60 }, jump: 'Put me at 60°' },
+
+    { level: 'intro', title: 'Height becomes the curve',
+      body: `The mint bar is the point's height. Carry it straight across — that dashed line — and drop
+        it at the matching angle on the right. Do that for every angle and you have drawn sine. The two
+        pictures share one vertical scale, so the bar and the curve height are literally the same
+        length.`,
+      state: { trace: 'sin', deg: 90 }, jump: 'Take me to the top' },
+
+    { level: 'use', title: 'Cosine is the same walk, measured sideways',
+      body: `Nothing changes about the circle. You read the <b>width</b> instead of the height, and out
+        comes a curve that is sine shifted by a quarter turn. That shift is not a coincidence — it is
+        the angle between the two axes.`,
+      state: { trace: 'cos', deg: 60 }, jump: 'Read the width instead' },
+
+    { level: 'use', title: 'Going round again repeats everything',
+      body: `Past 360° the point retraces its own path, so the heights repeat exactly. That is
+        <b>periodicity</b>, and it is why <code>sin θ = ½</code> has infinitely many answers spaced
+        <code>2π</code> apart. Sweep past one turn and watch the curve copy itself.`,
+      state: { trace: 'sin', deg: 430 }, jump: 'Sweep past one full turn' },
+
+    { level: 'advanced', title: 'Tangent is a slope, so it can blow up',
+      body: `<code>tan θ = sin θ / cos θ</code> — the slope of the radius. At 90° the width is zero and
+        the slope is vertical: undefined, not merely large. The curve runs off to infinity on both
+        sides of that angle, which is why tangent has asymptotes and sine never does.`,
+      state: { trace: 'tan', deg: 88 }, jump: 'Walk up to the asymptote' },
+
+    { level: 'real', title: 'Alternating current is a rotating magnet',
+      body: `Mains electricity is a sine wave because a generator is a coil spinning in a magnetic
+        field — the voltage <em>is</em> the height of a rotating point. 50 or 60 Hz is how many turns
+        per second. Three-phase power is three of these points spaced 120° apart on the same circle,
+        which is why the phases sum to zero and the return wire can be thin.`,
+      figure: `<svg viewBox="0 0 260 132" role="img" aria-label="Three points spaced round a circle producing three offset sine waves">
+  <circle cx="52" cy="66" r="34" fill="none" stroke="#7e98c4" stroke-opacity=".45"/>
+  <g stroke-width="2" stroke-linecap="round">
+    <path d="M52 66 L82 49" stroke="#3df2c0"/><path d="M52 66 L44 100" stroke="#ffb454"/><path d="M52 66 L30 39" stroke="#ff5d73"/>
+  </g>
+  <path d="M104 66 H250" stroke="#7e98c4" stroke-opacity=".35"/>
+  <path d="M104 49 Q127 12 150 49 Q173 86 196 49 Q219 12 242 49" fill="none" stroke="#3df2c0" stroke-width="1.8"/>
+  <path d="M104 83 Q127 46 150 83 Q173 120 196 83 Q219 46 242 83" fill="none" stroke="#ffb454" stroke-width="1.8"/>
+  <path d="M104 66 Q127 103 150 66 Q173 29 196 66 Q219 103 242 66" fill="none" stroke="#ff5d73" stroke-width="1.8"/>
+  <text x="176" y="128" fill="#8b95ab" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">three phases, 120° apart</text>
+</svg>`,
+      state: { trace: 'sin', deg: 120 }, jump: 'Show me a phase offset' },
+
+    { level: 'real', title: 'Sound, and why a tuning fork is a circle',
+      body: `A pure tone is a sine wave in air pressure. Middle A is 440 turns of that circle per
+        second. Every richer sound — a violin, a voice — is a sum of these, which is the whole content
+        of <b>Fourier analysis</b>: any repeating signal is a stack of rotating points at different
+        speeds. Audio codecs, image compression and radio all run on that one idea.`,
+      figure: `<svg viewBox="0 0 260 132" role="img" aria-label="A pure tone and a richer wave built from summed harmonics">
+  <path d="M14 42 Q34 14 54 42 Q74 70 94 42 Q114 14 134 42 Q154 70 174 42 Q194 14 214 42 Q234 70 248 48" fill="none" stroke="#3df2c0" stroke-width="1.8"/>
+  <text x="14" y="20" fill="#3df2c0" font-family="JetBrains Mono, monospace" font-size="9">pure tone</text>
+  <path d="M14 100 q10 -26 20 0 q10 26 20 -14 q10 -22 20 12 q10 24 20 -18 q10 -20 20 14 q10 22 20 -10 q10 -24 20 12 q10 20 20 -6 q10 -18 20 8 q10 16 20 -4 q10 -14 14 6" fill="none" stroke="#ffb454" stroke-width="1.8"/>
+  <text x="14" y="128" fill="#ffb454" font-family="JetBrains Mono, monospace" font-size="9">a violin: many circles at once</text>
+</svg>`,
+      state: { trace: 'sin', deg: 720 }, jump: 'Show me two full cycles' },
+  ],
+};

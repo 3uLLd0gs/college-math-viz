@@ -5,7 +5,8 @@ import { createConfetti } from '../../engine/confetti.js';
 import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
-import { REGIONS, AXES, methodReason, isExactAtAnyN } from './content.js';
+import { mountLesson } from '../../engine/lesson.js';
+import { REGIONS, AXES, methodReason, isExactAtAnyN, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "solids of revolution" ---- */
 
@@ -40,7 +41,7 @@ function useRegion() {
   meter.reset();
 }
 
-buttonGroup('fbtns', REGIONS, r => {
+const regionButtons = buttonGroup('fbtns', REGIONS, r => {
   state.region = r;
   useRegion();
   shell.award(`explore:${r.id}`, 5);
@@ -49,7 +50,7 @@ buttonGroup('fbtns', REGIONS, r => {
   render();
 });
 
-buttonGroup('axes', AXES, ax => {
+const axisButtons = buttonGroup('axes', AXES, ax => {
   state.axis = ax.id;
   useRegion();
   render();
@@ -119,3 +120,20 @@ function render() {
 render();
 
 mountNav('solids-of-revolution');
+
+mountLesson(LESSON, {
+  slug: 'solids-of-revolution',
+  onJump: st => {
+    if (st.region) {
+      const r = REGIONS.find(x => x.id === st.region);
+      if (r) { state.region = r; regionButtons.select(REGIONS.indexOf(r), { notify: false }); }
+    }
+    if (st.axis) {
+      const i = AXES.findIndex(a => a.id === st.axis);
+      if (i >= 0) { state.axis = st.axis; axisButtons.select(i, { notify: false }); }
+    }
+    useRegion();
+    if (typeof st.n === 'number') { state.n = st.n; nSlider.set(st.n); }
+    render();
+  },
+});

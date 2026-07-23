@@ -4,7 +4,8 @@ import { createConfetti } from '../../engine/confetti.js';
 import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
-import { TRACES, TWO_PI, MAX_ANGLE, wrap, valueAt, missBy, solutionsHit, deg } from './content.js';
+import { mountLesson } from '../../engine/lesson.js';
+import { TRACES, TWO_PI, MAX_ANGLE, wrap, valueAt, missBy, solutionsHit, deg, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "unit circle unwrap" ----
    The circle and the wave share ONE canvas and, crucially, ONE vertical scale:
@@ -36,7 +37,7 @@ const meter = challengeMeter({
   },
 });
 
-buttonGroup('fbtns', TRACES, t => {
+const traceButtons = buttonGroup('fbtns', TRACES, t => {
   state.trace = t;
   state.theta = START;
   state.visited = [START];
@@ -254,3 +255,23 @@ render();
 window.addEventListener('resize', render);
 
 mountNav('unit-circle');
+
+mountLesson(LESSON, {
+  slug: 'unit-circle',
+  onJump: st => {
+    if (st.trace) {
+      const t = TRACES.find(x => x.id === st.trace);
+      if (t) {
+        state.trace = t;
+        traceButtons.select(TRACES.indexOf(t), { notify: false });
+        state.visited = [];
+        meter.reset();
+      }
+    }
+    if (typeof st.deg === 'number') {
+      setTheta(st.deg * Math.PI / 180);
+      dial.set(st.deg);
+    }
+    render();
+  },
+});
