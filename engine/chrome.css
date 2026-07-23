@@ -23,7 +23,12 @@
 @import url("./tokens.css");
 
 *{box-sizing:border-box}
-html,body{height:100%}
+/* Only html gets height:100%. Giving it to BODY as well pins the body box to the
+   viewport, so any content taller than the screen overflows it — and padding-bottom
+   then lands at the viewport boundary instead of below the content, which silently
+   does nothing on every page long enough to scroll. min-height below is what
+   actually keeps a short page full-height. */
+html{height:100%}
 body{
   margin:0;
   font-family:"JetBrains Mono",ui-monospace,monospace;
