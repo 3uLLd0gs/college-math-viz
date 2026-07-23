@@ -31,6 +31,12 @@ export const PLAYGROUNDS = [
     blurb: 'Add one term at a time and watch each polynomial grip the function tighter. Drag anywhere to probe the error.',
   },
   {
+    slug: 'solids-of-revolution', course: 'calc2',
+    title: 'Solids of Revolution',
+    tag: 'Disks, washers and shells',
+    blurb: 'Spin a plane region into a 3-D solid and stack the slices that measure its volume. The axis you revolve about decides whether you need disks, washers or shells.',
+  },
+  {
     slug: 'partial-derivatives', course: 'calc3',
     title: 'Partial Derivatives',
     tag: 'Slice a surface, read the slope',

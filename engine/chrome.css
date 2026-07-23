@@ -7,6 +7,7 @@
    Tunable per playground:
      --graph-min       height of the canvas card            (default 440px)
      --graph-min-sm    ...below the 840px breakpoint        (default 340px)
+     --graph-max       cap on the canvas card height         (default none)
      --panel-gap       vertical gap between panel sections  (default 18px)
      --readout-max     max width of the canvas readout      (default 360px)
      --fbtn-cols       columns in the function-button grid  (default 3)
@@ -76,7 +77,7 @@ h1 em{font-style:italic;color:var(--true)}
 /* ---- layout ---- */
 .studio{display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:stretch}
 .card{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
-.graph-card{position:relative;overflow:hidden;min-height:var(--graph-min,440px)}
+.graph-card{position:relative;overflow:hidden;min-height:var(--graph-min,440px);max-height:var(--graph-max,none)}
 .panel{padding:18px;display:flex;flex-direction:column;gap:var(--panel-gap,18px)}
 
 /* ---- canvas overlays ---- */

@@ -1,14 +1,16 @@
 import { getCSS } from './dom.js';
 import { vsub, vcross, vdot, vnorm } from './math.js';
+import { OrbitCamera } from './orbit-camera.js';
 
 export class Surface3D {
   constructor(canvas) {
     this.cv = canvas;
     this.ctx = canvas.getContext('2d');
-    this.az = -0.75; this.el = 0.52; this.dist = 7; this.N = 38;
+    this.cam = new OrbitCamera({ az: -0.75, el: 0.52, dist: 7 });
+    this.N = 38;
     this._resize();
     new ResizeObserver(() => { this._resize(); this.schedule(); }).observe(canvas.parentElement);
-    this._bindCamera();
+    this.cam.bindTo(canvas, () => this.schedule());
   }
 
   _resize() {
@@ -19,13 +21,13 @@ export class Surface3D {
     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
   }
 
-  camPos() {
-    return [
-      this.dist * Math.cos(this.el) * Math.cos(this.az),
-      this.dist * Math.cos(this.el) * Math.sin(this.az),
-      this.dist * Math.sin(this.el),
-    ];
-  }
+  camPos() { return this.cam.position(); }
+
+  /* The playground reads and writes camera angles directly; keep that surface
+     working now that the state lives on the camera object. */
+  get az() { return this.cam.az; }   set az(v) { this.cam.az = v; }
+  get el() { return this.cam.el; }   set el(v) { this.cam.el = v; }
+  get dist() { return this.cam.dist; } set dist(v) { this.cam.dist = v; }
 
   setSurface(surf) {
     this.s = surf; const a = surf.a, N = this.N; this.a = a;
@@ -52,20 +54,7 @@ export class Surface3D {
   wz(x, y, z) { return [x * this.hScale, y * this.hScale, (z - this.zMid) * this.vScale]; }
   w(x, y) { return this.wz(x, y, this.s.f(x, y)); }
 
-  _basis() {
-    const C = this.camPos(), f = vnorm(vsub([0, 0, 0], C));
-    const r = vnorm(vcross(f, [0, 0, 1])), u = vcross(r, f);
-    const focal = (Math.min(this.W, this.H) / 2) / Math.tan(0.3927);
-    return { C, f, r, u, focal };
-  }
-
-  projector() {
-    const { C, f, r, u, focal } = this._basis(); const W = this.W, H = this.H;
-    return P => {
-      const d = vsub(P, C); const vz = vdot(d, f);
-      return { x: W / 2 + focal * vdot(d, r) / vz, y: H / 2 - focal * vdot(d, u) / vz, z: vz, ok: vz > 0.05 };
-    };
-  }
+  projector() { return this.cam.projector(this.W, this.H); }
 
   _color(t) {
     t = Math.max(0, Math.min(1, t));
@@ -127,32 +116,5 @@ export class Surface3D {
   schedule() {
     if (this._raf) return;
     this._raf = requestAnimationFrame(() => { this._raf = null; this.onrender && this.onrender(); });
-  }
-
-  _bindCamera() {
-    const el = this.cv; const pts = new Map(); let mode = null, last = null, pinch0 = 0, dist0 = 0;
-    el.addEventListener('pointerdown', e => {
-      el.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]);
-      if (pts.size === 1) { mode = 'orbit'; last = [e.clientX, e.clientY]; }
-      else if (pts.size === 2) { mode = 'pinch'; const v = [...pts.values()]; pinch0 = Math.hypot(v[0][0] - v[1][0], v[0][1] - v[1][1]); dist0 = this.dist; }
-    });
-    el.addEventListener('pointermove', e => {
-      if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, [e.clientX, e.clientY]);
-      if (mode === 'orbit' && pts.size === 1) {
-        const dx = e.clientX - last[0], dy = e.clientY - last[1]; last = [e.clientX, e.clientY];
-        this.az -= dx * 0.008; this.el = Math.max(0.08, Math.min(1.45, this.el + dy * 0.006)); this.schedule();
-      } else if (mode === 'pinch' && pts.size === 2) {
-        const v = [...pts.values()]; const d = Math.hypot(v[0][0] - v[1][0], v[0][1] - v[1][1]);
-        this.dist = Math.max(3.5, Math.min(16, dist0 * pinch0 / Math.max(d, 1))); this.schedule();
-      }
-    });
-    const end = e => {
-      pts.delete(e.pointerId); if (pts.size === 0) mode = null;
-      if (pts.size === 1) { mode = 'orbit'; last = [...pts.values()][0]; }
-    };
-    el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
-    el.addEventListener('wheel', e => {
-      e.preventDefault(); this.dist = Math.max(3.5, Math.min(16, this.dist * (1 + Math.sign(e.deltaY) * 0.08))); this.schedule();
-    }, { passive: false });
   }
 }

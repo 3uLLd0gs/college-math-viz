@@ -7,6 +7,7 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         'taylor-series': resolve(__dirname, 'playgrounds/taylor-series/index.html'),
+        'solids-of-revolution': resolve(__dirname, 'playgrounds/solids-of-revolution/index.html'),
         'partial-derivatives': resolve(__dirname, 'playgrounds/partial-derivatives/index.html'),
         'riemann-sums': resolve(__dirname, 'playgrounds/riemann-sums/index.html'),
         'secant-tangent': resolve(__dirname, 'playgrounds/secant-tangent/index.html'),
