@@ -26,6 +26,12 @@ export const PLAYGROUNDS = [
     blurb: 'Shrink the step h and watch a secant line through two points collapse onto the tangent. The difference quotient becoming f′(x₀), live.',
   },
   {
+    slug: 'related-rates', course: 'calc1',
+    title: 'Related Rates',
+    tag: 'One rate drives another',
+    blurb: 'A ladder slips, a balloon inflates, a tank fills. You set one rate; geometry decides the other, and it rarely holds still. Let time run and watch them diverge.',
+  },
+  {
     slug: 'riemann-sums', course: 'calc1',
     title: 'Riemann Sums',
     tag: 'Area converges to the integral',

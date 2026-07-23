@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Related Rates · One Rate Drives Another</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  @import url("../../engine/chrome.css");
+  :root{
+    --graph-min:460px;
+    --graph-min-sm:360px;
+    --graph-max:74vh;
+    --panel-gap:14px;
+    --readout-max:520px;
+    --fbtn-cols:3;
+    --fbtn-size:12px;
+    --goal-size:13px;
+  }
+  #scene{display:block;width:100%;height:100%}
+  .readout .pd{color:var(--approx);font-weight:700}
+  .slabel{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;color:var(--muted);margin-bottom:7px}
+  .slabel b{color:var(--ink);font-family:"Fraunces",serif;font-weight:700;font-size:15px}
+  .setup{background:#080b12;border:1px solid var(--line);border-radius:10px;padding:10px 12px;
+    font-size:11.5px;color:var(--muted);line-height:1.55}
+  .maths{background:#080b12;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .maths .k{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .maths .v{font-size:12.5px;color:var(--ink);margin:3px 0 8px}
+  .maths .v.rel{color:var(--gold)}
+  .derived{background:#080b12;border:1px solid rgba(61,242,192,.3);border-radius:10px;padding:10px 12px}
+  .derived .k{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .derived .v{font-family:"Fraunces",serif;font-weight:700;font-size:19px;color:var(--approx);margin-top:3px}
+  .inset-wrap{background:#080b12;border:1px solid var(--line);border-radius:11px;padding:10px 12px 6px}
+  .inset-wrap .cap{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  #inset{display:block;width:100%;height:96px}
+  .note{font-size:11.5px;color:var(--muted);line-height:1.55}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div class="toast-wrap" id="toasts"></div>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="kicker">Math · Visual Studio</div>
+      <h1>Related <em>Rates</em></h1>
+    </div>
+    <div class="scoreboard">
+      <div class="chip pts"><div class="lab">Points</div><div class="val" id="s-pts">0</div></div>
+      <div class="chip streak"><div class="lab">Streak</div><div class="val" id="s-streak">0</div></div>
+      <div class="chip"><div class="lab">Badges</div><div class="val" id="s-badges">0</div></div>
+    </div>
+  </header>
+  <div class="studio">
+    <div class="card graph-card">
+      <canvas id="scene"></canvas>
+      <div class="graph-tag">let time run · one arrow keeps its length, the other does not</div>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--approx)"></i> the rate you set</span>
+        <span><i class="swatch" style="background:var(--error)"></i> the rate that follows</span>
+      </div>
+      <div class="readout" id="readout"></div>
+    </div>
+    <div class="card panel">
+      <div>
+        <div class="sect-lab">Scenario</div>
+        <div class="fbtns" id="fbtns"></div>
+      </div>
+      <div class="setup" id="setup"></div>
+      <div class="maths">
+        <div class="k">the geometric fact</div>
+        <div class="v" id="constraint"></div>
+        <div class="k">differentiated in time</div>
+        <div class="v rel" id="relation"></div>
+      </div>
+      <div>
+        <div class="slabel"><span id="d-name">rate you set</span> <b id="drive-lab">—</b></div>
+        <input type="range" id="drive" min="0" max="1" step="0.01" value="0.5" aria-label="The driving rate">
+      </div>
+      <div>
+        <div class="slabel"><span id="s-name">state</span> <b id="sval-lab">—</b></div>
+        <input type="range" class="mint" id="sval" min="0" max="1" step="0.01" value="0.5" aria-label="The state variable">
+        <div class="row" style="margin-top:12px">
+          <button class="action primary" id="play">▸ Let time run</button>
+          <button class="action" id="reset">Reset</button>
+        </div>
+      </div>
+      <div class="derived">
+        <div class="k" id="derived-k">derived rate</div>
+        <div class="v" id="derived-v">—</div>
+      </div>
+      <div class="inset-wrap">
+        <div class="cap">the derived rate across the whole range</div>
+        <canvas id="inset"></canvas>
+      </div>
+      <div class="note" id="note"></div>
+      <div class="challenge">
+        <div class="lab">◆ Rate-matching challenge</div>
+        <div class="goal" id="c-goal"></div>
+        <div class="cmeter"><span>off by <b id="c-val">—</b></span><span>target <b id="c-tol">—</b></span></div>
+        <div class="cbar"><i id="c-bar"></i></div>
+        <div class="cstate" id="c-state">Slide the state variable — the derived rate moves with it.</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module" src="./playground.js"></script>
+</body>
+</html>
