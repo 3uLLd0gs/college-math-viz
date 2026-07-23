@@ -25,8 +25,11 @@ const meter = challengeMeter({
   formatTol: t => t.toFixed(2),
   progress: linearProgress(8),
   onSolve: () => {
-    shell.add(70); shell.hitStreak(); shell.celebrate();
-    shell.toast('Equilibrium found!', `${state.field.kind} · F = 0 here · +70`, '🎯');
+    const fresh = shell.award(`solve:${state.field.id}`, 70);
+    shell.hitStreak(); shell.celebrate();
+    shell.toast('Equilibrium found!', fresh
+      ? `${state.field.kind} · F = 0 here · +70`
+      : `${state.field.kind} · found again`, '🎯');
     shell.badge('still', 'Dead Calm', 'Located a stagnation point', '🧿');
   },
 });
@@ -41,7 +44,7 @@ useField(FIELDS[0]);
 
 buttonGroup('fbtns', FIELDS, fd => {
   useField(fd);
-  shell.add(5);
+  shell.award(`explore:${fd.id}`, 5);
   explored.add(fd.id);
   seenKinds.add(fd.kind);
   if (explored.size === FIELDS.length) shell.badge('explorer', 'Field Marshal', 'Surveyed every field', '🗺️');

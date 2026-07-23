@@ -18,8 +18,9 @@ const meter = challengeMeter({
   progress: linearProgress(6),
   onSolve: () => {
     const sym = state.axis === 'x' ? '∂f/∂x' : '∂f/∂y';
-    shell.add(60); shell.hitStreak(); shell.celebrate();
-    shell.toast('Critical point!', sym + ' ≈ 0 · +60', '🎯');
+    const fresh = shell.award(`solve:${state.surf.id}:${state.axis}`, 60);
+    shell.hitStreak(); shell.celebrate();
+    shell.toast('Critical point!', sym + (fresh ? ' ≈ 0 · +60' : ' ≈ 0 again'), '🎯');
     shell.badge('flat', 'Flatliner', 'Zeroed a partial derivative', '📐');
   },
 });
@@ -34,7 +35,7 @@ const probeSlider = slider('probe', { onInput: v => { state.probe = v; eng.sched
 const explored = new Set(['parab']);
 function pickSurface(sf) {
   state.surf = sf; state.slice = sliceStart(sf); state.probe = probeStart(sf); meter.reset();
-  eng.setSurface(sf); setSliderRanges(sf); shell.add(5);
+  eng.setSurface(sf); setSliderRanges(sf); shell.award(`explore:${sf.id}`, 5);
   explored.add(sf.id); if (explored.size === SURFACES.length) shell.badge('explorer', 'Cartographer', 'Explored every surface', '🗺️');
   eng.schedule();
 }

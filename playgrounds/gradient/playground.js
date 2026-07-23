@@ -32,8 +32,9 @@ const meter = challengeMeter({
   formatTol: t => t.toFixed(0) + '°',
   progress: linearProgress(10),
   onSolve: () => {
-    shell.add(60); shell.hitStreak(); shell.celebrate();
-    shell.toast('Steepest ascent!', 'Dᵤf reached |∇f| · +60', '🧭');
+    const fresh = shell.award(`solve:${state.field.id}`, 60);
+    shell.hitStreak(); shell.celebrate();
+    shell.toast('Steepest ascent!', fresh ? 'Dᵤf reached |∇f| · +60' : 'Dᵤf reached |∇f| again', '🧭');
     shell.badge('aligned', 'Uphill', 'Aligned the dial with the gradient', '⛰️');
   },
 });
@@ -50,7 +51,7 @@ buttonGroup('fbtns', FIELDS, fd => {
   placeProbe(fd);
   map.setField(fd);
   meter.reset();
-  shell.add(5);
+  shell.award(`explore:${fd.id}`, 5);
   explored.add(fd.id);
   if (explored.size === FIELDS.length) shell.badge('explorer', 'Surveyor', 'Mapped every field', '🗺️');
   render();

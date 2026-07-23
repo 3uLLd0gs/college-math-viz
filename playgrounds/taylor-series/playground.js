@@ -20,8 +20,11 @@ const meter = challengeMeter({
   progress: logProgress(6),
   onSolve: () => {
     const bonus = Math.max(10, 60 - state.N * 4);
-    shell.add(50 + bonus); shell.hitStreak(); shell.celebrate();
-    shell.toast('Target hit!', `Solved with ${state.N} terms · +${50 + bonus}`, '🎯');
+    const fresh = shell.award(`solve:${state.fn.id}`, 50 + bonus);
+    shell.hitStreak(); shell.celebrate();
+    shell.toast('Target hit!', fresh
+      ? `Solved with ${state.N} terms · +${50 + bonus}`
+      : `Solved again with ${state.N} terms`, '🎯');
     if (state.N <= 4) shell.badge('efficient', 'Efficient', 'Solved in ≤ 4 terms', '⚡');
     shell.badge('sharp', 'Sharpshooter', 'Cleared a precision challenge', '🎯');
   },
@@ -44,7 +47,7 @@ const terms = slider('terms', {
 function selectFn(fn) {
   state.fn = fn; state.probe = fn.challenge.x0; meter.reset();
   g.setView(fn.view);
-  shell.add(5);
+  shell.award(`explore:${fn.id}`, 5);
   markExplored(fn.id);
   render();
 }

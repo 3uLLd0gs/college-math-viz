@@ -20,8 +20,11 @@ const meter = challengeMeter({
   progress: linearProgress(8),
   onSolve: () => {
     const bonus = Math.max(10, 80 - state.n);
-    shell.add(40 + bonus); shell.hitStreak(); shell.celebrate();
-    shell.toast('Converged!', `${state.rule.label} sum on target at n = ${state.n} · +${40 + bonus}`, '🎯');
+    const fresh = shell.award(`solve:${state.fn.id}:${state.rule.id}`, 40 + bonus);
+    shell.hitStreak(); shell.celebrate();
+    shell.toast('Converged!', fresh
+      ? `${state.rule.label} sum on target at n = ${state.n} · +${40 + bonus}`
+      : `${state.rule.label} sum on target again at n = ${state.n}`, '🎯');
     if (state.n <= 12) shell.badge('smart', 'Smart Sampling', 'Hit the target with ≤ 12 rectangles', '🎯');
     shell.badge('converge', 'Convergence', 'Cleared a Riemann challenge', '🏅');
   },
@@ -34,7 +37,7 @@ const usedRules = new Set(['left']);
 buttonGroup('fbtns', INTEGRANDS, fn => {
   state.fn = fn; meter.reset();
   g.setView(fn.view);
-  shell.add(5);
+  shell.award(`explore:${fn.id}`, 5);
   markExplored(fn.id);
   render();
 });

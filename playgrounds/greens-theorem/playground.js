@@ -26,8 +26,11 @@ const meter = challengeMeter({
   formatTol: t => t.toFixed(2),
   progress: linearProgress(8),
   onSolve: () => {
-    shell.add(75); shell.hitStreak(); shell.celebrate();
-    shell.toast('Perfectly balanced', 'Positive and negative curl cancel · +75', '⚖️');
+    const fresh = shell.award(`solve:${state.field.id}`, 75);
+    shell.hitStreak(); shell.celebrate();
+    shell.toast('Perfectly balanced', fresh
+      ? 'Positive and negative curl cancel · +75'
+      : 'Cancelled again', '⚖️');
     shell.badge('cancel', 'Zero Net Spin', 'Cancelled a loop’s circulation', '🔄');
   },
 });
@@ -43,7 +46,7 @@ explored.add(FIELDS[0].id);
 
 buttonGroup('fbtns', FIELDS, fd => {
   useField(fd);
-  shell.add(5);
+  shell.award(`explore:${fd.id}`, 5);
   explored.add(fd.id);
   if (explored.size === FIELDS.length) shell.badge('explorer', 'Circuit Rider', 'Tested every field', '🗺️');
   render();

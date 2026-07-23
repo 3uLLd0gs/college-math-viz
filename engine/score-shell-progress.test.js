@@ -10,12 +10,12 @@ beforeEach(() => { dom(); localStorage.clear(); });
 
 describe('progress round-trips through storage', () => {
   it('starts empty for an unknown playground', () => {
-    expect(loadProgress('nothing-here')).toEqual({ pts: 0, streak: 0, badges: [] });
+    expect(loadProgress('nothing-here')).toEqual({ pts: 0, streak: 0, badges: [], awards: [] });
   });
 
   it('saves and reloads points, streak and badges', () => {
-    saveProgress('demo', { pts: 120, streak: 3, badges: new Set(['a', 'b']) });
-    expect(loadProgress('demo')).toEqual({ pts: 120, streak: 3, badges: ['a', 'b'] });
+    saveProgress('demo', { pts: 120, streak: 3, badges: new Set(['a', 'b']), awards: new Set(['k']) });
+    expect(loadProgress('demo')).toEqual({ pts: 120, streak: 3, badges: ['a', 'b'], awards: ['k'] });
   });
 
   it('clearProgress removes it', () => {
@@ -33,12 +33,12 @@ describe('progress round-trips through storage', () => {
 
   it('survives corrupt stored data instead of throwing', () => {
     localStorage.setItem('cmv:progress:broken', '{not json');
-    expect(loadProgress('broken')).toEqual({ pts: 0, streak: 0, badges: [] });
+    expect(loadProgress('broken')).toEqual({ pts: 0, streak: 0, badges: [], awards: [] });
   });
 
   it('rejects values of the wrong shape from an older build', () => {
-    localStorage.setItem('cmv:progress:odd', JSON.stringify({ pts: 'lots', badges: 'nope' }));
-    expect(loadProgress('odd')).toEqual({ pts: 0, streak: 0, badges: [] });
+    localStorage.setItem('cmv:progress:odd', JSON.stringify({ pts: 'lots', badges: 'nope', awards: 3 }));
+    expect(loadProgress('odd')).toEqual({ pts: 0, streak: 0, badges: [], awards: [] });
   });
 
   it('drops non-string badge entries', () => {
@@ -52,7 +52,7 @@ describe('ScoreShell persistence', () => {
     const shell = new ScoreShell({ burst: vi.fn() }, { slug: 'demo' });
     shell.add(30);
     shell.hitStreak();
-    expect(loadProgress('demo')).toEqual({ pts: 30, streak: 1, badges: [] });
+    expect(loadProgress('demo')).toEqual({ pts: 30, streak: 1, badges: [], awards: [] });
   });
 
   it('restores a previous session on construction', () => {
@@ -105,5 +105,77 @@ describe('totalProgress', () => {
 
   it('is all zeroes before anything is played', () => {
     expect(totalProgress(['a', 'b'])).toEqual({ pts: 0, badges: 0, started: 0 });
+  });
+});
+
+describe('award() — one-time, persisted point grants', () => {
+  it('pays out the first time and never again in the same session', () => {
+    const shell = new ScoreShell({ burst: vi.fn() }, { slug: 'demo' });
+    expect(shell.award('solve:exp', 90)).toBe(true);
+    expect(shell.award('solve:exp', 90)).toBe(false);
+    expect(shell.award('solve:exp', 90)).toBe(false);
+    expect(shell.pts).toBe(90);
+  });
+
+  it('does not pay out again after a reload — the reload-farm is closed', () => {
+    let shell = new ScoreShell({ burst: vi.fn() }, { slug: 'demo' });
+    shell.award('solve:exp', 90);
+    shell = new ScoreShell({ burst: vi.fn() }, { slug: 'demo' });   // fresh page load
+    expect(shell.award('solve:exp', 90)).toBe(false);
+    expect(shell.pts).toBe(90);
+  });
+
+  it('closes the alternate-click farm on exploration points', () => {
+    const shell = new ScoreShell({ burst: vi.fn() }, { slug: 'demo' });
+    for (const id of ['sin', 'cos', 'sin', 'cos', 'sin']) shell.award(`explore:${id}`, 5);
+    expect(shell.pts).toBe(10);   // two distinct fields, not five clicks
+  });
+
+  it('keeps distinct keys independent', () => {
+    const shell = new ScoreShell({ burst: vi.fn() }, { slug: 'demo' });
+    shell.award('solve:exp', 50);
+    shell.award('solve:sin', 50);
+    expect(shell.pts).toBe(100);
+  });
+
+  it('awarded() reports past payouts, including from an earlier session', () => {
+    let shell = new ScoreShell({ burst: vi.fn() }, { slug: 'demo' });
+    shell.award('solve:exp', 90);
+    expect(shell.awarded('solve:exp')).toBe(true);
+    expect(shell.awarded('solve:cos')).toBe(false);
+    shell = new ScoreShell({ burst: vi.fn() }, { slug: 'demo' });
+    expect(shell.awarded('solve:exp')).toBe(true);
+  });
+
+  it('keeps playgrounds independent', () => {
+    const a = new ScoreShell({ burst: vi.fn() }, { slug: 'one' });
+    const b = new ScoreShell({ burst: vi.fn() }, { slug: 'two' });
+    a.award('solve:x', 30);
+    expect(b.award('solve:x', 30)).toBe(true);
+    expect(b.pts).toBe(30);
+  });
+
+  it('reset() clears the award record so points can be earned again', () => {
+    const shell = new ScoreShell({ burst: vi.fn() }, { slug: 'demo' });
+    shell.award('solve:exp', 90);
+    shell.reset();
+    expect(shell.awarded('solve:exp')).toBe(false);
+    expect(shell.award('solve:exp', 90)).toBe(true);
+    expect(shell.pts).toBe(90);
+  });
+
+  it('an in-memory shell still gates within its own session', () => {
+    const shell = new ScoreShell({ burst: vi.fn() });
+    shell.award('k', 10);
+    expect(shell.award('k', 10)).toBe(false);
+    expect(shell.pts).toBe(10);
+  });
+
+  it('tolerates a stored record missing the awards field', () => {
+    localStorage.setItem('cmv:progress:old', JSON.stringify({ pts: 40, streak: 1, badges: ['b'] }));
+    const shell = new ScoreShell({ burst: vi.fn() }, { slug: 'old' });
+    expect(shell.pts).toBe(40);
+    expect(shell.awards.size).toBe(0);
+    expect(shell.award('solve:x', 10)).toBe(true);
   });
 });

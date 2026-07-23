@@ -11,8 +11,9 @@ const PREFIX = 'cmv:progress:';
  *  unavailable (private mode, disabled cookies) or hold junk from an older
  *  build, and neither should take the page down. */
 export function loadProgress(slug) {
-  const empty = { pts: 0, streak: 0, badges: [] };
+  const empty = { pts: 0, streak: 0, badges: [], awards: [] };
   if (!slug) return empty;
+  const strings = a => (Array.isArray(a) ? a.filter(x => typeof x === 'string') : []);
   try {
     const raw = localStorage.getItem(PREFIX + slug);
     if (!raw) return empty;
@@ -20,17 +21,19 @@ export function loadProgress(slug) {
     return {
       pts: Number.isFinite(v.pts) ? v.pts : 0,
       streak: Number.isFinite(v.streak) ? v.streak : 0,
-      badges: Array.isArray(v.badges) ? v.badges.filter(b => typeof b === 'string') : [],
+      badges: strings(v.badges),
+      awards: strings(v.awards),
     };
   } catch {
     return empty;
   }
 }
 
-export function saveProgress(slug, { pts, streak, badges }) {
+export function saveProgress(slug, { pts, streak, badges, awards = [] }) {
   if (!slug) return false;
   try {
-    localStorage.setItem(PREFIX + slug, JSON.stringify({ pts, streak, badges: [...badges] }));
+    localStorage.setItem(PREFIX + slug,
+      JSON.stringify({ pts, streak, badges: [...badges], awards: [...awards] }));
     return true;
   } catch {
     return false;   // quota or unavailable storage — play on, just unsaved
@@ -65,11 +68,32 @@ export class ScoreShell {
     this.pts = saved.pts;
     this.streak = saved.streak;
     this.badges = new Set(saved.badges);
+    this.awards = new Set(saved.awards);
 
     this._paint();
   }
 
   add(n) { this.pts += n; this._save(); this._paint(); }
+
+  /**
+   * Award `n` points at most once for `key`, ever — the record is persisted.
+   *
+   * Plain add() is farmable now that progress survives a reload: solve a
+   * challenge, refresh, solve it again, and the points stack. Switching back and
+   * forth between two options did the same for exploration points. Anything a
+   * student can repeat should go through here.
+   *
+   * @returns whether the points were actually awarded
+   */
+  award(key, n) {
+    if (this.awards.has(key)) return false;
+    this.awards.add(key);
+    this.add(n);            // add() persists both
+    return true;
+  }
+
+  /** Has this key already been paid out, in this session or an earlier one? */
+  awarded(key) { return this.awards.has(key); }
   hitStreak() { this.streak++; this._save(); this._paint(); }
   resetStreak() { this.streak = 0; this._save(); this._paint(); }
 
@@ -83,7 +107,7 @@ export class ScoreShell {
 
   /** Wipe this playground's progress and the on-screen counters with it. */
   reset() {
-    this.pts = 0; this.streak = 0; this.badges.clear();
+    this.pts = 0; this.streak = 0; this.badges.clear(); this.awards.clear();
     if (this.slug) clearProgress(this.slug);
     this._paint();
   }
