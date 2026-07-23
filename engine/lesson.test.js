@@ -19,9 +19,21 @@ beforeEach(() => {
 });
 
 describe('mounting', () => {
-  it('inserts itself directly after the studio', () => {
+  it('sits above the studio by default, so it cannot be missed', () => {
     const l = mountLesson(LESSON, { slug: 'demo' });
+    expect(document.querySelector('.studio').previousElementSibling).toBe(l.el);
+  });
+
+  it('can be placed after the studio instead', () => {
+    const l = mountLesson(LESSON, { slug: 'demo', place: 'after' });
     expect(document.querySelector('.studio').nextElementSibling).toBe(l.el);
+  });
+
+  it('offers a way past it once opened, since it sits in front of the playground', () => {
+    const l = mountLesson(LESSON, { slug: 'demo' });
+    l.el.querySelector('.lesson-toggle').click();
+    document.querySelector('.lesson-skip').click();
+    expect(Element.prototype.scrollIntoView).toHaveBeenCalled();
   });
 
   it('renders the title and intro as markup', () => {
@@ -49,10 +61,18 @@ describe('levels', () => {
     expect(tabs[0].textContent).toBe('Using it');
   });
 
-  it('shows all three when all three are present, in teaching order', () => {
-    mountLesson(LESSON, { slug: 'demo' });
+  it('shows every present level, in teaching order, ending with the real-world one', () => {
+    const all = { ...LESSON, steps: [...LESSON.steps, { level: 'real', title: 'Fifth', body: 'e' }] };
+    mountLesson(all, { slug: 'demo' });
     const tabs = [...document.querySelectorAll('.lesson-levels .tbtn')];
     expect(tabs.map(t => t.textContent)).toEqual(LEVELS.map(L => L.label));
+    expect(LEVELS[LEVELS.length - 1].id).toBe('real');
+  });
+
+  it('omits the real-world level when a lesson has none', () => {
+    mountLesson(LESSON, { slug: 'demo' });
+    const tabs = [...document.querySelectorAll('.lesson-levels .tbtn')].map(t => t.textContent);
+    expect(tabs).not.toContain('Where it shows up');
   });
 
   it('shows only the active level’s steps', () => {
@@ -102,21 +122,35 @@ describe('worked examples drive the playground', () => {
 });
 
 describe('open/closed state persists', () => {
-  it('starts open on a first visit', () => {
+  it('starts FOLDED on a first visit, so it never buries the playground', () => {
     const l = mountLesson(LESSON, { slug: 'demo' });
-    expect(l.el.classList.contains('closed')).toBe(false);
-    expect(l.el.querySelector('.lesson-toggle').textContent).toBe('Hide');
+    expect(l.el.classList.contains('closed')).toBe(true);
+    expect(l.el.querySelector('.lesson-toggle').textContent).toBe('Read this');
+    expect(l.el.querySelector('.lesson-toggle').getAttribute('aria-expanded')).toBe('false');
   });
 
-  it('toggles and remembers being closed', () => {
+  it('toggles open and remembers it for next time', () => {
     const l = mountLesson(LESSON, { slug: 'demo' });
     l.el.querySelector('.lesson-toggle').click();
-    expect(l.el.classList.contains('closed')).toBe(true);
+    expect(l.el.classList.contains('closed')).toBe(false);
+    expect(l.el.querySelector('.lesson-toggle').textContent).toBe('Hide');
 
     document.body.innerHTML = '<div class="wrap"><div class="studio"></div></div>';
     const again = mountLesson(LESSON, { slug: 'demo' });
-    expect(again.el.classList.contains('closed')).toBe(true);
-    expect(again.el.querySelector('.lesson-toggle').textContent).toBe('Show');
+    expect(again.el.classList.contains('closed')).toBe(false);
+  });
+
+  it('the whole header opens it while folded', () => {
+    const l = mountLesson(LESSON, { slug: 'demo' });
+    l.el.querySelector('.lesson-head h2').click();
+    expect(l.el.classList.contains('closed')).toBe(false);
+  });
+
+  it('but clicking inside the open header does not fold it again', () => {
+    const l = mountLesson(LESSON, { slug: 'demo' });
+    l.el.querySelector('.lesson-toggle').click();          // open
+    l.el.querySelector('.lesson-head h2').click();         // stray click
+    expect(l.el.classList.contains('closed')).toBe(false);
   });
 
   it('remembers the level a student was reading', () => {
@@ -132,13 +166,13 @@ describe('open/closed state persists', () => {
   it('keeps playgrounds independent', () => {
     mountLesson(LESSON, { slug: 'one' }).el.querySelector('.lesson-toggle').click();
     document.body.innerHTML = '<div class="wrap"><div class="studio"></div></div>';
-    expect(mountLesson(LESSON, { slug: 'two' }).el.classList.contains('closed')).toBe(false);
+    expect(mountLesson(LESSON, { slug: 'two' }).el.classList.contains('closed')).toBe(true);
   });
 
-  it('falls back to sane defaults on corrupt storage', () => {
+  it('falls back to folded on corrupt storage', () => {
     localStorage.setItem('cmv:lesson:demo', '{oops');
     const l = mountLesson(LESSON, { slug: 'demo' });
-    expect(l.el.classList.contains('closed')).toBe(false);
+    expect(l.el.classList.contains('closed')).toBe(true);
   });
 
   it('ignores a remembered level that no longer exists', () => {

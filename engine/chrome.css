@@ -124,18 +124,27 @@ input[type=range]::-moz-range-thumb{width:var(--thumb-moz,17px);height:var(--thu
 .cstate.win{color:var(--approx)}
 
 /* ---- lesson panel ---- */
-.lesson{margin-top:16px;padding:18px 20px}
+.lesson{margin-bottom:16px;padding:18px 20px}
 .lesson-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
 .lesson-kicker{font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--approx);margin-bottom:5px}
 .lesson-head h2{font-family:"Fraunces",serif;font-weight:700;font-size:21px;margin:0;letter-spacing:-.01em}
+.lesson-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.lesson-skip{font-family:inherit;font-size:11px;color:var(--muted);cursor:pointer;
+  background:transparent;border:1px solid transparent;border-radius:8px;padding:6px 8px;transition:.15s}
+.lesson-skip:hover{color:var(--approx)}
 .lesson-toggle{font-family:inherit;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
   cursor:pointer;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:6px 12px;transition:.15s}
 .lesson-toggle:hover{color:var(--accent);border-color:var(--accent)}
 .lesson-body{margin-top:14px}
 .lesson.closed .lesson-body{display:none}
+.lesson.closed{padding:14px 20px}
+.lesson.closed .lesson-head{cursor:pointer}
+.lesson.closed .lesson-head h2{font-size:18px}
+.lesson.closed:hover{border-color:rgba(61,242,192,.35)}
+.lesson.closed .lesson-skip{display:none}
 .lesson-intro{font-size:13.5px;color:var(--muted);line-height:1.75;margin:0 0 14px;max-width:78ch}
 .lesson-intro b{color:var(--ink);font-weight:500}
-.lesson-levels{--toggle-cols:3;max-width:460px;margin-bottom:16px}
+.lesson-levels{--toggle-cols:4;max-width:620px;margin-bottom:16px}
 .lesson-levels .tbtn{font-family:inherit;font-size:12px;font-weight:400;letter-spacing:.04em}
 .lesson-steps{display:flex;flex-direction:column;gap:14px}
 .lesson-step{display:flex;gap:14px;align-items:flex-start}
@@ -154,6 +163,8 @@ input[type=range]::-moz-range-thumb{width:var(--thumb-moz,17px);height:var(--thu
 @media(max-width:640px){
   .lesson{padding:15px 15px}
   .lesson-step{gap:10px}
+  .lesson-levels{--toggle-cols:2}
+  .lesson-skip{display:none}
 }
 
 /* ---- confetti + toasts ---- */

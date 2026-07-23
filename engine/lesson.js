@@ -17,16 +17,20 @@ export const LEVELS = [
   { id: 'intro', label: 'Start here' },
   { id: 'use', label: 'Using it' },
   { id: 'advanced', label: 'Going further' },
+  { id: 'real', label: 'Where it shows up' },
 ];
 
 const KEY = slug => `cmv:lesson:${slug}`;
 
+/* Folded on a first visit. The panel sits ABOVE the playground so a student
+   cannot miss that an explanation exists, but leaving it open by default would
+   push the thing they came for below the fold. Once toggled, the choice sticks. */
 function readPrefs(slug) {
   try {
     const v = JSON.parse(localStorage.getItem(KEY(slug)) ?? '{}');
-    return { open: v.open !== false, level: typeof v.level === 'string' ? v.level : 'intro' };
+    return { open: v.open === true, level: typeof v.level === 'string' ? v.level : 'intro' };
   } catch {
-    return { open: true, level: 'intro' };
+    return { open: false, level: 'intro' };
   }
 }
 
@@ -38,7 +42,8 @@ function writePrefs(slug, prefs) {
  * @param lesson        the content block described above
  * @param opts.slug     persistence key for open/level state
  * @param opts.onJump   called with a step's `state` when its button is pressed
- * @param opts.anchor   element to insert after (default: the .studio grid)
+ * @param opts.anchor   element to sit next to (default: the .studio grid)
+ * @param opts.place    'before' the anchor (default) or 'after' it
  */
 export function mountLesson(lesson, opts = {}) {
   const anchor = opts.anchor ?? document.querySelector('.studio');
@@ -57,17 +62,26 @@ export function mountLesson(lesson, opts = {}) {
         <div class="lesson-kicker">The idea</div>
         <h2>${lesson.title}</h2>
       </div>
-      <button class="lesson-toggle" type="button" aria-expanded="true"></button>
+      <div class="lesson-actions">
+        <button class="lesson-skip" type="button">Skip to the playground ↓</button>
+        <button class="lesson-toggle" type="button" aria-expanded="false"></button>
+      </div>
     </div>
     <div class="lesson-body">
       <p class="lesson-intro">${lesson.intro}</p>
       <div class="toggle lesson-levels" id="lesson-levels"></div>
       <div class="lesson-steps" id="lesson-steps"></div>
     </div>`;
-  anchor.insertAdjacentElement('afterend', el);
+  anchor.insertAdjacentElement(opts.place === 'after' ? 'afterend' : 'beforebegin', el);
 
   const stepsEl = el.querySelector('#lesson-steps');
   const toggle = el.querySelector('.lesson-toggle');
+
+  // The panel sits above the playground so it is impossible to miss, which also
+  // means it is in the way of anyone who does not want it. One press gets past.
+  const toGraph = () =>
+    (document.querySelector('.graph-card') ?? anchor).scrollIntoView({ behavior: 'smooth', block: 'start' });
+  el.querySelector('.lesson-skip').addEventListener('click', toGraph);
 
   function renderSteps(levelId) {
     const steps = lesson.steps.filter(s => s.level === levelId);
@@ -85,8 +99,7 @@ export function mountLesson(lesson, opts = {}) {
       btn.addEventListener('click', () => {
         const step = steps[+btn.dataset.i];
         if (step?.state && opts.onJump) opts.onJump(step.state, step);
-        // the playground is above the panel; bring it back into view
-        document.querySelector('.graph-card')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        toGraph();   // the change happens in the playground, so go look at it
       });
     });
   }
@@ -102,11 +115,18 @@ export function mountLesson(lesson, opts = {}) {
   function setOpen(open) {
     prefs.open = open;
     el.classList.toggle('closed', !open);
-    toggle.textContent = open ? 'Hide' : 'Show';
+    toggle.textContent = open ? 'Hide' : 'Read this';
     toggle.setAttribute('aria-expanded', String(open));
     writePrefs(slug, prefs);
   }
-  toggle.addEventListener('click', () => setOpen(el.classList.contains('closed')));
+  const flip = () => setOpen(el.classList.contains('closed'));
+  toggle.addEventListener('click', flip);
+  // While folded the whole header is the affordance — a thin strip with one
+  // small button is a fiddly target for the primary action on the page.
+  el.querySelector('.lesson-head').addEventListener('click', e => {
+    if (e.target.closest('.lesson-skip') || e.target.closest('.lesson-toggle')) return;
+    if (el.classList.contains('closed')) flip();
+  });
   setOpen(prefs.open);
 
   return { el, setOpen, showLevel: renderSteps };

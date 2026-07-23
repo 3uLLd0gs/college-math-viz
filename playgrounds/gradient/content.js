@@ -150,5 +150,51 @@ export const LESSON = {
       state: { field: 'bowl', x: 0, y: 0, thetaDeg: 45 },
       jump: 'Take me to the flat spot',
     },
+
+    {
+      level: 'real',
+      title: 'Training almost every machine-learning model',
+      body: `A model's error is a function of its parameters — millions of them, but the idea is
+        identical to this two-variable picture. <b>Gradient descent</b> computes ∇(error) and takes
+        a step in the <em>opposite</em> direction, because that is the fastest way down. Repeat a few
+        million times and you have a trained network. The "learning rate" is just how big a step you
+        take; too big and you overshoot the valley, which is the same thing as jumping past the
+        bottom of this bowl.`,
+      state: { field: 'bowl', x: 0.9, y: -0.6, thetaOffsetDeg: 180 },
+      jump: 'Show me the descent step',
+    },
+    {
+      level: 'real',
+      title: 'Where rain goes, and where a watershed ends',
+      body: `Let <code>h(x, y)</code> be ground elevation. Water on a hillside runs along
+        <code>−∇h</code> — steepest descent, exactly the arrow above reversed. Hydrologists compute
+        this over elevation data to work out which river basin any square metre of land drains into,
+        and the ridges where the gradient flips are watershed boundaries. The contour map you are
+        looking at is the same object a hiking map draws.`,
+      state: { field: 'ripple', x: 1.0, y: 0.6, snap: true },
+      jump: 'Show me a ridged landscape',
+    },
+    {
+      level: 'real',
+      title: 'How heat moves',
+      body: `Fourier's law says heat flows down the temperature gradient:
+        <code>q = −k∇T</code>. Not "from hot to cold" loosely — specifically along −∇T, at a rate
+        proportional to how steep the temperature change is. This is what a CPU heatsink, a
+        double-glazed window and a thermal-imaging camera are all reasoning about. The Gaussian hill
+        here is close to what a hot spot on a chip actually looks like.`,
+      state: { field: 'hill', x: 0.8, y: 0.5, snap: true },
+      jump: 'Show me a hot spot',
+    },
+    {
+      level: 'real',
+      title: 'Finding edges in an image',
+      body: `A greyscale image is a function of two pixel coordinates. Its gradient is large exactly
+        where brightness changes fast — which is to say, <b>at edges</b>. Sobel and Scharr filters
+        compute a discrete ∇I, and |∇I| is the edge map; the <em>direction</em> of ∇I tells you which
+        way the edge runs. That is how your phone finds the borders of a document you photograph,
+        and the first layer of most vision pipelines.`,
+      state: { field: 'ripple', x: -0.4, y: 1.2, snap: true },
+      jump: 'Show me a field full of edges',
+    },
   ],
 };
