@@ -146,6 +146,17 @@ export const LESSON = {
         changes the shape — every sinusoid you will ever meet is this one curve, stretched.`,
       state: { trace: 'sin', deg: 180 }, jump: 'Take me half a turn' },
 
+    { level: 'use', check: {
+      q: 'The sweep here runs over two full turns, 0° to 720°. How many distinct angles in that range satisfy sin θ = ½?',
+      options: [
+        { text: 'Four — two per turn, since sine hits any value strictly between −1 and 1 twice per turn', correct: true,
+          why: 'Right. Within one turn, sin θ = ½ at 30° and 150°. A second turn repeats both, 360° later — 30°, 150°, 390°, 510° — four in all.' },
+        { text: 'Two — sin θ = ½ has exactly one solution per full turn', why: 'Sine crosses any value strictly between −1 and 1 twice per turn, once rising and once falling — so even a single turn already gives two, not one.' },
+        { text: 'Eight — the circle has four-fold symmetry', why: "That overcounts. The circle's left–right symmetry only doubles the within-one-turn count from one to two; going round twice doubles it again to four, not eight." },
+      ],
+      state: { trace: 'sin', deg: 720 },
+    } },
+
     { level: 'advanced', title: 'Radians are not a preference',
       body: `<code>d/dθ sin θ = cos θ</code> is true <em>only</em> in radians. In degrees you pick up a
         stray factor of <code>π/180</code> every time you differentiate. Radians are defined so that arc

@@ -154,6 +154,17 @@ export const LESSON = {
         either.`,
       state: { fn: 'square', rule: 'right', n: 8 }, jump: 'Read the two ends' },
 
+    { level: 'use', check: {
+      q: 'On a DECREASING function like 1/x over [1, 3], which rule — left or right — systematically overestimates the true area?',
+      options: [
+        { text: 'Left — each rectangle takes the higher, left-edge value', correct: true,
+          why: 'Right. Since f is decreasing, f(x₀) ≥ f(x) on every subinterval [x₀, x₁], so sampling at the left edge puts every rectangle above the curve — an overcount.' },
+        { text: 'Right — same reasoning as for an increasing function', why: "That's backwards for a decreasing curve. The right endpoint is the *lowest* value in each strip, so the right rule undercounts instead." },
+        { text: 'Neither — decreasing functions integrate the same either way', why: 'Not at finite n. The asymmetry between left and right for finite rectangles is exactly the point — they only agree in the limit as n → ∞.' },
+      ],
+      state: { fn: 'recip', rule: 'left', n: 8 },
+    } },
+
     { level: 'advanced', title: 'Why midpoint gets a whole extra order',
       body: `On each strip, the midpoint rectangle cuts the curve twice — it under-counts on one side
         and over-counts on the other by nearly the same amount. Those errors cancel to first order,

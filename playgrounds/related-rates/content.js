@@ -209,6 +209,17 @@ export const LESSON = {
         secretly varying produces a wrong equation that still looks tidy.`,
       state: { scenario: 'cone', s: 1.2, drive: 1.5 }, jump: 'Show me a fixed shape, rising level' },
 
+    { level: 'use', check: {
+      q: 'Water flows into the conical tank at a constant rate dV/dt. Does the water level rise at a constant rate too?',
+      options: [
+        { text: 'No — the level rises fastest when the tank is nearly empty, and slows as it fills', correct: true,
+          why: 'Right. dh/dt = (dV/dt) / ((π/4)h²): the same dV/dt divided by a growing h² means the level climbs quickly at first and creeps as the water spreads over an ever-wider surface.' },
+        { text: 'Yes — dh/dt equals dV/dt divided by a constant', why: 'The divisor is (π/4)h², which grows as the tank fills — that is not a constant, so dh/dt is not one either.' },
+        { text: 'Yes, because volume and height are always directly proportional', why: 'That is only true in a cylinder, where cross-sectional area is fixed. In a cone the cross-section grows with depth, so V is proportional to h³, not h.' },
+      ],
+      state: { scenario: 'cone', s: 0.5, drive: 1.5 },
+    } },
+
     { level: 'advanced', title: 'The chain rule is doing all the work',
       body: `Why does <code>d/dt (x²)</code> give <code>2x·(dx/dt)</code> rather than <code>2x</code>?
         Because <code>x</code> is a function of time, so the outer power rule multiplies by the inner

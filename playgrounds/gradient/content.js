@@ -122,6 +122,16 @@ export const LESSON = {
       state: { field: 'bowl', x: 0.9, y: -0.6, thetaOffsetDeg: 90 },
       jump: 'Turn me along the contour',
     },
+    { level: 'use', check: {
+      q: 'You stand on the bowl and turn the dial 90° away from the gradient. What is the directional derivative?',
+      options: [
+        { text: 'Zero — you are walking along a contour', correct: true,
+          why: 'Right. Dᵤf = |∇f|·cos θ, and cos 90° = 0. Perpendicular to the gradient means no rise.' },
+        { text: 'Half of |∇f|', why: 'That would be cos 60°. A quarter turn is 90°, where cosine is zero.' },
+        { text: 'Negative |∇f|', why: 'That is 180° — straight downhill. 90° is along the contour.' },
+      ],
+      state: { field: 'bowl', x: 0.9, y: -0.6, thetaOffsetDeg: 90 },
+    } },
     {
       level: 'advanced',
       title: 'Downhill is just the other end of the same arrow',

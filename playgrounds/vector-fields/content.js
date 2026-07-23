@@ -155,6 +155,17 @@ export const LESSON = {
         gradient of anything, which is exactly what its non-zero curl is telling you.`,
       state: { field: 'source', x: -1.2, y: 1.1 }, jump: 'Show me a gradient field' },
 
+    { level: 'use', check: {
+      q: 'In the shear field F = (y − c, 0), every arrow points the same horizontal direction — nothing looks like it swirls. Does a paddle wheel dropped into this flow turn?',
+      options: [
+        { text: 'Yes — one side of the wheel sits in faster flow than the other, so it turns', correct: true,
+          why: 'Right. This field has curl −1 everywhere: the flow speed changes with height, so the top and bottom of the wheel feel different drag, and that mismatch spins it even though every arrow is parallel.' },
+        { text: 'No — curl requires the flow to visibly curve', why: 'Curl measures shear, not visual curviness. This field has non-zero curl purely from the speed gradient, with no curving arrows anywhere in sight.' },
+        { text: 'No — parallel flow always has zero curl', why: 'Only if the speed is also constant along with the direction. Here the speed changes with y, and that alone is enough to produce curl.' },
+      ],
+      state: { field: 'shear', x: 0.8, y: 1.2 },
+    } },
+
     { level: 'advanced', title: 'Equilibria come in types, and the type is the whole story',
       body: `Where <code>F = 0</code>, nearby flow either spirals in, spirals out, circles, or does both
         along different axes. Sink, source, centre, saddle — those four cases classify the long-term

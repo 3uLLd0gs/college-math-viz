@@ -152,6 +152,17 @@ export const LESSON = {
         ultimately this.`,
       state: { field: 'quad', x: 0.9, y: 0.3, r: 0.65 }, jump: 'Show me a positive loop' },
 
+    { level: 'use', check: {
+      q: 'You trace the same loop, but clockwise instead of counter-clockwise. What happens to the two numbers the page computes?',
+      options: [
+        { text: 'The circulation ∮F·dr flips sign, but ∬curl dA over the same fixed region does not', correct: true,
+          why: "Right — that is the theorem's fine print. Green's theorem states ∮_C F·dr = ∬_R curl dA for a counter-clockwise C; reversing the walk flips the boundary side's sign, while the interior integral, taken over the same region, never knew which way you walked and stays exactly as it was." },
+        { text: 'Nothing — Green\'s theorem holds regardless of direction', why: 'Not quite. The equality is stated specifically for a counter-clockwise boundary. Reverse the direction and the two sides part company by a sign.' },
+        { text: 'Both flip sign together, so they still agree', why: "The area integral ∬curl dA, taken over a fixed region, has no idea which way you decided to walk its boundary — only the line integral does. So it's the boundary side alone that flips." },
+      ],
+      state: { field: 'quad', x: 0.9, y: 0.3, r: 0.65 },
+    } },
+
     { level: 'advanced', title: 'A hole in the region needs a second loop',
       body: `Green's theorem wants the region filled in. Put a hole in it — a puncture where the field
         blows up — and you must add an inner boundary, traced the <em>opposite</em> way, so the enclosed

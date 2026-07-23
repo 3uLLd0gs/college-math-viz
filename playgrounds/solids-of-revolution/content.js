@@ -147,6 +147,17 @@ export const LESSON = {
         routine; get it wrong and you are inverting functions for no reason.`,
       state: { region: 'root', axis: 'y', n: 14 }, jump: 'Show me the shell choice' },
 
+    { level: 'use', check: {
+      q: 'Revolving the region between y = x² and y = x on [0,1] about the x-axis, a slice at some x has outer radius R = x and inner radius r = x². What is that washer\'s area?',
+      options: [
+        { text: 'π(R² − r²) = π(x² − x⁴)', correct: true,
+          why: 'Right. A washer is a disk with a smaller disk removed, so the areas subtract: πR² − πr² = π(R² − r²).' },
+        { text: 'π(R − r)² = π(x − x²)²', why: "That's the area of a disk whose radius is R − r — a single, smaller disk, not a disk with a hole cut out of it. It gives the wrong shape and the wrong number." },
+        { text: '2π(R − r), a strip rather than a washer', why: "That's closer to a shell's lateral surface. A washer is still a flat, 2-D cross-section, so its area comes from subtracting circle areas, πR² − πr²." },
+      ],
+      state: { region: 'band', axis: 'x', n: 16 },
+    } },
+
     { level: 'advanced', title: 'Pappus: volume without an integral',
       body: `Pappus's theorem says the volume equals the region's <b>area</b> times the distance its
         <b>centroid</b> travels: <code>V = 2πd̄·A</code>. For the triangle under <code>y = x</code> on
