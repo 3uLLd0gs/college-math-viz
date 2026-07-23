@@ -121,5 +121,61 @@ export const LESSON = {
   <text x="130" y="120" fill="#8b95ab" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">∂error/∂w ≈ Δerror / h</text>
 </svg>`,
       state: { fn: 'exp', x0: 0.6, h: 0.001 }, jump: 'Show me a gradient check' },
+
+    { level: 'use', title: 'You can approach from either side',
+      body: `Nothing says the second point must be to the right. A negative <code>h</code> gives the
+        <b>backward</b> difference, and it converges to the same limit. Averaging the forward and
+        backward quotients gives the <b>symmetric</b> difference, whose error falls like
+        <code>h²</code> instead of <code>h</code> — the same trick as the midpoint rule.`,
+      state: { fn: 'sin', x0: 0.7, h: 0.3 }, jump: 'Show me a moderate step' },
+
+    { level: 'advanced', title: 'Not every curve has a tangent',
+      body: `The derivative exists only if the quotient approaches the <em>same</em> number from both
+        sides. At a corner it does not: approach <code>|x|</code> at zero from the right and you get
+        +1, from the left −1. No single slope, so no derivative — even though the function is perfectly
+        continuous. Continuity is weaker than differentiability.`,
+      state: { fn: 'cubic', x0: 0, h: 0.05 }, jump: 'Sit where the slope flips' },
+
+    { level: 'advanced', title: 'You cannot let h go all the way to zero on a computer',
+      body: `<code>f(x+h) − f(x)</code> subtracts two nearly equal numbers. In floating point that
+        destroys significant digits, and below roughly <code>h ≈ 10⁻⁸</code> the quotient gets
+        <em>worse</em>, not better — truncation error falls but rounding error explodes. That is why
+        this slider stops at 10⁻³, and why real code uses analytic or automatic differentiation.`,
+      state: { fn: 'exp', x0: 0.6, h: 0.001 }, jump: 'Go to the smallest h here' },
+
+    { level: 'real', title: 'Simulating anything that changes',
+      body: `Weather models, crash simulations and circuit solvers all replace derivatives with
+        difference quotients on a grid — that is the <b>finite difference method</b>. The grid spacing
+        is your <code>h</code>, and the accuracy order you saw here is exactly what determines how fine
+        the mesh must be. Halving the mesh in a first-order scheme buys you half the error and four
+        times the work in 2-D.`,
+      figure: `<svg viewBox="0 0 260 128" role="img" aria-label="A grid over a region with a stencil of neighbouring points highlighted">
+  <g stroke="#7e98c4" stroke-opacity=".3">
+    <path d="M30 16 V112"/><path d="M72 16 V112"/><path d="M114 16 V112"/><path d="M156 16 V112"/><path d="M198 16 V112"/><path d="M240 16 V112"/>
+    <path d="M30 16 H240"/><path d="M30 40 H240"/><path d="M30 64 H240"/><path d="M30 88 H240"/><path d="M30 112 H240"/>
+  </g>
+  <g fill="#3df2c0"><circle cx="114" cy="64" r="4.5"/></g>
+  <g fill="#ffb454"><circle cx="72" cy="64" r="3.4"/><circle cx="156" cy="64" r="3.4"/><circle cx="114" cy="40" r="3.4"/><circle cx="114" cy="88" r="3.4"/></g>
+  <text x="135" y="126" fill="#8b95ab" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">a stencil: neighbours give the derivative</text>
+</svg>`,
+      state: { fn: 'sin', x0: 0.7, h: 0.1 }, jump: 'Show me a grid-sized step' },
+
+    { level: 'real', title: 'Rate of change as a diagnosis',
+      body: `A rising blood-glucose reading matters less than <em>how fast</em> it is rising — continuous
+        monitors compute a difference quotient over the last few samples and alarm on the slope, not the
+        level. The same logic drives trend detection in server monitoring and momentum indicators in
+        trading. Choosing the window is choosing <code>h</code>: too big and you lag, too small and you
+        alarm on noise.`,
+      figure: `<svg viewBox="0 0 260 128" role="img" aria-label="A noisy signal with a short window giving a jagged slope and a longer window a smooth one">
+  <path d="M18 100 H244" stroke="#7e98c4" stroke-opacity=".4"/>
+  <path d="M22 88 l10 -6 8 8 12 -12 9 6 11 -14 10 5 12 -13 9 4 11 -12 10 6 12 -14 9 5 11 -10 10 4 12 -12" fill="none" stroke="#7e98c4" stroke-opacity=".75" stroke-width="1.4"/>
+  <path d="M22 92 L106 60" stroke="#ff5d73" stroke-width="2"/>
+  <path d="M22 94 L232 26" stroke="#3df2c0" stroke-width="2"/>
+  <g font-family="JetBrains Mono, monospace" font-size="9">
+    <text x="112" y="58" fill="#ff5d73">short h: noisy</text>
+    <text x="150" y="98" fill="#3df2c0">long h: smooth but late</text>
+  </g>
+</svg>`,
+      state: { fn: 'exp', x0: 0.6, h: 0.05 }, jump: 'Show me a sampling window' },
   ],
 };

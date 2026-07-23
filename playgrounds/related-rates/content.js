@@ -201,5 +201,64 @@ export const LESSON = {
   <text x="196" y="80" fill="#ff5d73" font-family="JetBrains Mono, monospace" font-size="9">smaller rises</text>
 </svg>`,
       state: { scenario: 'cone', s: 0.5, drive: 1.5 }, jump: 'Fill a conical tank' },
+
+    { level: 'use', title: 'Decide what is fixed before you differentiate',
+      body: `The ladder's <em>length</em> never changes, so it differentiates to nothing; <code>x</code> and
+        <code>y</code> both change, so both pick up rates. Sorting constants from variables before
+        applying <code>d/dt</code> is where most of these problems are won or lost — a "constant" that is
+        secretly varying produces a wrong equation that still looks tidy.`,
+      state: { scenario: 'cone', s: 1.2, drive: 1.5 }, jump: 'Show me a fixed shape, rising level' },
+
+    { level: 'advanced', title: 'The chain rule is doing all the work',
+      body: `Why does <code>d/dt (x²)</code> give <code>2x·(dx/dt)</code> rather than <code>2x</code>?
+        Because <code>x</code> is a function of time, so the outer power rule multiplies by the inner
+        derivative. Every related-rates equation is implicit differentiation with <code>t</code> as the
+        hidden variable — no new technique, just the chain rule taken seriously.`,
+      state: { scenario: 'ripple', s: 1.4, drive: 0.6 }, jump: 'Differentiate an area' },
+
+    { level: 'advanced', title: 'Units are a free correctness check',
+      body: `In the cone, <code>dV/dt</code> is m³/s and it divides by an area in m² to give m/s. If your
+        answer comes out in the wrong units, the equation is wrong — no arithmetic check needed. This
+        catches a genuine, common mistake: differentiating the wrong quantity and not noticing because
+        the algebra still ran.`,
+      state: { scenario: 'balloon', s: 1.8, drive: 4 }, jump: 'Check the units here' },
+
+    { level: 'real', title: 'Radar, and how a speed gun really works',
+      body: `A radar gun measures the rate at which the <em>distance</em> to a car changes, not the car's
+        speed along the road. Those differ by a cosine when the gun is off to one side — the "cosine
+        error" — and it always reads <b>low</b>, which is why the physics favours the driver. Aircraft
+        collision-avoidance systems compute the same closing rate from a Pythagorean constraint.`,
+      figure: `<svg viewBox="0 0 260 128" role="img" aria-label="A radar gun beside the road measuring closing distance rather than road speed">
+  <path d="M18 96 H242" stroke="#7e98c4" stroke-opacity=".45"/>
+  <path d="M18 78 H242" stroke="#7e98c4" stroke-opacity=".25" stroke-dasharray="6 6"/>
+  <rect x="96" y="66" width="34" height="14" rx="3" fill="#eaeff8" fill-opacity=".8"/>
+  <g stroke="#3df2c0" stroke-width="2" fill="#3df2c0">
+    <path d="M136 73 H184"/><path d="M190 73 l-8 -4 v8 z"/>
+  </g>
+  <circle cx="52" cy="110" r="6" fill="#ffd76a"/>
+  <path d="M58 108 L100 78" stroke="#ff5d73" stroke-width="1.8" stroke-dasharray="4 3"/>
+  <g font-family="JetBrains Mono, monospace" font-size="9">
+    <text x="196" y="70" fill="#3df2c0">true speed</text>
+    <text x="60" y="94" fill="#ff5d73">what radar sees</text>
+  </g>
+</svg>`,
+      state: { scenario: 'ladder', s: 2.5, drive: 1.4 }, jump: 'Show me a closing distance' },
+
+    { level: 'real', title: 'How fast is an outbreak growing?',
+      body: `Epidemiologists never observe an infection rate directly — they observe case counts and
+        differentiate. The relationship between new cases, hospital admissions and deaths is a chain of
+        related rates with lags, and the same structure governs reaction rates in chemistry and
+        radioactive decay. When a briefing says "the rate of increase is slowing", that is a statement
+        about a second derivative.`,
+      figure: `<svg viewBox="0 0 260 128" role="img" aria-label="A rising case curve with its slope steepening then easing">
+  <path d="M20 106 H242" stroke="#7e98c4" stroke-opacity=".45"/>
+  <path d="M24 102 Q92 98 132 58 Q176 14 238 8" fill="none" stroke="#ffb454" stroke-width="2"/>
+  <path d="M64 108 L120 84" stroke="#3df2c0" stroke-width="2"/>
+  <path d="M104 92 L166 26" stroke="#3df2c0" stroke-width="2"/>
+  <path d="M182 32 L240 16" stroke="#3df2c0" stroke-width="2"/>
+  <g fill="#ffd76a"><circle cx="92" cy="96" r="3.6"/><circle cx="134" cy="58" r="3.6"/><circle cx="212" cy="21" r="3.6"/></g>
+  <text x="130" y="122" fill="#8b95ab" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">the slope is the thing being reported</text>
+</svg>`,
+      state: { scenario: 'ripple', s: 2.4, drive: 0.9 }, jump: 'Show me an accelerating spread' },
   ],
 };

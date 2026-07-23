@@ -147,5 +147,65 @@ export const LESSON = {
   <text x="196" y="114" fill="#8b95ab" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">div B = 0</text>
 </svg>`,
       state: { field: 'source', x: 1.5, y: -1.3 }, jump: 'Show me a point source' },
+
+    { level: 'use', title: 'Some fields are a hill in disguise',
+      body: `If a field is the gradient of some scalar — a height, a voltage, a temperature — it is
+        <b>conservative</b>: its curl is zero everywhere, and the work moving between two points does not
+        depend on the path. The source field here is <code>∇(½(x²+y²))</code>. A vortex is not the
+        gradient of anything, which is exactly what its non-zero curl is telling you.`,
+      state: { field: 'source', x: -1.2, y: 1.1 }, jump: 'Show me a gradient field' },
+
+    { level: 'advanced', title: 'Equilibria come in types, and the type is the whole story',
+      body: `Where <code>F = 0</code>, nearby flow either spirals in, spirals out, circles, or does both
+        along different axes. Sink, source, centre, saddle — those four cases classify the long-term
+        behaviour of any linear system, and everything on this page is a picture of one of them.`,
+      state: { field: 'saddle', x: 0.9, y: 1.1 }, jump: 'Show me a saddle' },
+
+    { level: 'advanced', title: 'This is what a differential equation looks like',
+      body: `A system <code>x′ = P(x,y)</code>, <code>y′ = Q(x,y)</code> <em>is</em> this vector field, and
+        its solutions <em>are</em> the streamlines. Drawing the arrows tells you how every solution
+        behaves without solving anything — which is the point of a <b>phase portrait</b>, and often the
+        only thing available when the equations have no closed form.`,
+      state: { field: 'spiral', x: -1.4, y: -1.2 }, jump: 'Trace a solution curve' },
+
+    { level: 'real', title: 'Making smoke and water move in films',
+      body: `Visual-effects fluid solvers store a velocity field on a grid and advect smoke, fire or water
+        along it — releasing particles into the field exactly as this page does. Artists then edit the
+        field directly to art-direct a shot, adding a vortex here or a source there, because the field is
+        the thing the physics reads.`,
+      figure: `<svg viewBox="0 0 260 128" role="img" aria-label="A grid of velocity arrows carrying a puff of smoke across it">
+  <g stroke="#7e98c4" stroke-opacity=".22">
+    <path d="M20 20 H240"/><path d="M20 48 H240"/><path d="M20 76 H240"/><path d="M20 104 H240"/>
+    <path d="M20 20 V104"/><path d="M64 20 V104"/><path d="M108 20 V104"/><path d="M152 20 V104"/><path d="M196 20 V104"/><path d="M240 20 V104"/>
+  </g>
+  <g stroke="#3df2c0" stroke-width="1.5" fill="#3df2c0" stroke-opacity=".8">
+    <path d="M28 76 l14 -6"/><path d="M72 70 l14 -8"/><path d="M116 62 l14 -6"/><path d="M160 56 l14 -4"/><path d="M204 52 l14 -2"/>
+  </g>
+  <g fill="#eaeff8" fill-opacity=".5">
+    <circle cx="70" cy="70" r="9"/><circle cx="84" cy="66" r="7"/><circle cx="60" cy="76" r="6"/>
+  </g>
+  <text x="130" y="122" fill="#8b95ab" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">smoke is advected by a stored velocity field</text>
+</svg>`,
+      state: { field: 'vortex', x: 1.0, y: 0.4 }, jump: 'Show me a field to ride' },
+
+    { level: 'real', title: 'Robots that steer by attraction and repulsion',
+      body: `<b>Potential field</b> navigation gives the goal a negative charge and every obstacle a
+        positive one, then has the robot follow the resulting field downhill. It is fast enough to run in
+        a control loop and needs no map search. Its famous failure — getting stuck at a local minimum
+        between two obstacles — is precisely a stagnation point of the field.`,
+      figure: `<svg viewBox="0 0 260 128" role="img" aria-label="A robot path bending around repulsive obstacles toward an attractive goal">
+  <circle cx="226" cy="64" r="9" fill="#3df2c0" fill-opacity=".7"/>
+  <text x="226" y="88" fill="#3df2c0" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">goal</text>
+  <g fill="#ff5d73" fill-opacity=".55">
+    <circle cx="120" cy="40" r="14"/><circle cx="140" cy="96" r="12"/>
+  </g>
+  <g fill="none" stroke="#ff5d73" stroke-opacity=".35">
+    <circle cx="120" cy="40" r="24"/><circle cx="140" cy="96" r="22"/>
+  </g>
+  <path d="M24 64 Q80 78 106 70 Q130 62 132 66 Q150 74 176 66 Q200 58 214 64" fill="none" stroke="#ffd76a" stroke-width="2" stroke-dasharray="5 4"/>
+  <circle cx="24" cy="64" r="5" fill="#ffd76a"/>
+  <text x="130" y="122" fill="#8b95ab" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">attract to goal, repel from obstacles</text>
+</svg>`,
+      state: { field: 'saddle', x: 0.6, y: 0.8 }, jump: 'Show me where it can get stuck' },
   ],
 };

@@ -139,5 +139,61 @@ export const LESSON = {
   <text x="14" y="128" fill="#ffb454" font-family="JetBrains Mono, monospace" font-size="9">a violin: many circles at once</text>
 </svg>`,
       state: { trace: 'sin', deg: 720 }, jump: 'Show me two full cycles' },
+
+    { level: 'use', title: 'Amplitude and period are stretches of the same circle',
+      body: `<code>A·sin(Bθ)</code> does two things: <code>A</code> scales the height, so the circle
+        grows; <code>B</code> speeds the walk, so a full turn happens in <code>2π/B</code>. Neither
+        changes the shape — every sinusoid you will ever meet is this one curve, stretched.`,
+      state: { trace: 'sin', deg: 180 }, jump: 'Take me half a turn' },
+
+    { level: 'advanced', title: 'Radians are not a preference',
+      body: `<code>d/dθ sin θ = cos θ</code> is true <em>only</em> in radians. In degrees you pick up a
+        stray factor of <code>π/180</code> every time you differentiate. Radians are defined so that arc
+        length equals angle on the unit circle, and that is precisely what makes the calculus clean.
+        Degrees are a Babylonian convenience.`,
+      state: { trace: 'sin', deg: 57 }, jump: 'Show me one radian' },
+
+    { level: 'advanced', title: 'The circle and the exponential are the same object',
+      body: `Euler's formula, <code>e^(iθ) = cos θ + i·sin θ</code>, says a point on this circle is what
+        you get by raising e to an imaginary power. Sine and cosine are the shadow of exponential growth
+        turned sideways. At <code>θ = π</code> it gives <code>e^(iπ) = −1</code> — the point at the far
+        left of the circle you are looking at.`,
+      state: { trace: 'cos', deg: 180 }, jump: 'Take me to e^(iπ)' },
+
+    { level: 'real', title: 'Everything wireless',
+      body: `A radio carrier is a sine wave, and information rides on it by nudging one of three things:
+        <b>amplitude</b> (AM), <b>frequency</b> (FM) or <b>phase</b>. Wi-Fi and 5G use the last, packing
+        several bits per symbol by choosing one of many points around exactly this circle — engineers
+        draw it as a constellation diagram, which is the unit circle with labels.`,
+      figure: `<svg viewBox="0 0 260 128" role="img" aria-label="A constellation of phase points around a circle beside a modulated wave">
+  <circle cx="62" cy="64" r="40" fill="none" stroke="#7e98c4" stroke-opacity=".45"/>
+  <g fill="#3df2c0">
+    <circle cx="90" cy="36" r="3.4"/><circle cx="90" cy="92" r="3.4"/><circle cx="34" cy="36" r="3.4"/><circle cx="34" cy="92" r="3.4"/>
+    <circle cx="62" cy="24" r="3.4"/><circle cx="62" cy="104" r="3.4"/><circle cx="22" cy="64" r="3.4"/><circle cx="102" cy="64" r="3.4"/>
+  </g>
+  <path d="M62 64 L90 36" stroke="#ffd76a" stroke-width="1.8"/>
+  <text x="62" y="122" fill="#8b95ab" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">each point = a symbol</text>
+  <path d="M126 64 q10 -30 20 0 q10 30 20 0 q10 -30 20 0 q10 30 20 0 q10 -30 20 0 q10 30 14 0" fill="none" stroke="#ffb454" stroke-width="1.8"/>
+  <path d="M126 64 h0" stroke="#7e98c4"/>
+  <text x="186" y="122" fill="#8b95ab" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">carrier</text>
+</svg>`,
+      state: { trace: 'sin', deg: 45 }, jump: 'Show me a phase point' },
+
+    { level: 'real', title: 'Tides, daylight and body clocks',
+      body: `Anything driven by rotation is sinusoidal. Daylight hours over a year, tide height over a
+        day, body temperature over a circadian cycle — all fitted as <code>A·sin(Bt + C) + D</code>,
+        because the underlying cause really is something going round. Tide tables are computed by adding
+        dozens of such terms, one for each astronomical driver.`,
+      figure: `<svg viewBox="0 0 260 128" role="img" aria-label="Two sinusoids of different periods summing to a more complex tide curve">
+  <path d="M18 40 q22 -20 44 0 q22 20 44 0 q22 -20 44 0 q22 20 44 0 q22 -20 44 0" fill="none" stroke="#3df2c0" stroke-width="1.6" stroke-opacity=".8"/>
+  <path d="M18 72 q44 -16 88 0 q44 16 88 0 q30 -11 50 -5" fill="none" stroke="#7aa2ff" stroke-width="1.6" stroke-opacity=".8"/>
+  <path d="M18 108 q11 -14 22 -4 q11 10 22 -10 q11 -10 22 8 q11 14 22 -6 q11 -12 22 2 q11 12 22 -8 q11 -8 22 6 q11 10 22 -4 q11 -12 22 0" fill="none" stroke="#ffb454" stroke-width="1.8"/>
+  <g font-family="JetBrains Mono, monospace" font-size="9">
+    <text x="20" y="24" fill="#3df2c0">lunar</text>
+    <text x="20" y="60" fill="#7aa2ff">solar</text>
+    <text x="20" y="124" fill="#ffb454">the tide you measure</text>
+  </g>
+</svg>`,
+      state: { trace: 'sin', deg: 540 }, jump: 'Show me repeated cycles' },
   ],
 };

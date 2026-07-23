@@ -144,5 +144,58 @@ export const LESSON = {
   <text x="130" y="124" fill="#8b95ab" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">trace the edge, get the area</text>
 </svg>`,
       state: { field: 'wave', x: 0.95, y: 0.95, r: 1.15 }, jump: 'Show me a traced loop' },
+
+    { level: 'use', title: 'Which way round you walk decides the sign',
+      body: `The theorem assumes the boundary is traced <b>counter-clockwise</b>, keeping the interior on
+        your left. Walk the other way and the circulation flips sign while the area integral does not —
+        so the two only agree under the stated orientation. Every sign error in this subject is
+        ultimately this.`,
+      state: { field: 'quad', x: 0.9, y: 0.3, r: 0.65 }, jump: 'Show me a positive loop' },
+
+    { level: 'advanced', title: 'A hole in the region needs a second loop',
+      body: `Green's theorem wants the region filled in. Put a hole in it — a puncture where the field
+        blows up — and you must add an inner boundary, traced the <em>opposite</em> way, so the enclosed
+        area is genuinely between the two curves. That bookkeeping is exactly how contour integration
+        handles singularities.`,
+      state: { field: 'wave', x: 0, y: 0, r: 1.35 }, jump: 'Show me a large enclosing loop' },
+
+    { level: 'advanced', title: 'It is the flat case of something much bigger',
+      body: `Green's theorem is Stokes' theorem in the plane. Stokes lifts the same statement to a curved
+        surface in space; the divergence theorem is its sibling for flux through a closed surface. All
+        three say one thing: <b>an integral over a region equals an integral over its boundary</b>. That
+        pattern is the whole of vector calculus, and it generalises again as the modern Stokes theorem.`,
+      state: { field: 'hyper', x: 0.7, y: -0.4, r: 0.9 }, jump: 'Show me the 2-D case' },
+
+    { level: 'real', title: 'Is this point inside the shape?',
+      body: `Graphics and GIS answer that constantly — for a mouse click, a map query, a collision. The
+        <b>winding number</b> does it by walking the boundary and totting up the angle swept, which is a
+        contour integral of exactly this kind. Non-zero means inside. Every fill tool and every "which
+        country was this photo taken in" query runs some version of it.`,
+      figure: `<svg viewBox="0 0 260 128" role="img" aria-label="A point inside a polygon with the boundary swept around it">
+  <path d="M40 92 L64 30 L128 14 L196 44 L214 96 L136 116 Z" fill="#3df2c0" fill-opacity=".12" stroke="#3df2c0" stroke-width="2"/>
+  <circle cx="126" cy="64" r="4.5" fill="#ffd76a"/>
+  <g stroke="#ffd76a" stroke-opacity=".55" stroke-dasharray="3 3">
+    <path d="M126 64 L64 30"/><path d="M126 64 L196 44"/><path d="M126 64 L136 116"/><path d="M126 64 L40 92"/>
+  </g>
+  <text x="130" y="126" fill="#8b95ab" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">total angle swept ≠ 0 ⟹ inside</text>
+</svg>`,
+      state: { field: 'grad', x: 0.3, y: 0.3, r: 1.0 }, jump: 'Show me a clean enclosure' },
+
+    { level: 'real', title: "Ampère's law, and why a clamp meter works",
+      body: `Ampère's law says the magnetic field integrated round a closed loop equals the current
+        enclosed — a boundary integral reporting on an interior. A clamp meter measures current without
+        touching the wire by doing precisely that: close a loop around the conductor and read the
+        circulation. Nothing about the wire's position inside the loop matters, which is the theorem
+        talking.`,
+      figure: `<svg viewBox="0 0 260 128" role="img" aria-label="A clamp encircling a wire, reading the field circulating around it">
+  <circle cx="130" cy="60" r="40" fill="none" stroke="#ffd76a" stroke-width="6" stroke-opacity=".8" stroke-dasharray="200 30"/>
+  <circle cx="130" cy="60" r="7" fill="#7aa2ff"/>
+  <g fill="none" stroke="#3df2c0" stroke-width="1.6">
+    <circle cx="130" cy="60" r="18"/><circle cx="130" cy="60" r="28"/>
+  </g>
+  <path d="M148 54 l6 6 -6 6 z" fill="#3df2c0"/>
+  <text x="130" y="122" fill="#8b95ab" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">∮B·dl = μ₀I enclosed</text>
+</svg>`,
+      state: { field: 'mixed', x: -0.9, y: 0.6, r: 0.8 }, jump: 'Enclose the source' },
   ],
 };

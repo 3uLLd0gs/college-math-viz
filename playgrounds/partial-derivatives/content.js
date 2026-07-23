@@ -98,5 +98,69 @@ export const LESSON = {
   <text x="150" y="22" fill="#ffd76a" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">a dominates; d barely matters</text>
 </svg>`,
       state: { surf: 'gauss', axis: 'y', slice: 1.05, probe: 1.8 }, jump: 'Compare the two directions' },
+
+    { level: 'use', title: 'Differentiate twice, in either order, and get the same thing',
+      body: `Take <code>∂/∂x</code> then <code>∂/∂y</code>, or the other way round, and for any surface
+        smooth enough you land on the same mixed partial. That is <b>Clairaut's theorem</b>, and it is
+        why <code>∂²f/∂x∂y</code> is written without fussing about order. On the saddle both come out
+        to zero; on the ripple both come out to <code>−cos x · sin y</code>.`,
+      state: { surf: 'ripple', axis: 'y', slice: 1.085, probe: 1.55 }, jump: 'Cut the ripple the other way' },
+
+    { level: 'advanced', title: 'The two partials build the tangent PLANE',
+      body: `One derivative gives a tangent line; two give a tangent plane, spanned by the slope east and
+        the slope north. Its equation is
+        <code>z = f(a,b) + f<sub>x</sub>·(x−a) + f<sub>y</sub>·(y−b)</code> — the two-variable version of
+        linear approximation, and the object that makes a curved surface look flat when you zoom far
+        enough in.`,
+      state: { surf: 'gauss', axis: 'x', slice: 1.05, probe: 0 }, jump: 'Sit where the plane is level' },
+
+    { level: 'advanced', title: 'Having both partials is not enough',
+      body: `Partials only probe along two special directions. A surface can have both of them exist at a
+        point and still be torn or creased along some diagonal — differentiability needs the tangent
+        plane to approximate well in <em>every</em> direction, which is strictly stronger. The usual
+        rescue: if the partials exist and are continuous nearby, the function is differentiable.`,
+      state: { surf: 'saddle', axis: 'y', slice: 0.7, probe: 0 }, jump: 'Sit at the saddle point' },
+
+    { level: 'real', title: 'Thermodynamics is almost entirely partial derivatives',
+      body: `State variables — pressure, volume, temperature, entropy — are tied together, so every
+        quantity is a partial with something else held fixed. Heat capacity <em>at constant volume</em>
+        and <em>at constant pressure</em> are different numbers for the same substance, and the subscript
+        in <code>C<sub>V</sub></code> is exactly the "hold this still" of the blue plane here. Maxwell's
+        relations come from Clairaut's theorem applied to those.`,
+      figure: `<svg viewBox="0 0 260 128" role="img" aria-label="A pressure volume surface with two paths, one at constant volume and one at constant pressure">
+  <path d="M30 106 H236" stroke="#7e98c4" stroke-opacity=".45"/>
+  <path d="M40 106 V18" stroke="#7e98c4" stroke-opacity=".45"/>
+  <path d="M52 96 Q104 30 220 24" fill="none" stroke="#ffb454" stroke-width="2"/>
+  <g stroke="#ff5d73" stroke-width="2" fill="#ff5d73">
+    <path d="M96 106 V44"/><path d="M96 38 l-3 7 h6 z"/>
+  </g>
+  <g stroke="#3df2c0" stroke-width="2" fill="#3df2c0">
+    <path d="M40 60 H150"/><path d="M156 60 l-7 -3 v6 z"/>
+  </g>
+  <g font-family="JetBrains Mono, monospace" font-size="9">
+    <text x="102" y="34" fill="#ff5d73">hold V</text>
+    <text x="160" y="56" fill="#3df2c0">hold P</text>
+    <text x="34" y="16" fill="#8b95ab">P</text><text x="238" y="120" fill="#8b95ab">V</text>
+  </g>
+</svg>`,
+      state: { surf: 'parab', axis: 'y', slice: 0.7, probe: 1.2 }, jump: 'Hold the other variable' },
+
+    { level: 'real', title: 'The Greeks, and why a trading desk cares',
+      body: `An option's price depends on the underlying price, volatility, interest rate and time. Each
+        partial has a name: <b>delta</b> is <code>∂V/∂S</code>, <b>vega</b> is the partial in volatility,
+        <b>theta</b> the one in time. Desks hedge by holding a position whose delta cancels theirs, and
+        the Black–Scholes equation that prices the thing is a partial differential equation built from
+        exactly these.`,
+      figure: `<svg viewBox="0 0 260 128" role="img" aria-label="An option price curve with its slope marked as delta">
+  <path d="M22 104 H242" stroke="#7e98c4" stroke-opacity=".45"/>
+  <path d="M26 100 Q120 96 158 68 Q198 38 238 20" fill="none" stroke="#ffb454" stroke-width="2"/>
+  <path d="M118 104 L206 34" stroke="#3df2c0" stroke-width="2"/>
+  <circle cx="162" cy="69" r="4" fill="#ffd76a"/>
+  <g font-family="JetBrains Mono, monospace" font-size="9">
+    <text x="206" y="30" fill="#3df2c0">slope = delta</text>
+    <text x="24" y="122" fill="#8b95ab">underlying price →</text>
+  </g>
+</svg>`,
+      state: { surf: 'gauss', axis: 'x', slice: 1.05, probe: 1.8 }, jump: 'Read one sensitivity' },
   ],
 };

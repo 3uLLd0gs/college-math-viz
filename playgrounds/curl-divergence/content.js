@@ -128,5 +128,60 @@ export const LESSON = {
   <text x="130" y="112" fill="#ffd76a" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">in = out ⟹ div v = 0</text>
 </svg>`,
       state: { field: 'cubic', x: 0.8, y: -0.6, r: 0.32 }, jump: 'Show me an incompressible field' },
+
+    { level: 'use', title: 'Read a field by eye before computing anything',
+      body: `Two questions answer most of it. Do arrows on opposite sides of your point pull <em>apart</em>
+        or push <em>together</em>? That is divergence. Are the arrows on one side longer, or angled
+        differently, from the other? That is curl. The instruments here just make those two judgements
+        quantitative.`,
+      state: { field: 'mixed', x: -0.2, y: 1.4, r: 0.32 }, jump: 'Judge this one by eye' },
+
+    { level: 'advanced', title: 'The curl of any gradient is zero',
+      body: `<code>curl(∇f) = 0</code>, always — it follows from mixed partials being equal. So if a field
+        has non-zero curl anywhere, it cannot be the gradient of any scalar, and no potential function
+        exists. This single identity is why "conservative" and "irrotational" are the same condition.`,
+      state: { field: 'blob', x: 0.9, y: -0.7, r: 0.32 }, jump: 'Show me an irrotational field' },
+
+    { level: 'advanced', title: 'And the divergence of any curl is zero',
+      body: `<code>div(curl F) = 0</code>, equally always. In three dimensions this is why magnetic field
+        lines never begin or end: <code>B</code> is the curl of a vector potential, so its divergence
+        vanishes identically, and monopoles are ruled out by the algebra before any experiment is run.`,
+      state: { field: 'cubic', x: 0.7, y: -0.5, r: 0.3 }, jump: 'Show me a divergence-free field' },
+
+    { level: 'real', title: 'The continuity equation: nothing disappears',
+      body: `<code>∂ρ/∂t + div(ρv) = 0</code> says that if density drops somewhere, the flow must have
+        carried it away — divergence is bookkeeping for conservation. The same equation governs mass in a
+        pipe, charge in a wire, cars on a motorway and probability in quantum mechanics. Traffic jams are
+        travelling regions of positive divergence.`,
+      figure: `<svg viewBox="0 0 260 128" role="img" aria-label="Flow into and out of a control volume with a change in density inside">
+  <path d="M18 40 H242" stroke="#7e98c4" stroke-opacity=".45"/>
+  <path d="M18 96 H242" stroke="#7e98c4" stroke-opacity=".45"/>
+  <rect x="98" y="40" width="66" height="56" fill="#7aa2ff" fill-opacity=".14" stroke="#7aa2ff" stroke-opacity=".55"/>
+  <g stroke="#3df2c0" stroke-width="2.2" fill="#3df2c0">
+    <path d="M32 68 H88"/><path d="M94 68 l-8 -4 v8 z"/>
+  </g>
+  <g stroke="#ffb454" stroke-width="1.4" fill="#ffb454">
+    <path d="M170 68 H210"/><path d="M216 68 l-8 -4 v8 z"/>
+  </g>
+  <text x="131" y="118" fill="#8b95ab" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">more in than out ⟹ density rises</text>
+</svg>`,
+      state: { field: 'quad', x: -1.3, y: 1.2, r: 0.32 }, jump: 'Show me flow being squeezed' },
+
+    { level: 'real', title: 'Storm rotation, and what a tornado warning is watching',
+      body: `Doppler radar measures wind toward and away from it, and forecasters look for a tight couplet
+        of opposite velocities side by side — a rotation signature. That couplet is a region of large
+        curl, and it is what triggers a tornado warning, often before anything is visible. The same
+        vorticity field predicts where a hurricane will intensify.`,
+      figure: `<svg viewBox="0 0 260 128" role="img" aria-label="A radar velocity couplet of inbound and outbound winds sitting side by side">
+  <circle cx="130" cy="60" r="48" fill="none" stroke="#7e98c4" stroke-opacity=".35"/>
+  <path d="M106 24 a44 44 0 0 0 0 72 z" fill="#3df2c0" fill-opacity=".45"/>
+  <path d="M154 24 a44 44 0 0 1 0 72 z" fill="#ff5d73" fill-opacity=".45"/>
+  <g font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">
+    <text x="88" y="62" fill="#3df2c0">toward</text>
+    <text x="176" y="62" fill="#ff5d73">away</text>
+    <text x="130" y="122" fill="#8b95ab">a tight couplet = rotation</text>
+  </g>
+</svg>`,
+      state: { field: 'vortex', x: 0.8, y: 0.8, r: 0.3 }, jump: 'Show me pure rotation' },
   ],
 };

@@ -133,5 +133,61 @@ export const LESSON = {
   </g>
 </svg>`,
       state: { fn: 'sin', N: 1, probe: 0.4 }, jump: 'Show me sin θ ≈ θ' },
+
+    { level: 'use', title: 'These are all built around zero — that is a choice',
+      body: `Expanding about <code>x = 0</code> gives a <b>Maclaurin</b> series, the special case
+        everyone meets first. A Taylor series proper can be centred anywhere: swap <code>x</code> for
+        <code>(x − a)</code> and the sweet spot moves to <code>a</code>. If you care about accuracy
+        near x = 10, centring at 0 is a poor plan.`,
+      state: { fn: 'ln', N: 8, probe: 0.5 }, jump: 'Show me a series with a bad centre' },
+
+    { level: 'advanced', title: 'The error is roughly the first term you left out',
+      body: `Truncating after N terms leaves a remainder, and Lagrange's form of it says that remainder
+        looks like the next term with the derivative evaluated somewhere in between. Practically: the
+        first discarded term is a good estimate of your error. Watch the readout — for
+        <code>eˣ</code> at x = 2 the error tracks <code>2ⁿ⁺¹/(n+1)!</code> closely.`,
+      state: { fn: 'exp', N: 4, probe: 2 }, jump: 'Compare error to the next term' },
+
+    { level: 'advanced', title: 'Symmetry deletes half the terms',
+      body: `<code>sin</code> is odd, so only odd powers survive; <code>cos</code> is even, so only even
+        ones do. You can see it in the formula panel — the gaps are not omissions, they are
+        coefficients that are exactly zero. That is why N = 6 and N = 7 give an identical cosine
+        polynomial.`,
+      state: { fn: 'cos', N: 8, probe: 2.4 }, jump: 'Look at the missing terms' },
+
+    { level: 'real', title: 'Where E = mc² comes from',
+      body: `Relativistic energy is <code>γmc²</code> with <code>γ = 1/√(1 − v²/c²)</code>. Expand it for
+        small <code>v/c</code> and you get <code>mc² + ½mv² + …</code> — the rest energy, then
+        <b>exactly the Newtonian kinetic energy</b> as the first correction. Classical mechanics is the
+        first two terms of a Taylor series, which is why it works beautifully until things go fast.`,
+      figure: `<svg viewBox="0 0 260 128" role="img" aria-label="Relativistic energy curve and its two-term approximation agreeing at low speed">
+  <path d="M20 108 H240" stroke="#7e98c4" stroke-opacity=".4"/>
+  <path d="M20 108 Q140 100 200 20" fill="none" stroke="#ffb454" stroke-width="2"/>
+  <path d="M20 108 Q110 94 176 62" fill="none" stroke="#3df2c0" stroke-width="2" stroke-dasharray="5 4"/>
+  <rect x="20" y="86" width="72" height="22" fill="#3df2c0" fill-opacity=".10"/>
+  <g font-family="JetBrains Mono, monospace" font-size="9" fill="#8b95ab">
+    <text x="56" y="122" text-anchor="middle">v ≪ c</text>
+    <text x="215" y="26" fill="#ffb454">γmc²</text>
+    <text x="182" y="74" fill="#3df2c0">mc² + ½mv²</text>
+  </g>
+</svg>`,
+      state: { fn: 'geo', N: 2, probe: 0.25 }, jump: 'Show me a two-term approximation' },
+
+    { level: 'real', title: 'Every numerical solver is a truncated series',
+      body: `Euler's method for an ODE is the first two Taylor terms; Runge–Kutta keeps more, which is
+        why RK4's error falls like <code>h⁴</code> while Euler's falls like <code>h</code>. The same
+        logic sits under finite-difference PDE solvers, orbital propagators and physics engines. When a
+        simulation "loses accuracy at large timesteps", this is the reason.`,
+      figure: `<svg viewBox="0 0 260 128" role="img" aria-label="A true solution curve with a coarse Euler path and a finer one tracking it more closely">
+  <path d="M20 104 Q90 92 140 60 Q190 28 240 20" fill="none" stroke="#ffb454" stroke-width="2"/>
+  <polyline points="20,104 76,98 132,76 188,44 240,26" fill="none" stroke="#3df2c0" stroke-width="1.6"/>
+  <polyline points="20,104 62,100 104,90 146,70 188,48 240,20" fill="none" stroke="#7aa2ff" stroke-width="1.6" stroke-dasharray="4 3"/>
+  <g font-family="JetBrains Mono, monospace" font-size="9">
+    <text x="22" y="20" fill="#ffb454">true</text>
+    <text x="22" y="34" fill="#3df2c0">coarse steps</text>
+    <text x="22" y="48" fill="#7aa2ff">finer steps</text>
+  </g>
+</svg>`,
+      state: { fn: 'exp', N: 1, probe: 1.2 }, jump: 'Show me one Euler step' },
   ],
 };

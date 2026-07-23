@@ -146,5 +146,73 @@ export const LESSON = {
   <text x="130" y="122" fill="#8b95ab" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">a few samples → AUC = total exposure</text>
 </svg>`,
       state: { fn: 'gauss', rule: 'mid', n: 10 }, jump: 'Show me a decay curve' },
+
+    { level: 'use', title: 'The trapezoid rule is just left and right averaged',
+      body: `Average the left and right sums and the overshoot cancels the undershoot — that is the
+        trapezoid rule, and it is second order like midpoint. Flip between Left and Right at the same n
+        and read the two numbers: the true area sits between them, and their mean is much closer than
+        either.`,
+      state: { fn: 'square', rule: 'right', n: 8 }, jump: 'Read the two ends' },
+
+    { level: 'advanced', title: 'Why midpoint gets a whole extra order',
+      body: `On each strip, the midpoint rectangle cuts the curve twice — it under-counts on one side
+        and over-counts on the other by nearly the same amount. Those errors cancel to first order,
+        leaving something proportional to <code>h²</code>. Left and right have no such cancellation, so
+        their errors just accumulate.`,
+      state: { fn: 'cubic', rule: 'mid', n: 6 }, jump: 'Look at one strip closely' },
+
+    { level: 'advanced', title: 'The integral exists even when no formula does',
+      body: `<code>e^(−x²)</code> has no antiderivative in elementary functions — no combination of
+        polynomials, exponentials and trig will give you one. The area under it is perfectly well
+        defined all the same, and this sum computes it. Definite integrals do not need closed forms;
+        that is a fact about our notation, not about area.`,
+      state: { fn: 'gauss', rule: 'mid', n: 20 }, jump: 'Integrate the impossible one' },
+
+    { level: 'real', title: 'When rectangles stop working: Monte Carlo',
+      body: `In one dimension n strips give you accuracy like <code>1/n²</code>. In <b>d</b> dimensions
+        you need <code>nᵈ</code> samples for the same spacing — at d = 10 that is hopeless. So
+        high-dimensional integrals are done by throwing random points instead, whose error falls like
+        <code>1/√N</code> <em>regardless of dimension</em>. That is how banks price options and how
+        renderers compute lighting.`,
+      figure: `<svg viewBox="0 0 260 128" role="img" aria-label="A regular grid of samples beside scattered random samples">
+  <g stroke="#7e98c4" stroke-opacity=".45"><rect x="18" y="16" width="96" height="96" fill="none"/></g>
+  <g fill="#3df2c0">
+    <circle cx="34" cy="32" r="2.4"/><circle cx="58" cy="32" r="2.4"/><circle cx="82" cy="32" r="2.4"/><circle cx="106" cy="32" r="2.4"/>
+    <circle cx="34" cy="56" r="2.4"/><circle cx="58" cy="56" r="2.4"/><circle cx="82" cy="56" r="2.4"/><circle cx="106" cy="56" r="2.4"/>
+    <circle cx="34" cy="80" r="2.4"/><circle cx="58" cy="80" r="2.4"/><circle cx="82" cy="80" r="2.4"/><circle cx="106" cy="80" r="2.4"/>
+    <circle cx="34" cy="104" r="2.4"/><circle cx="58" cy="104" r="2.4"/><circle cx="82" cy="104" r="2.4"/><circle cx="106" cy="104" r="2.4"/>
+  </g>
+  <g stroke="#7e98c4" stroke-opacity=".45"><rect x="146" y="16" width="96" height="96" fill="none"/></g>
+  <g fill="#ffb454">
+    <circle cx="164" cy="34" r="2.4"/><circle cx="212" cy="26" r="2.4"/><circle cx="190" cy="52" r="2.4"/><circle cx="158" cy="72" r="2.4"/>
+    <circle cx="228" cy="60" r="2.4"/><circle cx="176" cy="96" r="2.4"/><circle cx="204" cy="86" r="2.4"/><circle cx="232" cy="104" r="2.4"/>
+    <circle cx="152" cy="102" r="2.4"/><circle cx="196" cy="20" r="2.4"/><circle cx="222" cy="42" r="2.4"/><circle cx="168" cy="56" r="2.4"/>
+  </g>
+  <g font-family="JetBrains Mono, monospace" font-size="9" fill="#8b95ab" text-anchor="middle">
+    <text x="66" y="126">grid: nᵈ points</text><text x="194" y="126">random: 1/√N</text>
+  </g>
+</svg>`,
+      state: { fn: 'gauss', rule: 'mid', n: 30 }, jump: 'Show me a smooth integrand' },
+
+    { level: 'real', title: 'Quadrature rules you have already used without knowing',
+      body: `Spreadsheets, calculators and instrument software rarely use plain rectangles — they use
+        Simpson's rule, which fits parabolas to strip pairs and reaches fourth order, or Gaussian
+        quadrature, which picks unequal sample points on purpose. All of them are the same move: sample
+        the integrand, weight the samples, add them up. This page is the honest first version.`,
+      figure: `<svg viewBox="0 0 260 128" role="img" aria-label="Rectangles beside parabolic segments fitting a curve more closely">
+  <path d="M18 104 H124" stroke="#7e98c4" stroke-opacity=".4"/>
+  <path d="M18 82 Q70 24 124 60" fill="none" stroke="#ffb454" stroke-width="2"/>
+  <g fill="#3df2c0" fill-opacity=".25" stroke="#3df2c0" stroke-opacity=".6">
+    <rect x="18" y="66" width="26" height="38"/><rect x="44" y="44" width="26" height="60"/>
+    <rect x="70" y="40" width="26" height="64"/><rect x="96" y="52" width="28" height="52"/>
+  </g>
+  <text x="71" y="122" fill="#8b95ab" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">rectangles</text>
+  <path d="M136 104 H242" stroke="#7e98c4" stroke-opacity=".4"/>
+  <path d="M136 82 Q188 24 242 60" fill="none" stroke="#ffb454" stroke-width="2"/>
+  <path d="M136 82 Q162 40 188 42 L188 104 L136 104 Z" fill="#7aa2ff" fill-opacity=".22" stroke="#7aa2ff" stroke-opacity=".7"/>
+  <path d="M188 42 Q214 44 242 60 L242 104 L188 104 Z" fill="#7aa2ff" fill-opacity=".22" stroke="#7aa2ff" stroke-opacity=".7"/>
+  <text x="189" y="122" fill="#8b95ab" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">Simpson: parabolas</text>
+</svg>`,
+      state: { fn: 'sin', rule: 'mid', n: 4 }, jump: 'Show me few but smart samples' },
   ],
 };
