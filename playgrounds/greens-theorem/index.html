@@ -51,14 +51,14 @@
   </header>
   <div class="studio">
     <div class="card graph-card">
-      <canvas id="field"></canvas>
+      <canvas id="field" role="img" aria-label="Green's theorem flow map. Arrow keys move the loop, plus and minus resize it." aria-describedby="readout"></canvas>
       <div class="graph-tag">drag to move the loop · the dashed line is where curl = 0</div>
       <div class="legend">
         <span><i class="swatch" style="background:var(--gold)"></i> the loop C</span>
         <span><i class="swatch" style="background:var(--approx)"></i> curl &gt; 0</span>
         <span><i class="swatch" style="background:var(--error)"></i> curl &lt; 0</span>
       </div>
-      <div class="readout" id="readout"></div>
+      <div class="readout" id="readout" role="status" aria-live="polite"></div>
     </div>
     <div class="card panel">
       <div>

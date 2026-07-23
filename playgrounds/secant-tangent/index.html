@@ -53,14 +53,14 @@
   </header>
   <div class="studio">
     <div class="card graph-card">
-      <canvas id="graph"></canvas>
+      <canvas id="graph" role="img" aria-label="Secant and tangent graph. Arrow keys move the tangent point along x, plus and minus shrink or grow h." aria-describedby="readout"></canvas>
       <div class="graph-tag">drag left ⟷ right to move the tangent point</div>
       <div class="legend">
         <span><i class="swatch" style="background:var(--true)"></i> f(x)</span>
         <span><i class="swatch" style="background:var(--approx)"></i> secant</span>
         <span><i class="swatch" style="background:var(--error)"></i> tangent f′(x₀)</span>
       </div>
-      <div class="readout" id="readout"></div>
+      <div class="readout" id="readout" role="status" aria-live="polite"></div>
     </div>
     <div class="card panel">
       <div>

@@ -54,14 +54,14 @@
   </header>
   <div class="studio">
     <div class="card graph-card">
-      <canvas id="scene"></canvas>
+      <canvas id="scene" role="img" aria-label="Unit circle unwrap. Arrow keys and plus and minus turn the angle." aria-describedby="readout"></canvas>
       <div class="graph-tag">drag the radius on the circle · the leg unwraps into the curve</div>
       <div class="legend">
         <span><i class="swatch" style="background:var(--gold)"></i> the radius</span>
         <span><i class="swatch" style="background:var(--approx)"></i> the value it reads</span>
         <span><i class="swatch" style="background:var(--true)"></i> the curve so far</span>
       </div>
-      <div class="readout" id="readout"></div>
+      <div class="readout" id="readout" role="status" aria-live="polite"></div>
     </div>
     <div class="card panel">
       <div>

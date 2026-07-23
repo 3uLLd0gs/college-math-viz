@@ -55,13 +55,13 @@
   </header>
   <div class="studio">
     <div class="card graph-card">
-      <canvas id="field"></canvas>
+      <canvas id="field" role="img" aria-label="Curl and divergence flow map. Arrow keys move the probe, plus and minus resize the test circle." aria-describedby="readout"></canvas>
       <div class="graph-tag">drag the probe · the wheel spins at curl/2, the ring rides the flow</div>
       <div class="legend">
         <span><i class="swatch" style="background:var(--gold)"></i> paddle wheel · curl</span>
         <span><i class="swatch" style="background:var(--approx)"></i> tracer ring · divergence</span>
       </div>
-      <div class="readout" id="readout"></div>
+      <div class="readout" id="readout" role="status" aria-live="polite"></div>
     </div>
     <div class="card panel">
       <div>

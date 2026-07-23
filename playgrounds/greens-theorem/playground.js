@@ -8,6 +8,7 @@ import { buttonGroup, slider } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
 import { mountLesson } from '../../engine/lesson.js';
 import { readState, makeUrlSync, stateToParams } from '../../engine/deep-link.js';
+import { keyboardControl } from '../../engine/keyboard.js';
 import { FIELDS, curlGrid, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "Green's theorem" ---- */
@@ -76,6 +77,21 @@ cv.addEventListener('pointerdown', e => { dragging = true; cv.setPointerCapture(
 cv.addEventListener('pointermove', e => { if (dragging) moveLoop(e.clientX, e.clientY); });
 cv.addEventListener('pointerup', () => { dragging = false; });
 cv.addEventListener('pointercancel', () => { dragging = false; });
+
+keyboardControl(cv, {
+  nudge: (dx, dy, big) => {
+    const d = (big ? 0.2 : 0.05) * DOMAIN;
+    state.x = Math.max(-DOMAIN, Math.min(DOMAIN, state.x + dx * d));
+    state.y = Math.max(-DOMAIN, Math.min(DOMAIN, state.y + dy * d));
+    render(); pushUrl();
+  },
+  step: (delta, big) => {
+    const d = (big ? 0.1 : 0.02) * delta;
+    state.r = Math.max(0.2, Math.min(1.4, state.r + d));
+    radius.set(state.r);
+    render(); pushUrl();
+  },
+});
 
 view.onresize = render;
 

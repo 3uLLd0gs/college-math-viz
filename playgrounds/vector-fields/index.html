@@ -51,13 +51,13 @@
   </header>
   <div class="studio">
     <div class="card graph-card">
-      <canvas id="field"></canvas>
+      <canvas id="field" role="img" aria-label="Vector field flow map. Arrow keys move the probe." aria-describedby="readout"></canvas>
       <div class="graph-tag">drag to move the probe · release a particle to ride the flow</div>
       <div class="legend">
         <span><i class="swatch" style="background:var(--accent)"></i> streamline</span>
         <span><i class="swatch" style="background:var(--gold)"></i> particle</span>
       </div>
-      <div class="readout" id="readout"></div>
+      <div class="readout" id="readout" role="status" aria-live="polite"></div>
     </div>
     <div class="card panel">
       <div>

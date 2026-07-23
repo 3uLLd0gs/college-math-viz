@@ -7,6 +7,7 @@ import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
 import { mountLesson } from '../../engine/lesson.js';
 import { readState, makeUrlSync, stateToParams } from '../../engine/deep-link.js';
+import { keyboardControl } from '../../engine/keyboard.js';
 import { INTEGRANDS, RULES, riemannSum, rectangles, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "Riemann sums" ---- */
@@ -84,6 +85,19 @@ ticker('refine', {
 });
 
 g.onresize = render;
+
+keyboardControl(document.getElementById('graph'), {
+  nudge: (dx, dy, big) => {
+    state.n = Math.max(1, Math.min(MAX_N, state.n + dx * (big ? 5 : 1)));
+    nSlider.set(state.n);
+    render(); pushUrl();
+  },
+  step: (delta, big) => {
+    state.n = Math.max(1, Math.min(MAX_N, state.n + delta * (big ? 5 : 1)));
+    nSlider.set(state.n);
+    render(); pushUrl();
+  },
+});
 
 function render() {
   const { fn, rule, n } = state;

@@ -7,6 +7,7 @@ import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
 import { mountLesson } from '../../engine/lesson.js';
 import { readState, makeUrlSync, stateToParams } from '../../engine/deep-link.js';
+import { keyboardControl } from '../../engine/keyboard.js';
 import { FIELDS, speed, classify, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "vector fields" ---- */
@@ -95,6 +96,16 @@ cv.addEventListener('pointerdown', e => { dragging = true; cv.setPointerCapture(
 cv.addEventListener('pointermove', e => { if (dragging) moveProbe(e.clientX, e.clientY); });
 cv.addEventListener('pointerup', () => { dragging = false; });
 cv.addEventListener('pointercancel', () => { dragging = false; });
+
+keyboardControl(cv, {
+  nudge: (dx, dy, big) => {
+    const d = (big ? 0.2 : 0.05) * DOMAIN;
+    state.x = Math.max(-DOMAIN, Math.min(DOMAIN, state.x + dx * d));
+    state.y = Math.max(-DOMAIN, Math.min(DOMAIN, state.y + dy * d));
+    anim = null;
+    render(); pushUrl();
+  },
+});
 
 view.onresize = render;
 

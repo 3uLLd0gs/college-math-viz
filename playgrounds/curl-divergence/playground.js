@@ -7,6 +7,7 @@ import { buttonGroup, slider } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
 import { mountLesson } from '../../engine/lesson.js';
 import { readState, makeUrlSync, stateToParams } from '../../engine/deep-link.js';
+import { keyboardControl } from '../../engine/keyboard.js';
 import { FIELDS, readingsAt, stillness, canGoStill, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "curl & divergence" ---- */
@@ -77,6 +78,23 @@ cv.addEventListener('pointerdown', e => { dragging = true; cv.setPointerCapture(
 cv.addEventListener('pointermove', e => { if (dragging) moveProbe(e.clientX, e.clientY); });
 cv.addEventListener('pointerup', () => { dragging = false; });
 cv.addEventListener('pointercancel', () => { dragging = false; });
+
+keyboardControl(cv, {
+  nudge: (dx, dy, big) => {
+    const d = (big ? 0.2 : 0.05) * DOMAIN;
+    state.x = Math.max(-DOMAIN, Math.min(DOMAIN, state.x + dx * d));
+    state.y = Math.max(-DOMAIN, Math.min(DOMAIN, state.y + dy * d));
+    seedRing();
+    render(); pushUrl();
+  },
+  step: (delta, big) => {
+    const d = (big ? 0.1 : 0.02) * delta;
+    state.r = Math.max(0.08, Math.min(0.7, state.r + d));
+    radius.set(state.r);
+    seedRing();
+    render(); pushUrl();
+  },
+});
 
 view.onresize = render;
 

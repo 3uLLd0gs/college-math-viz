@@ -7,6 +7,7 @@ import { buttonGroup, slider } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
 import { mountLesson } from '../../engine/lesson.js';
 import { readState, makeUrlSync, stateToParams } from '../../engine/deep-link.js';
+import { keyboardControl } from '../../engine/keyboard.js';
 import { FIELDS, grad, gradMag, steepestAngle, directional, angleGap, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "gradient & directional derivative" ---- */
@@ -94,6 +95,17 @@ cv.addEventListener('pointerdown', e => { dragging = true; cv.setPointerCapture(
 cv.addEventListener('pointermove', e => { if (dragging) moveProbe(e.clientX, e.clientY); });
 cv.addEventListener('pointerup', () => { dragging = false; });
 cv.addEventListener('pointercancel', () => { dragging = false; });
+
+keyboardControl(cv, {
+  nudge: (dx, dy, big) => {
+    const d = (big ? 0.2 : 0.05) * state.field.a;
+    state.x = Math.max(-state.field.a, Math.min(state.field.a, state.x + dx * d));
+    state.y = Math.max(-state.field.a, Math.min(state.field.a, state.y + dy * d));
+    render(); pushUrl();
+  },
+  step: (delta, big) => { setTheta((state.theta * 180 / Math.PI) + delta * (big ? 15 : 3)); render(); pushUrl(); },
+  home: () => { placeProbe(state.field); setTheta(0); render(); pushUrl(); },
+});
 
 map.onresize = render;
 

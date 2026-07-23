@@ -7,6 +7,7 @@ import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
 import { challengeMeter, logProgress } from '../../engine/challenge-meter.js';
 import { mountLesson } from '../../engine/lesson.js';
 import { readState, makeUrlSync, stateToParams } from '../../engine/deep-link.js';
+import { keyboardControl } from '../../engine/keyboard.js';
 import { FUNCTIONS, secantSlope, slopeError, clampProbe, clampStep, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "secant → tangent" ---- */
@@ -92,6 +93,20 @@ cv.addEventListener('pointerdown', e => { dragging = true; cv.setPointerCapture(
 cv.addEventListener('pointermove', e => { if (dragging) moveProbe(e.clientX); });
 cv.addEventListener('pointerup', () => { dragging = false; });
 cv.addEventListener('pointercancel', () => { dragging = false; });
+
+keyboardControl(cv, {
+  nudge: (dx, dy, big) => {
+    const view = state.fn.view;
+    const d = (big ? 0.4 : 0.1) * (view.xmax - view.xmin);
+    state.x0 = clampProbe(state.fn, state.x0 + dx * d);
+    render(); pushUrl();
+  },
+  step: (delta, big) => {
+    state.logH = Math.max(LOG_H_MIN, Math.min(LOG_H_MAX, state.logH + delta * (big ? 0.3 : 0.1)));
+    hSlider.set(state.logH);
+    render(); pushUrl();
+  },
+});
 
 g.onresize = render;
 

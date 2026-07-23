@@ -7,6 +7,7 @@ import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
 import { challengeMeter, logProgress } from '../../engine/challenge-meter.js';
 import { mountLesson } from '../../engine/lesson.js';
 import { readState, makeUrlSync, stateToParams } from '../../engine/deep-link.js';
+import { keyboardControl } from '../../engine/keyboard.js';
 import { FUNCTIONS, polyAt, formula, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "Taylor series" ---- */
@@ -90,6 +91,20 @@ gc.addEventListener('pointerdown', e => { dragging = true; gc.setPointerCapture(
 gc.addEventListener('pointermove', e => { if (dragging) setProbe(e.clientX); });
 gc.addEventListener('pointerup', () => dragging = false);
 gc.addEventListener('pointercancel', () => dragging = false);
+
+keyboardControl(gc, {
+  nudge: (dx, dy, big) => {
+    const view = state.fn.view;
+    const d = (big ? 0.4 : 0.1) * (view.xmax - view.xmin);
+    state.probe = Math.max(view.xmin + 0.02, Math.min(view.xmax - 0.02, state.probe + dx * d));
+    render(); pushUrl();
+  },
+  step: (delta, big) => {
+    state.N = Math.max(0, Math.min(MAX_TERMS, state.N + delta * (big ? 3 : 1)));
+    terms.set(state.N);
+    render(); pushUrl();
+  },
+});
 
 g.onresize = render;
 

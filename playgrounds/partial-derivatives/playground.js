@@ -7,6 +7,7 @@ import { buttonGroup, slider } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
 import { mountLesson } from '../../engine/lesson.js';
 import { readState, makeUrlSync, stateToParams } from '../../engine/deep-link.js';
+import { keyboardControl } from '../../engine/keyboard.js';
 import { SURFACES, sliceStart, probeStart, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "partial derivatives" ---- */
@@ -59,6 +60,17 @@ function setAxis(ax) {
 }
 s('ax-x').onclick = () => { setAxis('x'); pushUrl(); }; s('ax-y').onclick = () => { setAxis('y'); pushUrl(); };
 s('reset').onclick = () => { eng.az = -0.75; eng.el = 0.52; eng.dist = 7; eng.schedule(); pushUrl(); };
+
+keyboardControl(s('scene'), {
+  nudge: (dx, dy, big) => {
+    const a = state.surf.a;
+    const d = (big ? 0.2 : 0.05) * a;
+    if (dx) { state.probe = Math.max(-a, Math.min(a, state.probe + dx * d)); probeSlider.set(state.probe); }
+    if (dy) { state.slice = Math.max(-a, Math.min(a, state.slice + dy * d)); sliceSlider.set(state.slice); }
+    eng.schedule();
+    pushUrl();
+  },
+});
 
 eng.onrender = function () {
   const proj = eng.projector(); const sf = state.surf;

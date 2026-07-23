@@ -55,13 +55,13 @@
   </header>
   <div class="studio">
     <div class="card graph-card">
-      <canvas id="solid"></canvas>
+      <canvas id="solid" role="img" aria-label="Solid of revolution view. Arrow keys and plus and minus add or remove slices." aria-describedby="readout"></canvas>
       <div class="graph-tag">drag to orbit · scroll to zoom</div>
       <div class="legend">
         <span><i class="swatch" style="background:#3a769e"></i> the slices</span>
         <span><i class="swatch" style="background:var(--true)"></i> the true solid</span>
       </div>
-      <div class="readout" id="readout"></div>
+      <div class="readout" id="readout" role="status" aria-live="polite"></div>
     </div>
     <div class="card panel">
       <div>

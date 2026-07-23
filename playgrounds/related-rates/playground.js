@@ -6,6 +6,7 @@ import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
 import { readState, makeUrlSync, stateToParams } from '../../engine/deep-link.js';
+import { keyboardControl } from '../../engine/keyboard.js';
 import { SCENARIOS, byId, solveFor, missBy, stateSpeed, LESSON } from './content.js';
 
 const URL_SCHEMA = { scenario: 'string', s: 'number', drive: 'number' };
@@ -76,6 +77,23 @@ ticker('play', {
 });
 
 window.addEventListener('resize', render);
+
+keyboardControl(cv, {
+  nudge: (dx, dy, big) => {
+    const sv = state.sc.sVar;
+    const d = (big ? 5 : 1) * sv.step;
+    state.s = Math.max(sv.min, Math.min(sv.max, state.s + dx * d));
+    sSlider.set(state.s);
+    render(); pushUrl();
+  },
+  step: (delta, big) => {
+    const sv = state.sc.sVar;
+    const d = (big ? 5 : 1) * sv.step;
+    state.s = Math.max(sv.min, Math.min(sv.max, state.s + delta * d));
+    sSlider.set(state.s);
+    render(); pushUrl();
+  },
+});
 
 /* ---- scene drawing ---- */
 function layout() {

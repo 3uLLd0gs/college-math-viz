@@ -50,14 +50,14 @@
   </header>
   <div class="studio">
     <div class="card graph-card">
-      <canvas id="scene"></canvas>
+      <canvas id="scene" role="img" aria-label="3D surface view. Arrow keys move the probe along the slice and move the slice itself." aria-describedby="readout"></canvas>
       <div class="graph-tag">drag to orbit · scroll to zoom</div>
       <div class="legend">
         <span><i class="swatch" style="background:var(--approx)"></i> the slice</span>
         <span><i class="swatch" style="background:var(--true)"></i> cross-section</span>
         <span><i class="swatch" style="background:var(--error)"></i> tangent = ∂f</span>
       </div>
-      <div class="readout" id="readout"></div>
+      <div class="readout" id="readout" role="status" aria-live="polite"></div>
     </div>
     <div class="card panel">
       <div>

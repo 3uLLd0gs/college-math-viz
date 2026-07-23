@@ -6,6 +6,7 @@ import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
 import { mountLesson } from '../../engine/lesson.js';
 import { readState, makeUrlSync, stateToParams } from '../../engine/deep-link.js';
+import { keyboardControl } from '../../engine/keyboard.js';
 import { TRACES, TWO_PI, MAX_ANGLE, wrap, valueAt, missBy, solutionsHit, deg, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "unit circle unwrap" ----
@@ -88,6 +89,21 @@ cv.addEventListener('pointermove', e => { if (dragging) grab(e); });
 cv.addEventListener('pointerup', () => { dragging = false; });
 cv.addEventListener('pointercancel', () => { dragging = false; });
 let dragging = false;
+
+keyboardControl(cv, {
+  nudge: (dx, dy, big) => {
+    const stepDeg = big ? 15 : 3;
+    setTheta(state.theta + dx * stepDeg * Math.PI / 180);
+    dial.set(deg(state.theta));
+    render(); pushUrl();
+  },
+  step: (delta, big) => {
+    const stepDeg = big ? 15 : 3;
+    setTheta(state.theta + delta * stepDeg * Math.PI / 180);
+    dial.set(deg(state.theta));
+    render(); pushUrl();
+  },
+});
 
 function grab(e) {
   const b = cv.getBoundingClientRect();

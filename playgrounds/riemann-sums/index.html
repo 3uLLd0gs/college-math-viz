@@ -44,13 +44,13 @@
   </header>
   <div class="studio">
     <div class="card graph-card">
-      <canvas id="graph"></canvas>
+      <canvas id="graph" role="img" aria-label="Riemann sum graph. Arrow keys and plus and minus add or remove rectangles." aria-describedby="readout"></canvas>
       <div class="graph-tag">add rectangles ⟶ the sum climbs toward the true area</div>
       <div class="legend">
         <span><i class="swatch" style="background:var(--true)"></i> f(x)</span>
         <span><i class="swatch" style="background:var(--approx)"></i> rectangles</span>
       </div>
-      <div class="readout" id="readout"></div>
+      <div class="readout" id="readout" role="status" aria-live="polite"></div>
     </div>
     <div class="card panel">
       <div>
