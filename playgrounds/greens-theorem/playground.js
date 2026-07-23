@@ -1,6 +1,7 @@
 import { VectorFieldView, circulation, curlFlux, curlAt } from '../../engine/vector-field.js';
 import { isoSegments } from '../../engine/contour-map.js';
 import { ScoreShell } from '../../engine/score-shell.js';
+import { mountNav } from '../../engine/sequencer.js';
 import { createConfetti } from '../../engine/confetti.js';
 import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider } from '../../engine/control-panel.js';
@@ -15,7 +16,7 @@ const CURL_GRID = 72;         // resolution used to trace the curl = 0 locus
 const START = { x: 0.8, y: 0.6, r: 0.7 };
 
 const view = new VectorFieldView(document.getElementById('field'));
-const shell = new ScoreShell(createConfetti());
+const shell = new ScoreShell(createConfetti(), { slug: 'greens-theorem' });
 const state = { field: null, x: START.x, y: START.y, r: START.r };
 
 const explored = new Set();
@@ -170,3 +171,5 @@ function render() {
 }
 
 render();
+
+mountNav('greens-theorem');

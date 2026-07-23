@@ -1,5 +1,6 @@
 import { ContourMap } from '../../engine/contour-map.js';
 import { ScoreShell } from '../../engine/score-shell.js';
+import { mountNav } from '../../engine/sequencer.js';
 import { createConfetti } from '../../engine/confetti.js';
 import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider } from '../../engine/control-panel.js';
@@ -21,7 +22,7 @@ const ALIGN_TOL_DEG = 4;
 const FLAT_EPS = 0.05;
 
 const map = new ContourMap(document.getElementById('map'));
-const shell = new ScoreShell(createConfetti());
+const shell = new ScoreShell(createConfetti(), { slug: 'gradient' });
 const state = { field: FIELDS[0], x: 0, y: 0, theta: 0 };
 
 const explored = new Set([FIELDS[0].id]);
@@ -186,3 +187,5 @@ function drawDialInset(fd, x, y, theta, mag, best) {
 }
 
 render();
+
+mountNav('gradient');

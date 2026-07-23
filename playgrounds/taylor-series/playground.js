@@ -1,5 +1,6 @@
 import { Grapher2D } from '../../engine/grapher-2d.js';
 import { ScoreShell } from '../../engine/score-shell.js';
+import { mountNav } from '../../engine/sequencer.js';
 import { createConfetti } from '../../engine/confetti.js';
 import { getCSS, fmtAxis as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
@@ -10,7 +11,7 @@ import { FUNCTIONS, polyAt, formula } from './content.js';
 const MAX_TERMS = 14;   // must match the #terms slider max in index.html
 
 const g = new Grapher2D(document.getElementById('graph'));
-const shell = new ScoreShell(createConfetti());
+const shell = new ScoreShell(createConfetti(), { slug: 'taylor-series' });
 let state = { fn: FUNCTIONS[0], N: 1, probe: 2 };
 
 const meter = challengeMeter({
@@ -113,3 +114,5 @@ function render() {
 }
 
 render();
+
+mountNav('taylor-series');

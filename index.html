@@ -2,17 +2,69 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>College Math Viz — Playground Index</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>College Math Viz — Interactive Playgrounds</title>
+<meta name="description" content="Interactive, self-contained visualizations for college calculus — Riemann sums, Taylor series, partial derivatives, gradients, vector fields and Green's theorem.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  @import url("./engine/chrome.css");
+  :root{ --wrap:1180px }
+  .lede{max-width:640px;font-size:14px;color:var(--muted);line-height:1.7;margin:14px 0 26px}
+  .lede b{color:var(--approx);font-weight:500}
+  .course{margin-bottom:30px}
+  .course-head{display:flex;align-items:baseline;gap:12px;margin-bottom:12px}
+  .course-head h2{font-family:"Fraunces",serif;font-weight:700;font-size:19px;margin:0;color:var(--ink)}
+  .course-head .count{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+  .pcard{display:flex;flex-direction:column;gap:8px;text-decoration:none;color:inherit;
+    background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--line);border-radius:var(--radius);padding:17px 18px;transition:.16s}
+  .pcard:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--shadow)}
+  .pcard.played{border-color:rgba(61,242,192,.32)}
+  .pcard-tag{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--approx)}
+  .pcard h3{font-family:"Fraunces",serif;font-weight:700;font-size:20px;margin:0;letter-spacing:-.01em}
+  .pcard p{font-size:12.5px;color:var(--muted);line-height:1.6;margin:0;flex:1}
+  .pcard-foot{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--muted);
+    border-top:1px solid var(--line);padding-top:10px;margin-top:4px}
+  .pcard-foot .pts{color:var(--gold);font-weight:700}
+  .pcard-foot .bdg{color:var(--approx)}
+  .pcard-foot .new{opacity:.6}
+  .pcard-foot .go{margin-left:auto;color:var(--accent)}
+  .colophon{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);
+    font-size:11.5px;color:var(--muted);line-height:1.7;max-width:640px}
+</style>
 </head>
 <body>
-  <h1>College Math Viz</h1>
-  <ul>
-    <li><a href="/playgrounds/taylor-series/">Taylor Series Studio</a></li>
-    <li><a href="/playgrounds/partial-derivatives/">Partial Derivatives 3D</a></li>
-    <li><a href="/playgrounds/riemann-sums/">Riemann Sums</a></li>
-    <li><a href="/playgrounds/gradient/">Gradient &amp; Directional Derivative</a></li>
-    <li><a href="/playgrounds/vector-fields/">Vector Fields</a></li>
-    <li><a href="/playgrounds/greens-theorem/">Green's Theorem</a></li>
-  </ul>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="kicker">Math · Visual Studio</div>
+      <h1>College Math <em>Viz</em></h1>
+    </div>
+    <div class="scoreboard">
+      <div class="chip pts"><div class="lab">Points</div><div class="val" id="t-pts">0</div></div>
+      <div class="chip"><div class="lab">Badges</div><div class="val" id="t-badges">0</div></div>
+      <div class="chip streak"><div class="lab">Started</div><div class="val" id="t-started">0</div></div>
+    </div>
+  </header>
+
+  <p class="lede">
+    Concepts that are taught symbolically but are really <b>dynamic or spatial</b>. Each playground is a
+    single page you can poke at — drag a probe, turn a dial, add a term — with a challenge to clear.
+    Everything runs locally in your browser: <b>no accounts, no network calls</b>, and your progress is
+    saved on this device.
+  </p>
+
+  <div id="courses"></div>
+
+  <div class="colophon">
+    Built on one shared engine — a 2-D grapher, a 3-D surface renderer, a contour map, a vector-field
+    view, and a common control and scoring shell. Adding a concept means writing its maths, not its
+    machinery.
+  </div>
+</div>
+<script type="module" src="./home.js"></script>
 </body>
 </html>

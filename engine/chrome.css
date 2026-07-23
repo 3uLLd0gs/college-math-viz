@@ -38,6 +38,28 @@ body{
 }
 .wrap{max-width:1180px;margin:0 auto}
 
+/* ---- cross-playground nav ---- */
+.pgnav{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;
+  font-size:11.5px;color:var(--muted);
+  background:rgba(17,23,38,.55);border:1px solid var(--line);border-radius:11px;padding:8px 11px}
+.pgnav-home{color:var(--muted);text-decoration:none;letter-spacing:.06em;white-space:nowrap;
+  padding-right:10px;border-right:1px solid var(--line)}
+.pgnav-home:hover{color:var(--approx)}
+.pgnav-pills{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+.pgpill{font-size:11px;text-decoration:none;white-space:nowrap;
+  color:var(--muted);background:var(--panel-2);border:1px solid var(--line);
+  border-radius:7px;padding:4px 9px;transition:.15s}
+.pgpill:hover{color:var(--accent);border-color:var(--accent);transform:translateY(-1px)}
+.pgpill.on{color:var(--approx);border-color:var(--approx);background:rgba(61,242,192,.12);cursor:default}
+.pgnav-next{color:var(--accent);text-decoration:none;white-space:nowrap;
+  padding-left:10px;border-left:1px solid var(--line)}
+.pgnav-next:hover{color:var(--approx)}
+.pgnav-off{opacity:.4;color:var(--muted)}
+@media(max-width:640px){
+  .pgnav-home,.pgnav-next{border:0;padding:0}
+  .pgnav-pills{order:3;width:100%}
+}
+
 /* ---- header + scoreboard ---- */
 header{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap;margin-bottom:16px}
 .brand .kicker{font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--approx);display:flex;align-items:center;gap:8px;margin-bottom:6px}

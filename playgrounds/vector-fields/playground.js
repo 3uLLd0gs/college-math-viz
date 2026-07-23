@@ -1,5 +1,6 @@
 import { VectorFieldView, streamline, divergenceAt, curlAt } from '../../engine/vector-field.js';
 import { ScoreShell } from '../../engine/score-shell.js';
+import { mountNav } from '../../engine/sequencer.js';
 import { createConfetti } from '../../engine/confetti.js';
 import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
@@ -13,7 +14,7 @@ const FIND_TOL = 0.12;            // |F| below this counts as finding the equili
 const START = { x: -1.5, y: 1.5 };  // a corner, well away from every equilibrium
 
 const view = new VectorFieldView(document.getElementById('field'));
-const shell = new ScoreShell(createConfetti());
+const shell = new ScoreShell(createConfetti(), { slug: 'vector-fields' });
 const state = { field: FIELDS[0], x: START.x, y: START.y, arrows: 17, trace: [] };
 
 const explored = new Set([FIELDS[0].id]);
@@ -145,3 +146,5 @@ function render() {
 }
 
 render();
+
+mountNav('vector-fields');

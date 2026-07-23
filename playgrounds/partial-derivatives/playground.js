@@ -1,5 +1,6 @@
 import { Surface3D } from '../../engine/surface-3d.js';
 import { ScoreShell } from '../../engine/score-shell.js';
+import { mountNav } from '../../engine/sequencer.js';
 import { createConfetti } from '../../engine/confetti.js';
 import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider } from '../../engine/control-panel.js';
@@ -8,7 +9,7 @@ import { SURFACES, sliceStart, probeStart } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "partial derivatives" ---- */
 const eng = new Surface3D(document.getElementById('scene'));
-const shell = new ScoreShell(createConfetti());
+const shell = new ScoreShell(createConfetti(), { slug: 'partial-derivatives' });
 let state = { surf: SURFACES[0], axis: 'x', slice: sliceStart(SURFACES[0]), probe: probeStart(SURFACES[0]) };
 
 const meter = challengeMeter({
@@ -122,3 +123,5 @@ function updatePanel(sf, x0, y0, m) {
 }
 
 eng.setSurface(state.surf); setSliderRanges(state.surf); setAxis('x'); eng.schedule();
+
+mountNav('partial-derivatives');
