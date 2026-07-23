@@ -60,3 +60,95 @@ export function angleGap(a, b) {
   if (d > Math.PI) d = Math.PI * 2 - d;
   return d;
 }
+
+/* ---- LESSON: the teaching layer ----
+   Every step that carries a `state` becomes a button that drives the playground
+   to exactly the configuration being described, so reading and manipulating are
+   the same act. `state` is interpreted by playground.js. */
+export const LESSON = {
+  title: 'Which way is uphill, and how steep is it?',
+  intro: `A function of two variables is a <b>landscape</b>. The map below is that landscape seen
+    from above: colour is height, and each thin line joins points at one height, exactly like a
+    contour on a hiking map. Standing anywhere on it, two questions have answers — <b>which
+    direction is uphill</b>, and <b>how steep is it</b> if you walk some other way instead.`,
+  steps: [
+    {
+      level: 'intro',
+      title: 'Read the map first',
+      body: `Where the contour lines are <b>close together</b>, height changes fast — the ground is
+        steep. Where they spread apart, it is gentle. On this bowl the lines are rings, tight near
+        the rim and loose near the bottom. Drag the probe around and watch the two arrows swing.`,
+      state: { field: 'bowl', x: 1.1, y: -0.8, thetaDeg: 20 },
+      jump: 'Put me on the steep part',
+    },
+    {
+      level: 'intro',
+      title: 'The gradient is a vector, not a number',
+      body: `The gradient collects both partial derivatives into one arrow:
+        <code>∇f = (∂f/∂x, ∂f/∂y)</code>. Its <em>direction</em> is the way the ground rises fastest;
+        its <em>length</em> |∇f| is how fast it rises that way. That is the dashed red arrow. For
+        <code>f = x² + y²</code> it works out to <code>(2x, 2y)</code> — always pointing straight
+        away from the bottom of the bowl.`,
+      state: { field: 'bowl', x: 0.9, y: -0.6, snap: true },
+      jump: 'Point me straight uphill',
+    },
+    {
+      level: 'use',
+      title: 'The directional derivative picks a direction and asks for the slope',
+      body: `Choose any unit vector <code>u</code> — that is the mint arrow, and the dial sets its
+        angle. The slope of the ground if you walk that way is
+        <code>Dᵤf = ∇f · u</code>, a single number. Turn the dial and watch it change while ∇f
+        stays put: the landscape has not moved, only the direction you asked about.`,
+      state: { field: 'bowl', x: 0.9, y: -0.6, thetaDeg: 0 },
+      jump: 'Set the dial to 0°',
+    },
+    {
+      level: 'use',
+      title: 'It is largest exactly when you face the gradient',
+      body: `Because <code>Dᵤf = ∇f · u = |∇f| cos θ</code>, where θ is the angle between your
+        direction and the gradient. Cosine is biggest at θ = 0, so the steepest possible slope is
+        <b>|∇f|</b>, and it happens when u lines up with ∇f. That is the whole challenge on this
+        page, and it is why "the gradient points uphill" is a theorem rather than a definition.`,
+      state: { field: 'bowl', x: 0.9, y: -0.6, snap: true },
+      jump: 'Line them up',
+    },
+    {
+      level: 'use',
+      title: 'Walk along a contour and the slope is zero',
+      body: `Turn a quarter turn from the gradient and cos θ = 0, so <code>Dᵤf = 0</code>. You are
+        walking along a contour line — the same height the whole way. This is the fast way to see
+        that <b>the gradient is perpendicular to the contour through your point</b>: the only
+        direction with no rise is the one at right angles to steepest ascent.`,
+      state: { field: 'bowl', x: 0.9, y: -0.6, thetaOffsetDeg: 90 },
+      jump: 'Turn me along the contour',
+    },
+    {
+      level: 'advanced',
+      title: 'Downhill is just the other end of the same arrow',
+      body: `At θ = 180°, cos θ = −1 and <code>Dᵤf = −|∇f|</code> — the steepest possible
+        <em>descent</em>. Gradient descent, the workhorse of machine learning, is exactly this:
+        stand somewhere, compute ∇f, and step the other way.`,
+      state: { field: 'bowl', x: 0.9, y: -0.6, thetaOffsetDeg: 180 },
+      jump: 'Point me downhill',
+    },
+    {
+      level: 'advanced',
+      title: 'A plane has the same gradient everywhere',
+      body: `For <code>f = 2x + y</code> the partials are constants, so ∇f = (2, 1) at every single
+        point and |∇f| = √5 ≈ 2.24 wherever you stand. Drag the probe anywhere — the red arrow never
+        turns. A curved surface is exactly the case where it does.`,
+      state: { field: 'plane', x: -1.2, y: 0.9, snap: true },
+      jump: 'Try it on a plane',
+    },
+    {
+      level: 'advanced',
+      title: 'Where the gradient vanishes, no direction is steepest',
+      body: `At the bottom of the bowl ∇f = (0, 0). Then <code>Dᵤf = 0</code> for <em>every</em>
+        direction — the ground is flat to first order, and asking "which way is uphill" has no
+        answer. These are the critical points, and they are where maxima, minima and saddles live.
+        The page refuses the challenge here rather than pretending some direction wins.`,
+      state: { field: 'bowl', x: 0, y: 0, thetaDeg: 45 },
+      jump: 'Take me to the flat spot',
+    },
+  ],
+};

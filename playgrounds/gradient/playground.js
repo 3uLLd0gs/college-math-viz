@@ -5,7 +5,8 @@ import { createConfetti } from '../../engine/confetti.js';
 import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
-import { FIELDS, grad, gradMag, steepestAngle, directional, angleGap } from './content.js';
+import { mountLesson } from '../../engine/lesson.js';
+import { FIELDS, grad, gradMag, steepestAngle, directional, angleGap, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "gradient & directional derivative" ---- */
 
@@ -46,7 +47,7 @@ function placeProbe(fd) {
 placeProbe(state.field);
 map.setField(state.field);
 
-buttonGroup('fbtns', FIELDS, fd => {
+const fieldButtons = buttonGroup('fbtns', FIELDS, fd => {
   state.field = fd;
   placeProbe(fd);
   map.setField(fd);
@@ -190,3 +191,41 @@ function drawDialInset(fd, x, y, theta, mag, best) {
 render();
 
 mountNav('gradient');
+
+/**
+ * Drive the playground to the configuration a lesson step is describing.
+ * `snap` and `thetaOffsetDeg` are resolved AFTER the probe moves, since both are
+ * relative to the gradient at the new position.
+ */
+mountLesson(LESSON, {
+  slug: 'gradient',
+  onJump: st => {
+    if (st.field) {
+      const fd = FIELDS.find(f => f.id === st.field);
+      if (fd) {
+        state.field = fd;
+        map.setField(fd);
+        fieldButtons.select(FIELDS.indexOf(fd), { notify: false });
+        placeProbe(fd);
+      }
+    }
+    if (typeof st.x === 'number') state.x = st.x;
+    if (typeof st.y === 'number') state.y = st.y;
+
+    const best = steepestAngle(state.field, state.x, state.y);
+    if (st.snap && best !== null) setTheta(best * 180 / Math.PI);
+    else if (typeof st.thetaOffsetDeg === 'number' && best !== null) {
+      setTheta(best * 180 / Math.PI + st.thetaOffsetDeg);
+    } else if (typeof st.thetaDeg === 'number') setTheta(st.thetaDeg);
+
+    meter.reset();
+    render();
+  },
+});
+
+function setTheta(deg) {
+  const d = ((deg % 360) + 360) % 360;
+  state.theta = d * Math.PI / 180;
+  dial.set(d);
+  dialTouched = true;
+}
