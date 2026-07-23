@@ -9,7 +9,10 @@ import { buttonGroup } from './control-panel.js';
    never a static picture the student has to map onto the controls themselves.
 
    Content shape (declared in a playground's content.js):
-     { title, intro, steps: [ { level, title, body, state?, jump? } ] }
+     { title, intro, steps: [ { level, title, body, figure?, state?, jump? } ] }
+   `figure` is inline SVG. Inline rather than an image file because the whole
+   site is offline-capable with no external requests, and because a diagram that
+   uses the design tokens stays in step with the theme for free.
    `level` is one of LEVELS below; `state` is opaque here and handed straight
    back to the playground's own handler. */
 
@@ -86,12 +89,17 @@ export function mountLesson(lesson, opts = {}) {
   function renderSteps(levelId) {
     const steps = lesson.steps.filter(s => s.level === levelId);
     stepsEl.innerHTML = steps.map((s, i) => `
-      <article class="lesson-step">
+      <article class="lesson-step${s.figure ? ' has-fig' : ''}">
         <div class="lesson-step-n">${i + 1}</div>
         <div class="lesson-step-main">
           <h3>${s.title}</h3>
-          <div class="lesson-step-body">${s.body}</div>
-          ${s.state ? `<button class="action lesson-jump" type="button" data-i="${i}">${s.jump ?? 'Show me on the graph'} →</button>` : ''}
+          <div class="lesson-step-cols">
+            <div>
+              <div class="lesson-step-body">${s.body}</div>
+              ${s.state ? `<button class="action lesson-jump" type="button" data-i="${i}">${s.jump ?? 'Show me on the graph'} →</button>` : ''}
+            </div>
+            ${s.figure ? `<figure class="lesson-fig">${s.figure}</figure>` : ''}
+          </div>
         </div>
       </article>`).join('');
 

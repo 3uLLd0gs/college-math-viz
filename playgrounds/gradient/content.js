@@ -162,6 +162,19 @@ export const LESSON = {
         bottom of this bowl.`,
       state: { field: 'bowl', x: 0.9, y: -0.6, thetaOffsetDeg: 180 },
       jump: 'Show me the descent step',
+      figure: `<svg viewBox="0 0 260 150" role="img" aria-label="A ball taking successively smaller steps down a valley toward its minimum">
+  <path d="M15 25 Q130 175 245 25" fill="none" stroke="#7e98c4" stroke-opacity=".45" stroke-width="2"/>
+  <g fill="none" stroke="#ff5d73" stroke-width="2" stroke-linecap="round">
+    <path d="M40 63 l22 26"/><path d="M74 100 l20 17"/><path d="M104 122 l14 8"/>
+  </g>
+  <g fill="#ffd76a">
+    <circle cx="40" cy="63" r="5"/><circle cx="74" cy="100" r="4.5"/>
+    <circle cx="104" cy="122" r="4"/><circle cx="122" cy="130" r="3.5"/>
+  </g>
+  <circle cx="130" cy="131" r="3" fill="#3df2c0"/>
+  <text x="130" y="147" fill="#8b95ab" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">minimum</text>
+</svg>
+<figcaption>Each step goes along −∇(error), and shortens as the ground flattens.</figcaption>`,
     },
     {
       level: 'real',
@@ -173,6 +186,24 @@ export const LESSON = {
         looking at is the same object a hiking map draws.`,
       state: { field: 'ripple', x: 1.0, y: 0.6, snap: true },
       jump: 'Show me a ridged landscape',
+      figure: `<svg viewBox="0 0 260 150" role="img" aria-label="Rain running down a ridged hillside into a stream at the bottom">
+  <g fill="none" stroke="#7e98c4" stroke-opacity=".38" stroke-width="1.4">
+    <path d="M10 30 Q75 8 130 34 Q185 60 250 34"/>
+    <path d="M10 54 Q75 32 130 58 Q185 84 250 58"/>
+    <path d="M10 78 Q75 56 130 82 Q185 108 250 82"/>
+  </g>
+  <g fill="none" stroke="#3df2c0" stroke-width="2" stroke-linecap="round">
+    <path d="M58 24 L54 122"/><path d="M100 40 L104 122"/>
+    <path d="M160 52 L156 122"/><path d="M206 40 L210 122"/>
+  </g>
+  <g fill="#3df2c0">
+    <path d="M54 126 l-4 -8 h8 z"/><path d="M104 126 l-4 -8 h8 z"/>
+    <path d="M156 126 l-4 -8 h8 z"/><path d="M210 126 l-4 -8 h8 z"/>
+  </g>
+  <path d="M10 132 H250" stroke="#7aa2ff" stroke-width="4" stroke-linecap="round" opacity=".8"/>
+  <text x="130" y="147" fill="#8b95ab" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">every drop follows −∇h into the stream</text>
+</svg>
+<figcaption>Ridge lines are where the gradient flips — those are watershed boundaries.</figcaption>`,
     },
     {
       level: 'real',
@@ -184,6 +215,21 @@ export const LESSON = {
         here is close to what a hot spot on a chip actually looks like.`,
       state: { field: 'hill', x: 0.8, y: 0.5, snap: true },
       jump: 'Show me a hot spot',
+      figure: `<svg viewBox="0 0 260 150" role="img" aria-label="Heat spreading outward from a hot spot on a chip, down the temperature gradient">
+  <rect x="30" y="24" width="200" height="96" rx="6" fill="none" stroke="#7e98c4" stroke-opacity=".45" stroke-width="1.6"/>
+  <circle cx="130" cy="72" r="12" fill="#ff5d73" fill-opacity=".85"/>
+  <circle cx="130" cy="72" r="24" fill="none" stroke="#ffb454" stroke-opacity=".55" stroke-width="1.4"/>
+  <circle cx="130" cy="72" r="38" fill="none" stroke="#3df2c0" stroke-opacity=".40" stroke-width="1.4"/>
+  <circle cx="130" cy="72" r="52" fill="none" stroke="#7aa2ff" stroke-opacity=".30" stroke-width="1.4"/>
+  <g stroke="#ffb454" stroke-width="1.8" stroke-linecap="round" fill="#ffb454">
+    <path d="M146 72 h30"/><path d="M176 72 l-7 -4 v8 z"/>
+    <path d="M114 72 h-30"/><path d="M84 72 l7 -4 v8 z"/>
+    <path d="M130 56 v-22"/><path d="M130 34 l-4 7 h8 z"/>
+    <path d="M130 88 v22"/><path d="M130 110 l-4 -7 h8 z"/>
+  </g>
+  <text x="130" y="143" fill="#8b95ab" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">q = −k∇T</text>
+</svg>
+<figcaption>Rings are isotherms. Heat crosses them at right angles — straight down the gradient.</figcaption>`,
     },
     {
       level: 'real',
@@ -195,6 +241,19 @@ export const LESSON = {
         and the first layer of most vision pipelines.`,
       state: { field: 'ripple', x: -0.4, y: 1.2, snap: true },
       jump: 'Show me a field full of edges',
+      figure: `<svg viewBox="0 0 260 150" role="img" aria-label="A bright and dark region meeting at an edge, with gradient arrows crossing it">
+  <rect x="20" y="20" width="105" height="100" fill="#eaeff8" fill-opacity=".82"/>
+  <rect x="125" y="20" width="115" height="100" fill="#0d1320"/>
+  <rect x="20" y="20" width="220" height="100" fill="none" stroke="#7e98c4" stroke-opacity=".45" stroke-width="1.4"/>
+  <g stroke="#ff5d73" stroke-width="2.4" stroke-linecap="round" fill="#ff5d73">
+    <path d="M150 45 H105"/><path d="M105 45 l8 -5 v10 z"/>
+    <path d="M150 70 H105"/><path d="M105 70 l8 -5 v10 z"/>
+    <path d="M150 95 H105"/><path d="M105 95 l8 -5 v10 z"/>
+  </g>
+  <line x1="125" y1="16" x2="125" y2="124" stroke="#3df2c0" stroke-width="2" stroke-dasharray="4 4"/>
+  <text x="130" y="143" fill="#8b95ab" font-family="JetBrains Mono, monospace" font-size="9" text-anchor="middle">|∇I| spikes at the edge; ∇I points across it</text>
+</svg>
+<figcaption>Sobel filters compute a discrete ∇I — the arrows are what they return.</figcaption>`,
     },
   ],
 };

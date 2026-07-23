@@ -104,29 +104,71 @@ export const hrefFor = slug => `/playgrounds/${slug}/`;
  * here rather than requiring markup in every index.html means adding a
  * playground needs no edit to any existing page.
  *
- * Every playground is shown as a pill, so any page is ONE click from any other.
- * Deliberately not a <select>: a focused dropdown swallows the scroll wheel and
- * silently navigates away mid-page, which is a nasty surprise on pages you
- * scroll. With a catalogue this size, showing them all is also simply clearer.
+ * One menu per course, each listing that course's playgrounds. A flat strip of
+ * pills was fine at six rows and will not survive the sixty the build map plans.
+ *
+ * Deliberately NOT a native <select>: a focused dropdown swallows the scroll
+ * wheel and silently navigates away mid-page, which is a nasty surprise on pages
+ * you scroll. This is a button plus a panel, which behaves.
  */
 export function mountNav(slug) {
   const wrap = document.querySelector('.wrap');
   if (!wrap) return null;
 
+  const here = bySlug(slug);
   const n = next(slug);
-  const pills = PLAYGROUNDS.map(pg => pg.slug === slug
-    ? `<span class="pgpill on" aria-current="page">${pg.title}</span>`
-    : `<a class="pgpill" href="${hrefFor(pg.slug)}" title="${courseOf(pg.slug)?.label ?? ''}">${pg.title}</a>`
-  ).join('');
+  const courses = COURSES.filter(c => inCourse(c.id).length);
+
+  const menus = courses.map(c => {
+    const isCurrent = here?.course === c.id;
+    const items = inCourse(c.id).map(pg => pg.slug === slug
+      ? `<span class="pgmenu-item on" aria-current="page">${pg.title}</span>`
+      : `<a class="pgmenu-item" href="${hrefFor(pg.slug)}">${pg.title}</a>`).join('');
+    return `
+      <div class="pgmenu${isCurrent ? ' current' : ''}" data-course="${c.id}">
+        <button class="pgmenu-btn" type="button" aria-expanded="false" aria-haspopup="true">
+          ${c.label}<span class="pgmenu-caret" aria-hidden="true">▾</span>
+        </button>
+        <div class="pgmenu-list" role="menu" hidden>${items}</div>
+      </div>`;
+  }).join('');
 
   const nav = document.createElement('nav');
   nav.className = 'pgnav';
   nav.setAttribute('aria-label', 'Playgrounds');
   nav.innerHTML = `
     <a class="pgnav-home" href="/">◂ All</a>
-    <span class="pgnav-pills">${pills}</span>
+    <div class="pgnav-menus">${menus}</div>
+    <span class="pgnav-here">${here ? here.title : ''}</span>
     ${n ? `<a class="pgnav-next" href="${hrefFor(n.slug)}">Next: ${n.title}&nbsp;→</a>`
         : '<span class="pgnav-next pgnav-off">End of the sequence</span>'}`;
   wrap.insertBefore(nav, wrap.firstChild);
-  return nav;
+
+  const menuEls = [...nav.querySelectorAll('.pgmenu')];
+  const closeAll = except => menuEls.forEach(m => {
+    if (m === except) return;
+    m.classList.remove('open');
+    m.querySelector('.pgmenu-list').hidden = true;
+    m.querySelector('.pgmenu-btn').setAttribute('aria-expanded', 'false');
+  });
+
+  menuEls.forEach(m => {
+    const btn = m.querySelector('.pgmenu-btn');
+    const list = m.querySelector('.pgmenu-list');
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const open = m.classList.contains('open');
+      closeAll(m);
+      m.classList.toggle('open', !open);
+      list.hidden = open;
+      btn.setAttribute('aria-expanded', String(!open));
+    });
+  });
+
+  // A menu left hanging open over a canvas you are dragging is worse than one
+  // that is slightly too eager to close.
+  document.addEventListener('click', () => closeAll(null));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(null); });
+
+  return { nav, closeAll };
 }

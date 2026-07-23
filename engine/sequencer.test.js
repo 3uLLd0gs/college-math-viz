@@ -79,29 +79,46 @@ describe('mountNav', () => {
   beforeEach(() => { document.body.innerHTML = '<div class="wrap"><h1>page</h1></div>'; });
 
   it('inserts itself as the first child of .wrap', () => {
-    const nav = mountNav('gradient');
+    const { nav } = mountNav('gradient');
     expect(document.querySelector('.wrap').firstChild).toBe(nav);
   });
 
-  it('shows a pill for every playground, so any page is one click away', () => {
+  it('renders one menu per course that has playgrounds', () => {
     mountNav('gradient');
-    const pills = [...document.querySelectorAll('.pgpill')];
-    expect(pills).toHaveLength(PLAYGROUNDS.length);
-    expect(pills.map(p => p.textContent)).toEqual(PLAYGROUNDS.map(p => p.title));
+    const btns = [...document.querySelectorAll('.pgmenu-btn')];
+    const withRows = COURSES.filter(c => inCourse(c.id).length);
+    expect(btns.map(b => b.textContent.replace('▾', '').trim())).toEqual(withRows.map(c => c.label));
   });
 
-  it('marks the current playground and makes it a non-link', () => {
+  it('lists every playground across the menus, none lost or duplicated', () => {
+    mountNav('gradient');
+    const items = [...document.querySelectorAll('.pgmenu-item')].map(i => i.textContent);
+    expect(items).toHaveLength(PLAYGROUNDS.length);
+    expect(new Set(items).size).toBe(PLAYGROUNDS.length);
+  });
+
+  it('puts each playground under its own course', () => {
+    mountNav('gradient');
+    COURSES.forEach(c => {
+      const menu = document.querySelector(`.pgmenu[data-course="${c.id}"]`);
+      if (!inCourse(c.id).length) { expect(menu).toBeNull(); return; }
+      const titles = [...menu.querySelectorAll('.pgmenu-item')].map(i => i.textContent);
+      expect(titles).toEqual(inCourse(c.id).map(p => p.title));
+    });
+  });
+
+  it('marks the current playground and its course', () => {
     mountNav('vector-fields');
-    const on = document.querySelectorAll('.pgpill.on');
+    const on = document.querySelectorAll('.pgmenu-item.on');
     expect(on).toHaveLength(1);
     expect(on[0].textContent).toBe('Vector Fields');
     expect(on[0].tagName).toBe('SPAN');
-    expect(on[0].getAttribute('aria-current')).toBe('page');
+    expect(document.querySelector('.pgmenu.current').dataset.course).toBe(bySlug('vector-fields').course);
   });
 
-  it('every other pill is a link to that playground', () => {
+  it('every other item is a link', () => {
     mountNav('gradient');
-    const links = [...document.querySelectorAll('a.pgpill')];
+    const links = [...document.querySelectorAll('a.pgmenu-item')];
     expect(links).toHaveLength(PLAYGROUNDS.length - 1);
     links.forEach(a => expect(a.getAttribute('href')).toMatch(/^\/playgrounds\/[a-z0-9-]+\/$/));
   });
@@ -109,6 +126,53 @@ describe('mountNav', () => {
   it('uses no <select>, which would hijack the scroll wheel', () => {
     mountNav('gradient');
     expect(document.querySelectorAll('.pgnav select')).toHaveLength(0);
+  });
+
+  it('menus start closed', () => {
+    mountNav('gradient');
+    document.querySelectorAll('.pgmenu-list').forEach(l => expect(l.hidden).toBe(true));
+    document.querySelectorAll('.pgmenu-btn').forEach(b => expect(b.getAttribute('aria-expanded')).toBe('false'));
+  });
+
+  it('a button opens its own menu', () => {
+    mountNav('gradient');
+    const m = document.querySelector('.pgmenu');
+    m.querySelector('.pgmenu-btn').click();
+    expect(m.querySelector('.pgmenu-list').hidden).toBe(false);
+    expect(m.querySelector('.pgmenu-btn').getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('opening one closes the others', () => {
+    mountNav('gradient');
+    const [a, b] = [...document.querySelectorAll('.pgmenu')];
+    a.querySelector('.pgmenu-btn').click();
+    b.querySelector('.pgmenu-btn').click();
+    expect(a.querySelector('.pgmenu-list').hidden).toBe(true);
+    expect(b.querySelector('.pgmenu-list').hidden).toBe(false);
+  });
+
+  it('a second press on the same button closes it', () => {
+    mountNav('gradient');
+    const m = document.querySelector('.pgmenu');
+    m.querySelector('.pgmenu-btn').click();
+    m.querySelector('.pgmenu-btn').click();
+    expect(m.querySelector('.pgmenu-list').hidden).toBe(true);
+  });
+
+  it('a click anywhere else closes it, so it cannot hang over a canvas', () => {
+    mountNav('gradient');
+    const m = document.querySelector('.pgmenu');
+    m.querySelector('.pgmenu-btn').click();
+    document.body.click();
+    expect(m.querySelector('.pgmenu-list').hidden).toBe(true);
+  });
+
+  it('Escape closes it', () => {
+    mountNav('gradient');
+    const m = document.querySelector('.pgmenu');
+    m.querySelector('.pgmenu-btn').click();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(m.querySelector('.pgmenu-list').hidden).toBe(true);
   });
 
   it('links back to the index', () => {
