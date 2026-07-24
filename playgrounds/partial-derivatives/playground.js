@@ -1,6 +1,6 @@
 import { Surface3D } from '../../engine/surface-3d.js';
 import { ScoreShell } from '../../engine/score-shell.js';
-import { mountNav } from '../../engine/sequencer.js';
+import { mountNav, neighbours } from '../../engine/sequencer.js';
 import { createConfetti } from '../../engine/confetti.js';
 import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider } from '../../engine/control-panel.js';
@@ -167,7 +167,7 @@ function applyState(st) {
 const urlState = () => ({ surf: state.surf.id, axis: state.axis, slice: state.slice, probe: state.probe });
 const pushUrl = makeUrlSync(() => stateToParams(urlState()));
 
-mountLesson(LESSON, { slug: 'partial-derivatives', onJump: applyState });
+mountLesson(LESSON, { slug: 'partial-derivatives', onJump: applyState, links: neighbours('partial-derivatives') });
 
 // A link with parameters opens the playground in that exact configuration.
 const linked = readState(URL_SCHEMA);

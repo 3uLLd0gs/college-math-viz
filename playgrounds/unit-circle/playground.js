@@ -1,5 +1,5 @@
 import { ScoreShell } from '../../engine/score-shell.js';
-import { mountNav } from '../../engine/sequencer.js';
+import { mountNav, neighbours } from '../../engine/sequencer.js';
 import { createConfetti } from '../../engine/confetti.js';
 import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
@@ -302,7 +302,7 @@ function applyState(st) {
 const urlState = () => ({ trace: state.trace.id, deg: state.theta * 180 / Math.PI });
 const pushUrl = makeUrlSync(() => stateToParams(urlState()));
 
-mountLesson(LESSON, { slug: 'unit-circle', onJump: applyState });
+mountLesson(LESSON, { slug: 'unit-circle', onJump: applyState, links: neighbours('unit-circle') });
 
 // A link with parameters opens the playground in that exact configuration.
 const linked = readState(URL_SCHEMA);

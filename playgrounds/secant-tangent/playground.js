@@ -1,6 +1,6 @@
 import { Grapher2D } from '../../engine/grapher-2d.js';
 import { ScoreShell } from '../../engine/score-shell.js';
-import { mountNav } from '../../engine/sequencer.js';
+import { mountNav, neighbours } from '../../engine/sequencer.js';
 import { createConfetti } from '../../engine/confetti.js';
 import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
@@ -229,7 +229,7 @@ function applyState(st) {
 const urlState = () => ({ fn: state.fn.id, x0: state.x0, h: Math.pow(10, state.logH) });
 const pushUrl = makeUrlSync(() => stateToParams(urlState()));
 
-mountLesson(LESSON, { slug: 'secant-tangent', onJump: applyState });
+mountLesson(LESSON, { slug: 'secant-tangent', onJump: applyState, links: neighbours('secant-tangent') });
 
 // A link with parameters opens the playground in that exact configuration.
 const linked = readState(URL_SCHEMA);

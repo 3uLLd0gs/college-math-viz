@@ -1,6 +1,6 @@
 import { ContourMap } from '../../engine/contour-map.js';
 import { ScoreShell } from '../../engine/score-shell.js';
-import { mountNav } from '../../engine/sequencer.js';
+import { mountNav, neighbours } from '../../engine/sequencer.js';
 import { createConfetti } from '../../engine/confetti.js';
 import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider } from '../../engine/control-panel.js';
@@ -242,7 +242,7 @@ const urlState = () => ({
 });
 const pushUrl = makeUrlSync(() => stateToParams(urlState()));
 
-mountLesson(LESSON, { slug: 'gradient', onJump: applyState });
+mountLesson(LESSON, { slug: 'gradient', onJump: applyState, links: neighbours('gradient') });
 
 // A link with parameters opens the playground in that exact configuration.
 const linked = readState(URL_SCHEMA);

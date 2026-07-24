@@ -1,6 +1,6 @@
 import { VectorFieldView, streamline, divergenceAt, curlAt } from '../../engine/vector-field.js';
 import { ScoreShell } from '../../engine/score-shell.js';
-import { mountNav } from '../../engine/sequencer.js';
+import { mountNav, neighbours } from '../../engine/sequencer.js';
 import { createConfetti } from '../../engine/confetti.js';
 import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
@@ -186,7 +186,7 @@ function applyState(st) {
 const urlState = () => ({ field: state.field.id, x: state.x, y: state.y });
 const pushUrl = makeUrlSync(() => stateToParams(urlState()));
 
-mountLesson(LESSON, { slug: 'vector-fields', onJump: applyState });
+mountLesson(LESSON, { slug: 'vector-fields', onJump: applyState, links: neighbours('vector-fields') });
 
 // A link with parameters opens the playground in that exact configuration.
 const linked = readState(URL_SCHEMA);
