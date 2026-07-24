@@ -1,5 +1,5 @@
 import { COURSES, PLAYGROUNDS, inCourse, hrefFor } from './engine/sequencer.js';
-import { loadProgress, totalProgress } from './engine/score-shell.js';
+import { loadProgress, totalProgress, exportProgress, importProgress } from './engine/score-shell.js';
 
 const el = id => document.getElementById(id);
 
@@ -20,6 +20,33 @@ el('courses').innerHTML = COURSES
         ${inCourse(course.id).map(card).join('')}
       </div>
     </section>`).join('');
+
+const pmsg = (text, kind) => {
+  const el2 = el('pmsg');
+  if (!el2) return;
+  el2.textContent = text;
+  el2.className = 'backup-msg' + (kind ? ` ${kind}` : '');
+};
+
+el('pexport')?.addEventListener('click', () => {
+  const code = exportProgress();
+  const box = el('pcode');
+  box.value = code;
+  box.focus();
+  box.select();
+  pmsg(code ? 'Copy this code somewhere safe.' : 'Nothing to export yet — no progress saved.', code ? 'ok' : '');
+});
+
+el('pimport')?.addEventListener('click', () => {
+  const code = el('pcode').value.trim();
+  if (!code) { pmsg('Paste a backup code first.', 'err'); return; }
+  if (importProgress(code)) {
+    pmsg('Restored — reloading…', 'ok');
+    location.reload();
+  } else {
+    pmsg('That code could not be read. Check it was copied in full.', 'err');
+  }
+});
 
 function card(p) {
   const prog = loadProgress(p.slug);
