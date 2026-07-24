@@ -42,6 +42,7 @@ export const PLAYGROUNDS = [
     title: 'Taylor Series',
     tag: 'Polynomials that hug a curve',
     blurb: 'Add one term at a time and watch each polynomial grip the function tighter. Drag anywhere to probe the error.',
+    prereq: 'secant-tangent',
   },
   {
     slug: 'solids-of-revolution', course: 'calc2',
@@ -60,6 +61,7 @@ export const PLAYGROUNDS = [
     title: 'Gradient & Direction',
     tag: 'Which way is uphill',
     blurb: 'On a contour map, spin a direction dial and watch the directional derivative peak exactly when it aligns with the gradient.',
+    prereq: 'partial-derivatives',
   },
   {
     slug: 'vector-fields', course: 'calc3',
@@ -72,12 +74,14 @@ export const PLAYGROUNDS = [
     title: 'Curl & Divergence',
     tag: 'Spin and spread, made visible',
     blurb: 'A paddle wheel that turns at curl/2 and a ring of tracers whose area changes at rate div. Find the one spot where both go completely still.',
+    prereq: 'vector-fields',
   },
   {
     slug: 'greens-theorem', course: 'calc3',
     title: "Green's Theorem",
     tag: 'Boundary equals interior',
     blurb: 'Circulation around a loop and the curl inside it, computed independently and shown to agree. Balance the spin to cancel it.',
+    prereq: 'curl-divergence',
   },
 ];
 
@@ -101,6 +105,16 @@ export const next = slug => {
 export const prev = slug => {
   const i = indexOf(slug);
   return i > 0 ? PLAYGROUNDS[i - 1] : null;
+};
+
+/** A playground's declared prerequisite (if any) and its sequence successor,
+    for the "Builds on X · Leads to Y" line under a lesson intro. */
+export const neighbours = slug => {
+  const here = bySlug(slug);
+  return {
+    prereq: here?.prereq ? bySlug(here.prereq) : null,
+    next: next(slug),
+  };
 };
 
 export const hrefFor = slug => `/playgrounds/${slug}/`;

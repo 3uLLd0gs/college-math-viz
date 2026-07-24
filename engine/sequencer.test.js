@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { COURSES, PLAYGROUNDS, bySlug, courseOf, inCourse, next, prev, hrefFor, mountNav } from './sequencer.js';
+import { COURSES, PLAYGROUNDS, bySlug, courseOf, inCourse, next, prev, hrefFor, mountNav, neighbours } from './sequencer.js';
 
 describe('the catalogue is internally consistent', () => {
   it('every slug is unique', () => {
@@ -72,6 +72,18 @@ describe('sequence walking', () => {
   it('returns null for an unknown slug rather than wrapping to an end', () => {
     expect(next('nope')).toBeNull();
     expect(prev('nope')).toBeNull();
+  });
+});
+
+describe('neighbours', () => {
+  it('returns the declared prereq and the sequence next', () => {
+    const n = neighbours('gradient');
+    expect(n.prereq?.slug).toBe('partial-derivatives');
+    expect(n.next?.slug).toBe(next('gradient').slug);
+  });
+  it('nulls where none exist', () => {
+    const n = neighbours(PLAYGROUNDS[0].slug);
+    expect(n.prereq).toBeNull();
   });
 });
 

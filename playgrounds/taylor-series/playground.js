@@ -1,12 +1,12 @@
 import { Grapher2D } from '../../engine/grapher-2d.js';
 import { ScoreShell } from '../../engine/score-shell.js';
-import { mountNav } from '../../engine/sequencer.js';
+import { mountNav, neighbours } from '../../engine/sequencer.js';
 import { createConfetti } from '../../engine/confetti.js';
-import { getCSS, fmtAxis as fmt } from '../../engine/dom.js';
+import { getCSS, fmtAxis as fmt, mountPresenter } from '../../engine/dom.js';
 import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
 import { challengeMeter, logProgress } from '../../engine/challenge-meter.js';
 import { mountLesson } from '../../engine/lesson.js';
-import { readState, makeUrlSync, stateToParams } from '../../engine/deep-link.js';
+import { readState, makeUrlSync, stateToParams, syncedUrl } from '../../engine/deep-link.js';
 import { keyboardControl } from '../../engine/keyboard.js';
 import { FUNCTIONS, polyAt, formula, LESSON } from './content.js';
 
@@ -165,14 +165,16 @@ function applyState(st) {
 const urlState = () => ({ fn: state.fn.id, N: state.N, probe: state.probe });
 const pushUrl = makeUrlSync(() => stateToParams(urlState()));
 
-mountLesson(LESSON, { slug: 'taylor-series', onJump: applyState });
+mountLesson(LESSON, { slug: 'taylor-series', onJump: applyState, links: neighbours('taylor-series') });
 
 // A link with parameters opens the playground in that exact configuration.
 const linked = readState(URL_SCHEMA);
 if (Object.keys(linked).length) applyState(linked);
 
 document.getElementById('copylink').onclick = async () => {
-  const url = `${location.origin}${location.pathname}?${stateToParams(urlState())}`;
+  const url = `${location.origin}${syncedUrl(stateToParams(urlState()))}`;
   try { await navigator.clipboard.writeText(url); shell.toast('Link copied', 'Opens this exact view', '🔗'); }
   catch { shell.toast('Copy failed', url, '🔗'); }
 };
+
+mountPresenter();

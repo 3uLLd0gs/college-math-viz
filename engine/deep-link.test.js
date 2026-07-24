@@ -1,6 +1,6 @@
 // engine/deep-link.test.js
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { stateToParams, paramsToState, readState, makeUrlSync } from './deep-link.js';
+import { stateToParams, paramsToState, readState, makeUrlSync, syncedUrl } from './deep-link.js';
 
 describe('stateToParams', () => {
   it('encodes strings, numbers and booleans', () => {
@@ -54,6 +54,23 @@ describe('readState', () => {
   });
 });
 
+describe('syncedUrl', () => {
+  it('preserves a foreign param (e.g. present=1) not in the schema params', () => {
+    window.history.replaceState(null, '', '/p/?present=1');
+    const url = syncedUrl(new URLSearchParams({ deg: '120' }));
+    expect(url).toContain('present=1');
+    expect(url).toContain('deg=120');
+  });
+
+  it('overwrites a schema key already present in the URL while keeping foreign params', () => {
+    window.history.replaceState(null, '', '/p/?deg=5&present=1');
+    const url = syncedUrl(new URLSearchParams({ deg: '120' }));
+    expect(url).toContain('deg=120');
+    expect(url).not.toContain('deg=5');
+    expect(url).toContain('present=1');
+  });
+});
+
 describe('makeUrlSync', () => {
   beforeEach(() => vi.useFakeTimers());
   it('debounces and writes the current state to the URL without a history entry', () => {
@@ -64,6 +81,19 @@ describe('makeUrlSync', () => {
     vi.advanceTimersByTime(100);
     expect(spy).toHaveBeenCalledTimes(1);    // once, with the last state
     const url = spy.mock.calls[0][2];
+    expect(url).toContain('N=3');
+    spy.mockRestore();
+    vi.useRealTimers();
+  });
+
+  it('preserves a foreign present=1 param when auto-syncing schema state', () => {
+    window.history.replaceState(null, '', '/p/?present=1');
+    const spy = vi.spyOn(window.history, 'replaceState');
+    const sync = makeUrlSync(st => stateToParams(st), { delay: 100 });
+    sync({ N: 3 });
+    vi.advanceTimersByTime(100);
+    const url = spy.mock.calls[0][2];
+    expect(url).toContain('present=1');
     expect(url).toContain('N=3');
     spy.mockRestore();
     vi.useRealTimers();

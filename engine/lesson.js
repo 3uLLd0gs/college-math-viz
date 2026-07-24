@@ -77,6 +77,15 @@ export function mountLesson(lesson, opts = {}) {
     </div>`;
   anchor.insertAdjacentElement(opts.place === 'after' ? 'afterend' : 'beforebegin', el);
 
+  const links = opts.links;
+  if (links && (links.prereq || links.next)) {
+    const bits = [];
+    if (links.prereq) bits.push(`Builds on <a href="/playgrounds/${links.prereq.slug}/">${links.prereq.title}</a>`);
+    if (links.next) bits.push(`Leads to <a href="/playgrounds/${links.next.slug}/">${links.next.title}</a>`);
+    el.querySelector('.lesson-intro').insertAdjacentHTML('afterend',
+      `<p class="lesson-links">${bits.join(' &nbsp;·&nbsp; ')}</p>`);
+  }
+
   const stepsEl = el.querySelector('#lesson-steps');
   const toggle = el.querySelector('.lesson-toggle');
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ScoreShell, loadProgress, saveProgress, clearProgress, totalProgress } from './score-shell.js';
+import { ScoreShell, loadProgress, saveProgress, clearProgress, totalProgress, exportProgress, importProgress } from './score-shell.js';
 
 const dom = () => {
   document.body.innerHTML = `
@@ -105,6 +105,22 @@ describe('totalProgress', () => {
 
   it('is all zeroes before anything is played', () => {
     expect(totalProgress(['a', 'b'])).toEqual({ pts: 0, badges: 0, started: 0 });
+  });
+});
+
+describe('export / import progress', () => {
+  it('round-trips every playground', () => {
+    saveProgress('a', { pts: 40, streak: 0, badges: ['x'], awards: ['solve:a'] });
+    saveProgress('b', { pts: 10, streak: 2, badges: [], awards: [] });
+    const code = exportProgress();
+    localStorage.clear();
+    expect(loadProgress('a').pts).toBe(0);
+    expect(importProgress(code)).toBe(true);
+    expect(loadProgress('a')).toEqual({ pts: 40, streak: 0, badges: ['x'], awards: ['solve:a'] });
+    expect(loadProgress('b').streak).toBe(2);
+  });
+  it('rejects a corrupt code without throwing', () => {
+    expect(importProgress('not base64!!')).toBe(false);
   });
 });
 

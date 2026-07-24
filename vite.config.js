@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
+import { configDefaults } from 'vitest/config';
 
 export default defineConfig({
   build: {
@@ -22,5 +23,9 @@ export default defineConfig({
   },
   test: {
     environment: 'happy-dom',
+    // e2e/ holds Playwright specs (run via `npm run test:e2e`), not Vitest
+    // unit tests — without this they match Vitest's default *.spec.js glob
+    // and fail to load because they import '@playwright/test'.
+    exclude: [...configDefaults.exclude, 'e2e/**'],
   },
 });

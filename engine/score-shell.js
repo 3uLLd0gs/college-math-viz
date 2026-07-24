@@ -55,6 +55,34 @@ export function totalProgress(slugs) {
   }, { pts: 0, badges: 0, started: 0 });
 }
 
+/** Bundle every stored playground's progress into one copyable, base64-encoded
+ *  code — the whole backup/restore story, with no backend and no account. */
+export function exportProgress() {
+  const all = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith(PREFIX)) all[k.slice(PREFIX.length)] = loadProgress(k.slice(PREFIX.length));
+  }
+  try { return btoa(unescape(encodeURIComponent(JSON.stringify(all)))); } catch { return ''; }
+}
+
+/** Decode a code produced by exportProgress() and write each playground's
+ *  progress back via saveProgress. Never throws — a mistyped or truncated
+ *  paste should fail cleanly, not take the page down. */
+export function importProgress(code) {
+  try {
+    const obj = JSON.parse(decodeURIComponent(escape(atob(code))));
+    if (!obj || typeof obj !== 'object') return false;
+    for (const [slug, v] of Object.entries(obj)) {
+      if (v && typeof v === 'object') saveProgress(slug, {
+        pts: Number(v.pts) || 0, streak: Number(v.streak) || 0,
+        badges: Array.isArray(v.badges) ? v.badges : [], awards: Array.isArray(v.awards) ? v.awards : [],
+      });
+    }
+    return true;
+  } catch { return false; }
+}
+
 export class ScoreShell {
   /**
    * @param confetti  something with .burst()

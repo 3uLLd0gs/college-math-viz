@@ -1,13 +1,13 @@
 import { VectorFieldView, circulation, curlFlux, curlAt } from '../../engine/vector-field.js';
 import { isoSegments } from '../../engine/contour-map.js';
 import { ScoreShell } from '../../engine/score-shell.js';
-import { mountNav } from '../../engine/sequencer.js';
+import { mountNav, neighbours } from '../../engine/sequencer.js';
 import { createConfetti } from '../../engine/confetti.js';
-import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
+import { s, getCSS, fmtNum as fmt, mountPresenter } from '../../engine/dom.js';
 import { buttonGroup, slider } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
 import { mountLesson } from '../../engine/lesson.js';
-import { readState, makeUrlSync, stateToParams } from '../../engine/deep-link.js';
+import { readState, makeUrlSync, stateToParams, syncedUrl } from '../../engine/deep-link.js';
 import { keyboardControl } from '../../engine/keyboard.js';
 import { FIELDS, curlGrid, LESSON } from './content.js';
 
@@ -216,14 +216,16 @@ function applyState(st) {
 const urlState = () => ({ field: state.field.id, x: state.x, y: state.y, r: state.r });
 const pushUrl = makeUrlSync(() => stateToParams(urlState()));
 
-mountLesson(LESSON, { slug: 'greens-theorem', onJump: applyState });
+mountLesson(LESSON, { slug: 'greens-theorem', onJump: applyState, links: neighbours('greens-theorem') });
 
 // A link with parameters opens the playground in that exact configuration.
 const linked = readState(URL_SCHEMA);
 if (Object.keys(linked).length) applyState(linked);
 
 s('copylink').onclick = async () => {
-  const url = `${location.origin}${location.pathname}?${stateToParams(urlState())}`;
+  const url = `${location.origin}${syncedUrl(stateToParams(urlState()))}`;
   try { await navigator.clipboard.writeText(url); shell.toast('Link copied', 'Opens this exact view', '🔗'); }
   catch { shell.toast('Copy failed', url, '🔗'); }
 };
+
+mountPresenter();
