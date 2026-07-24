@@ -203,6 +203,25 @@ input[type=range]::-moz-range-thumb{width:var(--thumb-moz,17px);height:var(--thu
   .lesson-step-n{flex-basis:22px;height:22px;font-size:11px}
 }
 
+/* ---- keyboard focus (a11y) ---- */
+canvas:focus-visible, .pgpill:focus-visible, .action:focus-visible,
+.tbtn:focus-visible, .fbtn:focus-visible, .lesson-opt:focus-visible,
+.pgmenu-btn:focus-visible, .lesson-toggle:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+
+/* ---- lesson self-check ---- */
+.lesson-check-q{font-size:14px;color:var(--ink);margin-bottom:10px;line-height:1.5}
+.lesson-opts{display:flex;flex-direction:column;gap:7px;max-width:60ch}
+.lesson-opt{text-align:left;font-family:inherit;font-size:12.5px;color:var(--ink);cursor:pointer;
+  background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:9px 12px;transition:.15s}
+.lesson-opt:hover{border-color:var(--accent)}
+.lesson-opt.right{border-color:var(--approx);background:rgba(61,242,192,.12);color:var(--approx)}
+.lesson-opt.wrong{border-color:var(--error);background:rgba(255,93,115,.10);color:var(--error)}
+.lesson-why{margin-top:9px;font-size:12px;color:var(--muted);line-height:1.6;max-width:70ch}
+.lesson-seeit{margin-top:9px;width:auto;padding:8px 14px;font-size:11px;color:var(--accent);border-color:rgba(122,162,255,.4)}
+.lesson-check .lesson-step-n{color:var(--gold);background:rgba(255,215,106,.10);border-color:rgba(255,215,106,.35)}
+
 /* ---- confetti + toasts ---- */
 #fx{position:fixed;inset:0;pointer-events:none;z-index:60}
 .toast-wrap{position:fixed;top:18px;right:18px;display:flex;flex-direction:column;gap:9px;z-index:70}
