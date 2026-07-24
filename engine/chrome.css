@@ -240,3 +240,23 @@ canvas:focus-visible, .pgpill:focus-visible, .action:focus-visible,
   .graph-card{min-height:var(--graph-min-sm,340px)}
   header{align-items:flex-start}
 }
+
+/* ---- presenter mode: bigger for a lecture hall ---- */
+body.present{font-size:118%}
+body.present .graph-card{--graph-min:66vh}
+body.present .readout{font-size:15px;max-width:min(94%,640px)}
+body.present .pgnav,body.present .lesson,body.present .scoreboard{display:none}
+body.present #present{display:inline-flex}   /* keep the toggle reachable while presenting */
+
+/* ---- print: the lesson becomes a handout ---- */
+@media print{
+  body{background:#fff;color:#111;padding:0}
+  .pgnav,.scoreboard,.toast-wrap,#fx,.graph-card,.panel,.lesson-actions,.lesson-jump,.lesson-seeit,.lesson-opts,#present{display:none !important}
+  body.present .lesson{display:block !important}   /* printing while presenting still shows the handout */
+  .lesson{border:0;box-shadow:none;padding:0}
+  .lesson.closed .lesson-body{display:block}
+  .lesson-body,.lesson-intro,.lesson-step-body,.lesson-check-q,.lesson-why{color:#111}
+  .lesson-fig{border:1px solid #ccc}
+  .lesson-step{break-inside:avoid}
+  .lesson-links a{color:#111;text-decoration:underline}
+}

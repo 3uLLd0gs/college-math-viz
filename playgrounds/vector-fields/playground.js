@@ -2,7 +2,7 @@ import { VectorFieldView, streamline, divergenceAt, curlAt } from '../../engine/
 import { ScoreShell } from '../../engine/score-shell.js';
 import { mountNav, neighbours } from '../../engine/sequencer.js';
 import { createConfetti } from '../../engine/confetti.js';
-import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
+import { s, getCSS, fmtNum as fmt, mountPresenter } from '../../engine/dom.js';
 import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
 import { mountLesson } from '../../engine/lesson.js';
@@ -197,3 +197,5 @@ s('copylink').onclick = async () => {
   try { await navigator.clipboard.writeText(url); shell.toast('Link copied', 'Opens this exact view', '🔗'); }
   catch { shell.toast('Copy failed', url, '🔗'); }
 };
+
+mountPresenter();
