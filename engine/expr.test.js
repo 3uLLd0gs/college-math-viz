@@ -39,4 +39,14 @@ describe('expr safety', () => {
     // x is grammatical but unbound here → ExprError, never a global lookup
     expect(() => compile('x')({})).toThrow(ExprError);
   });
+  it('rejects Object.prototype member names as function calls (null-proto guard)', () => {
+    // Regression guard: the FUNCS/CONSTS whitelist tables MUST be null-prototype,
+    // or `'constructor' in FUNCS` resolves true via Object.prototype and these
+    // slip past the "Unknown function" check. If a refactor reintroduces a plain
+    // object literal, these assertions fail.
+    for (const name of ['constructor', 'valueOf', 'hasOwnProperty', 'toString', '__proto__']) {
+      expect(() => parse(`${name}(1)`)).toThrow(ExprError);
+    }
+    expect(() => parse('   ')).toThrow(ExprError);
+  });
 });
