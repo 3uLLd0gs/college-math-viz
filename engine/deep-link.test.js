@@ -99,3 +99,32 @@ describe('makeUrlSync', () => {
     vi.useRealTimers();
   });
 });
+
+describe('syncedUrl managed keys', () => {
+  beforeEach(() => { window.history.replaceState(null, '', '/p/?present=1&expr=x%5E2&a=0&b=2'); });
+
+  it('without managed, preserves every existing key (Phase-1 behavior)', () => {
+    const out = syncedUrl(new URLSearchParams({ fn: 'square' }));
+    expect(out).toContain('present=1');
+    expect(out).toContain('expr=x%5E2');   // stale expr survives — the bug managed fixes
+    expect(out).toContain('fn=square');
+  });
+
+  it('with managed, drops managed keys absent from the new params but keeps foreign keys', () => {
+    const managed = ['fn', 'rule', 'n', 'expr', 'a', 'b'];
+    const out = syncedUrl(new URLSearchParams({ fn: 'square', rule: 'left', n: '4' }), managed);
+    expect(out).toContain('fn=square');
+    expect(out).toContain('present=1');     // foreign key preserved
+    expect(out).not.toContain('expr=');     // managed-but-absent → dropped
+    expect(out).not.toContain('a=');
+    expect(out).not.toContain('b=');
+  });
+
+  it('with managed, still sets the present managed keys', () => {
+    const managed = ['fn', 'expr', 'a', 'b'];
+    const out = syncedUrl(new URLSearchParams({ expr: 'sin(x)', a: '1', b: '3' }), managed);
+    expect(out).toContain('expr=sin%28x%29');
+    expect(out).toContain('a=1');
+    expect(out).toContain('present=1');
+  });
+});
