@@ -119,11 +119,16 @@ Expected: FAIL (module not found / exports missing).
 
 export class ExprError extends Error {}
 
-const FUNCS = {
+// Object.create(null): tables with NO prototype chain. A plain object literal
+// would make `'__proto__' in CONSTS` and `'constructor' in FUNCS` resolve true
+// via Object.prototype, letting `parse('__proto__')` or `constructor(...)`
+// slip through — a prototype-pollution-style hole. Null-prototype tables mean
+// `in` only sees whitelisted OWN keys.
+const FUNCS = Object.assign(Object.create(null), {
   sin: Math.sin, cos: Math.cos, tan: Math.tan,
   exp: Math.exp, ln: Math.log, sqrt: Math.sqrt, abs: Math.abs,
-};
-const CONSTS = { pi: Math.PI, e: Math.E };
+});
+const CONSTS = Object.assign(Object.create(null), { pi: Math.PI, e: Math.E });
 
 function tokenize(src) {
   const tokens = [];
