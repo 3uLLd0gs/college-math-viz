@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Differentiation Drills · Practice the Chain, Product &amp; Quotient Rules</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../engine/chrome.css">
+<style>
+  .drill-card{max-width:720px}
+  .drill-intro{font-size:13.5px;color:var(--muted);line-height:1.7;margin-bottom:20px;max-width:68ch}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div class="toast-wrap" id="toasts"></div>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="kicker">Math · Visual Studio</div>
+      <h1>Differentiation <em>Drills</em></h1>
+    </div>
+    <button class="chip" id="present" type="button" title="Presenter mode" aria-pressed="false" style="cursor:pointer">Present</button>
+    <div class="scoreboard">
+      <div class="chip pts"><div class="lab">Points</div><div class="val" id="s-pts">0</div></div>
+      <div class="chip streak"><div class="lab">Streak</div><div class="val" id="s-streak">0</div></div>
+      <div class="chip"><div class="lab">Badges</div><div class="val" id="s-badges">0</div></div>
+    </div>
+  </header>
+  <div class="card drill-card">
+    <p class="drill-intro">Differentiate each expression and type the result — any algebraically equivalent form is accepted. Stuck? Reveal the rule, then the steps, one at a time. Add <code>?seed=1234</code> to the URL to share an identical problem set.</p>
+    <div id="drill-root"></div>
+  </div>
+</div>
+<script type="module" src="./drill.js"></script>
+</body>
+</html>

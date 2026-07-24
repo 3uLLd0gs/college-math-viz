@@ -14,7 +14,7 @@ el('courses').innerHTML = COURSES
     <section class="course">
       <div class="course-head">
         <h2>${course.label}</h2>
-        <span class="count">${inCourse(course.id).length} playground${inCourse(course.id).length === 1 ? '' : 's'}</span>
+        <span class="count">${inCourse(course.id).length} ${course.id === 'practice' ? 'drill' : 'playground'}${inCourse(course.id).length === 1 ? '' : 's'}</span>
       </div>
       <div class="grid">
         ${inCourse(course.id).map(card).join('')}

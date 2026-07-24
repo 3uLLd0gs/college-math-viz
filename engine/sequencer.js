@@ -10,6 +10,7 @@ export const COURSES = [
   { id: 'calc1', label: 'Calculus 1' },
   { id: 'calc2', label: 'Calculus 2' },
   { id: 'calc3', label: 'Calculus 3' },
+  { id: 'practice', label: 'Practice' },
 ];
 
 export const PLAYGROUNDS = [
@@ -83,6 +84,12 @@ export const PLAYGROUNDS = [
     blurb: 'Circulation around a loop and the curl inside it, computed independently and shown to agree. Balance the spin to cancel it.',
     prereq: 'curl-divergence',
   },
+  {
+    slug: 'differentiation-rules', course: 'practice', kind: 'drill',
+    title: 'Differentiation Drills',
+    tag: 'Practice the chain, product & quotient rules',
+    blurb: 'Randomized d/dx problems checked for mathematical equivalence, with hints revealed one rung at a time. Add ?seed to share an exact set.',
+  },
 ];
 
 export const bySlug = slug => PLAYGROUNDS.find(p => p.slug === slug) ?? null;
@@ -117,7 +124,10 @@ export const neighbours = slug => {
   };
 };
 
-export const hrefFor = slug => `/playgrounds/${slug}/`;
+export const hrefFor = slug => {
+  const p = bySlug(slug);
+  return p?.kind === 'drill' ? `/drills/${slug}/` : `/playgrounds/${slug}/`;
+};
 
 /**
  * Insert the cross-playground nav at the top of `.wrap`. Creating the element

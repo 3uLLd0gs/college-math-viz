@@ -132,7 +132,7 @@ describe('mountNav', () => {
     mountNav('gradient');
     const links = [...document.querySelectorAll('a.pgmenu-item')];
     expect(links).toHaveLength(PLAYGROUNDS.length - 1);
-    links.forEach(a => expect(a.getAttribute('href')).toMatch(/^\/playgrounds\/[a-z0-9-]+\/$/));
+    links.forEach(a => expect(a.getAttribute('href')).toMatch(/^\/(playgrounds|drills)\/[a-z0-9-]+\/$/));
   });
 
   it('uses no <select>, which would hijack the scroll wheel', () => {
@@ -207,5 +207,15 @@ describe('mountNav', () => {
   it('does nothing gracefully when there is no .wrap', () => {
     document.body.innerHTML = '<main></main>';
     expect(mountNav('gradient')).toBeNull();
+  });
+});
+
+describe('drills in the catalogue', () => {
+  it('routes drills to /drills/ and playgrounds to /playgrounds/', () => {
+    expect(hrefFor('differentiation-rules')).toBe('/drills/differentiation-rules/');
+    expect(hrefFor('gradient')).toBe('/playgrounds/gradient/');
+  });
+  it('groups the drill under the practice course', () => {
+    expect(inCourse('practice').map(p => p.slug)).toContain('differentiation-rules');
   });
 });
