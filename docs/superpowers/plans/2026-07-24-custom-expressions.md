@@ -285,6 +285,7 @@ let customActive = false;
 // built-in clears it, and it re-selects the custom function when clicked.
 const customPill = document.createElement('button');
 customPill.type = 'button';
+customPill.id = 'customPill';                 // #customPill is the interface contract Tasks 4/5 select on
 customPill.className = 'fbtn custom-pill';
 customPill.textContent = '◆ custom';
 customPill.hidden = true;
