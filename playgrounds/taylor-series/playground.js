@@ -6,10 +6,13 @@ import { getCSS, fmtAxis as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
 import { challengeMeter, logProgress } from '../../engine/challenge-meter.js';
 import { mountLesson } from '../../engine/lesson.js';
+import { readState, makeUrlSync, stateToParams } from '../../engine/deep-link.js';
+import { keyboardControl } from '../../engine/keyboard.js';
 import { FUNCTIONS, polyAt, formula, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "Taylor series" ---- */
 const MAX_TERMS = 14;   // must match the #terms slider max in index.html
+const URL_SCHEMA = { fn: 'string', N: 'number', probe: 'number' };
 
 const g = new Grapher2D(document.getElementById('graph'));
 const shell = new ScoreShell(createConfetti(), { slug: 'taylor-series' });
@@ -42,6 +45,7 @@ const terms = slider('terms', {
     if (state.N >= 1) shell.badge('first', 'First Term', 'You started an approximation', '✳️');
     if (state.N === MAX_TERMS) shell.badge('deep', 'Convergence Master', `Pushed to ${MAX_TERMS} terms`, '♾️');
     render();
+    pushUrl();
   },
 });
 
@@ -51,6 +55,7 @@ function selectFn(fn) {
   shell.award(`explore:${fn.id}`, 5);
   markExplored(fn.id);
   render();
+  pushUrl();
 }
 
 const explored = new Set(['exp']);
@@ -59,16 +64,17 @@ function markExplored(id) {
   if (explored.size === FUNCTIONS.length) shell.badge('explorer', 'Explorer', 'Tried every function', '🧭');
 }
 
-document.getElementById('reset').onclick = () => { state.N = 1; terms.set(1); render(); };
+document.getElementById('reset').onclick = () => { state.N = 1; terms.set(1); render(); pushUrl(); };
 
 ticker('build', {
   intervalMs: 260,
   playLabel: '▸ Animate build',
   pauseLabel: '⏸ Pause',
-  onStart: () => { state.N = 0; terms.set(0); render(); },
+  onStart: () => { state.N = 0; terms.set(0); render(); pushUrl(); },
   onTick: () => {
     if (state.N >= MAX_TERMS) return false;
     state.N++; terms.set(state.N); render();
+    pushUrl();
   },
 });
 
@@ -79,11 +85,26 @@ function setProbe(clientX) {
   let x = g.ux(clientX - r.left);
   x = Math.max(state.fn.view.xmin + 0.02, Math.min(state.fn.view.xmax - 0.02, x));
   state.probe = x; render();
+  pushUrl();
 }
 gc.addEventListener('pointerdown', e => { dragging = true; gc.setPointerCapture(e.pointerId); setProbe(e.clientX); });
 gc.addEventListener('pointermove', e => { if (dragging) setProbe(e.clientX); });
 gc.addEventListener('pointerup', () => dragging = false);
 gc.addEventListener('pointercancel', () => dragging = false);
+
+keyboardControl(gc, {
+  nudge: (dx, dy, big) => {
+    const view = state.fn.view;
+    const d = (big ? 0.4 : 0.1) * (view.xmax - view.xmin);
+    state.probe = Math.max(view.xmin + 0.02, Math.min(view.xmax - 0.02, state.probe + dx * d));
+    render(); pushUrl();
+  },
+  step: (delta, big) => {
+    state.N = Math.max(0, Math.min(MAX_TERMS, state.N + delta * (big ? 3 : 1)));
+    terms.set(state.N);
+    render(); pushUrl();
+  },
+});
 
 g.onresize = render;
 
@@ -121,21 +142,37 @@ render();
 
 mountNav('taylor-series');
 
-mountLesson(LESSON, {
-  slug: 'taylor-series',
-  onJump: st => {
-    if (st.fn) {
-      const fn = FUNCTIONS.find(f => f.id === st.fn);
-      if (fn) {
-        state.fn = fn;
-        fnButtons.select(FUNCTIONS.indexOf(fn), { notify: false });
-        g.setView(fn.view);
-        state.probe = fn.challenge.x0;
-      }
+/** Drive the playground to a described configuration. Shared by lesson jumps,
+ *  shareable URLs, and self-checks — all of which speak the same state object. */
+function applyState(st) {
+  if (st.fn) {
+    const fn = FUNCTIONS.find(f => f.id === st.fn);
+    if (fn) {
+      state.fn = fn;
+      fnButtons.select(FUNCTIONS.indexOf(fn), { notify: false });
+      g.setView(fn.view);
+      state.probe = fn.challenge.x0;
     }
-    if (typeof st.N === 'number') { state.N = st.N; terms.set(st.N); }
-    if (typeof st.probe === 'number') state.probe = st.probe;
-    meter.reset();
-    render();
-  },
-});
+  }
+  if (typeof st.N === 'number') { state.N = st.N; terms.set(st.N); }
+  if (typeof st.probe === 'number') state.probe = st.probe;
+  meter.reset();
+  render();
+  pushUrl();
+}
+
+/** A shareable snapshot of the current view (only the URL_SCHEMA keys). */
+const urlState = () => ({ fn: state.fn.id, N: state.N, probe: state.probe });
+const pushUrl = makeUrlSync(() => stateToParams(urlState()));
+
+mountLesson(LESSON, { slug: 'taylor-series', onJump: applyState });
+
+// A link with parameters opens the playground in that exact configuration.
+const linked = readState(URL_SCHEMA);
+if (Object.keys(linked).length) applyState(linked);
+
+document.getElementById('copylink').onclick = async () => {
+  const url = `${location.origin}${location.pathname}?${stateToParams(urlState())}`;
+  try { await navigator.clipboard.writeText(url); shell.toast('Link copied', 'Opens this exact view', '🔗'); }
+  catch { shell.toast('Copy failed', url, '🔗'); }
+};

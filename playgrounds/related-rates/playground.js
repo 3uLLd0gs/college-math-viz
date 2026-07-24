@@ -5,7 +5,11 @@ import { createConfetti } from '../../engine/confetti.js';
 import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
+import { readState, makeUrlSync, stateToParams } from '../../engine/deep-link.js';
+import { keyboardControl } from '../../engine/keyboard.js';
 import { SCENARIOS, byId, solveFor, missBy, stateSpeed, LESSON } from './content.js';
+
+const URL_SCHEMA = { scenario: 'string', s: 'number', drive: 'number' };
 
 /* ---- PLAYGROUND: thin wiring specific to "related rates" ----
    The scene is drawn directly rather than through Grapher2D: these are physical
@@ -38,10 +42,11 @@ const scButtons = buttonGroup('fbtns', SCENARIOS, sc => {
   explored.add(sc.id);
   if (explored.size === SCENARIOS.length) shell.badge('explorer', 'Rate Hunter', 'Ran every scenario', '🗺️');
   render();
+  pushUrl();
 });
 
-const sSlider = slider('sval', { onInput: v => { state.s = v; render(); } });
-const dSlider = slider('drive', { onInput: v => { state.drive = v; render(); } });
+const sSlider = slider('sval', { onInput: v => { state.s = v; render(); pushUrl(); } });
+const dSlider = slider('drive', { onInput: v => { state.drive = v; render(); pushUrl(); } });
 
 function useScenario(sc) {
   state.sc = sc;
@@ -53,7 +58,7 @@ function useScenario(sc) {
 }
 useScenario(SCENARIOS[0]);
 
-s('reset').onclick = () => { useScenario(state.sc); render(); };
+s('reset').onclick = () => { useScenario(state.sc); render(); pushUrl(); };
 
 /* Let time run: the state advances at exactly the driving rate, which is the
    point — the driver is constant and the derived rate is not. */
@@ -61,16 +66,34 @@ ticker('play', {
   intervalMs: 40,
   playLabel: '▸ Let time run',
   pauseLabel: '⏸ Pause',
-  onStart: () => { state.s = state.sc.sVar.min + 1e-6; sSlider.set(state.s); render(); },
+  onStart: () => { state.s = state.sc.sVar.min + 1e-6; sSlider.set(state.s); render(); pushUrl(); },
   onTick: () => {
     const sc = state.sc;
     const next = state.s + stateSpeed(sc, state.s, state.drive) * 0.04;
-    if (next >= sc.sVar.max) { state.s = sc.sVar.max; sSlider.set(state.s); render(); return false; }
+    if (next >= sc.sVar.max) { state.s = sc.sVar.max; sSlider.set(state.s); render(); pushUrl(); return false; }
     state.s = next; sSlider.set(state.s); render();
+    pushUrl();
   },
 });
 
 window.addEventListener('resize', render);
+
+keyboardControl(cv, {
+  nudge: (dx, dy, big) => {
+    const sv = state.sc.sVar;
+    const d = (big ? 5 : 1) * sv.step;
+    state.s = Math.max(sv.min, Math.min(sv.max, state.s + dx * d));
+    sSlider.set(state.s);
+    render(); pushUrl();
+  },
+  step: (delta, big) => {
+    const sv = state.sc.sVar;
+    const d = (big ? 5 : 1) * sv.step;
+    state.s = Math.max(sv.min, Math.min(sv.max, state.s + delta * d));
+    sSlider.set(state.s);
+    render(); pushUrl();
+  },
+});
 
 /* ---- scene drawing ---- */
 function layout() {
@@ -283,19 +306,35 @@ render();
 
 mountNav('related-rates');
 
-mountLesson(LESSON, {
-  slug: 'related-rates',
-  onJump: st => {
-    if (st.scenario) {
-      const sc = byId(st.scenario);
-      if (sc) { useScenario(sc); scButtons.select(SCENARIOS.indexOf(sc), { notify: false }); }
-    }
-    if (typeof st.drive === 'number') { state.drive = st.drive; dSlider.set(st.drive); }
-    if (st.solve) {
-      const target = state.sc.challenge?.target ?? null;
-      const sv = solveFor(state.sc, target, state.drive);
-      if (sv !== null) { state.s = sv; sSlider.set(sv); }
-    } else if (typeof st.s === 'number') { state.s = st.s; sSlider.set(st.s); }
-    render();
-  },
-});
+/** Drive the playground to a described configuration. Shared by lesson jumps,
+ *  shareable URLs, and self-checks — all of which speak the same state object. */
+function applyState(st) {
+  if (st.scenario) {
+    const sc = byId(st.scenario);
+    if (sc) { useScenario(sc); scButtons.select(SCENARIOS.indexOf(sc), { notify: false }); }
+  }
+  if (typeof st.drive === 'number') { state.drive = st.drive; dSlider.set(st.drive); }
+  if (st.solve) {
+    const target = state.sc.challenge?.target ?? null;
+    const sv = solveFor(state.sc, target, state.drive);
+    if (sv !== null) { state.s = sv; sSlider.set(sv); }
+  } else if (typeof st.s === 'number') { state.s = st.s; sSlider.set(st.s); }
+  render();
+  pushUrl();
+}
+
+/** A shareable snapshot of the current view (only the URL_SCHEMA keys). */
+const urlState = () => ({ scenario: state.sc.id, s: state.s, drive: state.drive });
+const pushUrl = makeUrlSync(() => stateToParams(urlState()));
+
+mountLesson(LESSON, { slug: 'related-rates', onJump: applyState });
+
+// A link with parameters opens the playground in that exact configuration.
+const linked = readState(URL_SCHEMA);
+if (Object.keys(linked).length) applyState(linked);
+
+s('copylink').onclick = async () => {
+  const url = `${location.origin}${location.pathname}?${stateToParams(urlState())}`;
+  try { await navigator.clipboard.writeText(url); shell.toast('Link copied', 'Opens this exact view', '🔗'); }
+  catch { shell.toast('Copy failed', url, '🔗'); }
+};

@@ -6,12 +6,15 @@ import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
 import { mountLesson } from '../../engine/lesson.js';
+import { readState, makeUrlSync, stateToParams } from '../../engine/deep-link.js';
+import { keyboardControl } from '../../engine/keyboard.js';
 import { REGIONS, AXES, methodReason, isExactAtAnyN, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "solids of revolution" ---- */
 
 const N_MAX = 40;
 const TOL_FRAC = 0.005;   // within 0.5% of the exact volume clears it
+const URL_SCHEMA = { region: 'string', axis: 'string', n: 'number' };
 
 const view = new Revolve3D(document.getElementById('solid'));
 const shell = new ScoreShell(createConfetti(), { slug: 'solids-of-revolution' });
@@ -48,32 +51,48 @@ const regionButtons = buttonGroup('fbtns', REGIONS, r => {
   explored.add(r.id);
   if (explored.size === REGIONS.length) shell.badge('explorer', 'Turner', 'Revolved every region', '🗺️');
   render();
+  pushUrl();
 });
 
 const axisButtons = buttonGroup('axes', AXES, ax => {
   state.axis = ax.id;
   useRegion();
   render();
+  pushUrl();
 }, { className: 'tbtn' });
 
-const nSlider = slider('n', { onInput: v => { state.n = v; render(); } });
+const nSlider = slider('n', { onInput: v => { state.n = v; render(); pushUrl(); } });
 
-s('reset').onclick = () => { view.cam.home(); state.n = 2; nSlider.set(2); meter.reset(); render(); };
+s('reset').onclick = () => { view.cam.home(); state.n = 2; nSlider.set(2); meter.reset(); render(); pushUrl(); };
 
 ticker('refine', {
   intervalMs: 110,
   playLabel: '▸ Refine n → ∞',
   pauseLabel: '⏸ Pause',
-  onStart: () => { state.n = 2; nSlider.set(2); render(); },
+  onStart: () => { state.n = 2; nSlider.set(2); render(); pushUrl(); },
   onTick: () => {
     if (state.n >= N_MAX) return false;
     state.n++; nSlider.set(state.n); render();
+    pushUrl();
   },
 });
 
 view.onresize = render;
 view.onrender = render;
 useRegion();
+
+keyboardControl(s('solid'), {
+  nudge: (dx, dy, big) => {
+    state.n = Math.max(1, Math.min(N_MAX, state.n + dx * (big ? 5 : 1)));
+    nSlider.set(state.n);
+    render(); pushUrl();
+  },
+  step: (delta, big) => {
+    state.n = Math.max(1, Math.min(N_MAX, state.n + delta * (big ? 5 : 1)));
+    nSlider.set(state.n);
+    render(); pushUrl();
+  },
+});
 
 function render() {
   const { region, axis, n } = state;
@@ -121,19 +140,35 @@ render();
 
 mountNav('solids-of-revolution');
 
-mountLesson(LESSON, {
-  slug: 'solids-of-revolution',
-  onJump: st => {
-    if (st.region) {
-      const r = REGIONS.find(x => x.id === st.region);
-      if (r) { state.region = r; regionButtons.select(REGIONS.indexOf(r), { notify: false }); }
-    }
-    if (st.axis) {
-      const i = AXES.findIndex(a => a.id === st.axis);
-      if (i >= 0) { state.axis = st.axis; axisButtons.select(i, { notify: false }); }
-    }
-    useRegion();
-    if (typeof st.n === 'number') { state.n = st.n; nSlider.set(st.n); }
-    render();
-  },
-});
+/** Drive the playground to a described configuration. Shared by lesson jumps,
+ *  shareable URLs, and self-checks — all of which speak the same state object. */
+function applyState(st) {
+  if (st.region) {
+    const r = REGIONS.find(x => x.id === st.region);
+    if (r) { state.region = r; regionButtons.select(REGIONS.indexOf(r), { notify: false }); }
+  }
+  if (st.axis) {
+    const i = AXES.findIndex(a => a.id === st.axis);
+    if (i >= 0) { state.axis = st.axis; axisButtons.select(i, { notify: false }); }
+  }
+  useRegion();
+  if (typeof st.n === 'number') { state.n = st.n; nSlider.set(st.n); }
+  render();
+  pushUrl();
+}
+
+/** A shareable snapshot of the current view (only the URL_SCHEMA keys). */
+const urlState = () => ({ region: state.region.id, axis: state.axis, n: state.n });
+const pushUrl = makeUrlSync(() => stateToParams(urlState()));
+
+mountLesson(LESSON, { slug: 'solids-of-revolution', onJump: applyState });
+
+// A link with parameters opens the playground in that exact configuration.
+const linked = readState(URL_SCHEMA);
+if (Object.keys(linked).length) applyState(linked);
+
+s('copylink').onclick = async () => {
+  const url = `${location.origin}${location.pathname}?${stateToParams(urlState())}`;
+  try { await navigator.clipboard.writeText(url); shell.toast('Link copied', 'Opens this exact view', '🔗'); }
+  catch { shell.toast('Copy failed', url, '🔗'); }
+};

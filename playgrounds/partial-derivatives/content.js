@@ -106,6 +106,17 @@ export const LESSON = {
         to zero; on the ripple both come out to <code>−cos x · sin y</code>.`,
       state: { surf: 'ripple', axis: 'y', slice: 1.085, probe: 1.55 }, jump: 'Cut the ripple the other way' },
 
+    { level: 'use', check: {
+      q: 'At the centre of the saddle x² − y², both ∂f/∂x and ∂f/∂y equal zero. Does that guarantee the point is a local maximum?',
+      options: [
+        { text: 'No — it could be a maximum, a minimum, or (as here) a saddle point', correct: true,
+          why: 'Right. Both partials vanishing only says the tangent plane is horizontal there. Whether the point is a max, min, or saddle needs more information — and on this surface it curves up in one direction and down in the other, so it is neither a max nor a min.' },
+        { text: 'Yes — a horizontal tangent plane always means a peak', why: 'A horizontal tangent plane is necessary for a maximum, but far from sufficient — plenty of horizontal points, including this one, are saddles or minima instead.' },
+        { text: 'Yes, as long as the surface is smooth everywhere', why: 'Smoothness does not rule out saddle points. x² − y² is smooth everywhere and still has a saddle, not a maximum, right at the origin.' },
+      ],
+      state: { surf: 'saddle', axis: 'x', slice: 0.7, probe: 0 },
+    } },
+
     { level: 'advanced', title: 'The two partials build the tangent PLANE',
       body: `One derivative gives a tangent line; two give a tangent plane, spanned by the slope east and
         the slope north. Its equation is

@@ -6,9 +6,12 @@ import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
 import { mountLesson } from '../../engine/lesson.js';
+import { readState, makeUrlSync, stateToParams } from '../../engine/deep-link.js';
+import { keyboardControl } from '../../engine/keyboard.js';
 import { SURFACES, sliceStart, probeStart, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "partial derivatives" ---- */
+const URL_SCHEMA = { surf: 'string', axis: 'string', slice: 'number', probe: 'number' };
 const eng = new Surface3D(document.getElementById('scene'));
 const shell = new ScoreShell(createConfetti(), { slug: 'partial-derivatives' });
 let state = { surf: SURFACES[0], axis: 'x', slice: sliceStart(SURFACES[0]), probe: probeStart(SURFACES[0]) };
@@ -28,10 +31,10 @@ const meter = challengeMeter({
 function point() { return state.axis === 'x' ? { x0: state.probe, y0: state.slice } : { x0: state.slice, y0: state.probe }; }
 function partial(x0, y0) { return state.axis === 'x' ? state.surf.fx(x0, y0) : state.surf.fy(x0, y0); }
 
-const surfButtons = buttonGroup('fbtns', SURFACES, sf => pickSurface(sf));
+const surfButtons = buttonGroup('fbtns', SURFACES, sf => { pickSurface(sf); pushUrl(); });
 
-const sliceSlider = slider('slice', { onInput: v => { state.slice = v; eng.schedule(); } });
-const probeSlider = slider('probe', { onInput: v => { state.probe = v; eng.schedule(); } });
+const sliceSlider = slider('slice', { onInput: v => { state.slice = v; eng.schedule(); pushUrl(); } });
+const probeSlider = slider('probe', { onInput: v => { state.probe = v; eng.schedule(); pushUrl(); } });
 
 const explored = new Set(['parab']);
 function pickSurface(sf) {
@@ -55,8 +58,19 @@ function setAxis(ax) {
   usedAxes.add(ax); if (usedAxes.size === 2) shell.badge('both', 'Ambidextrous', 'Sliced both directions', '🔀');
   eng.schedule();
 }
-s('ax-x').onclick = () => setAxis('x'); s('ax-y').onclick = () => setAxis('y');
-s('reset').onclick = () => { eng.az = -0.75; eng.el = 0.52; eng.dist = 7; eng.schedule(); };
+s('ax-x').onclick = () => { setAxis('x'); pushUrl(); }; s('ax-y').onclick = () => { setAxis('y'); pushUrl(); };
+s('reset').onclick = () => { eng.az = -0.75; eng.el = 0.52; eng.dist = 7; eng.schedule(); pushUrl(); };
+
+keyboardControl(s('scene'), {
+  nudge: (dx, dy, big) => {
+    const a = state.surf.a;
+    const d = (big ? 0.2 : 0.05) * a;
+    if (dx) { state.probe = Math.max(-a, Math.min(a, state.probe + dx * d)); probeSlider.set(state.probe); }
+    if (dy) { state.slice = Math.max(-a, Math.min(a, state.slice + dy * d)); sliceSlider.set(state.slice); }
+    eng.schedule();
+    pushUrl();
+  },
+});
 
 eng.onrender = function () {
   const proj = eng.projector(); const sf = state.surf;
@@ -128,23 +142,39 @@ eng.setSurface(state.surf); setSliderRanges(state.surf); setAxis('x'); eng.sched
 
 mountNav('partial-derivatives');
 
-mountLesson(LESSON, {
-  slug: 'partial-derivatives',
-  onJump: st => {
-    if (st.surf) {
-      const sf = SURFACES.find(x => x.id === st.surf);
-      if (sf) {
-        state.surf = sf;
-        surfButtons.select(SURFACES.indexOf(sf), { notify: false });
-        eng.setSurface(sf);
-        setSliderRanges(sf);
-        state.slice = sliceStart(sf); state.probe = probeStart(sf);
-      }
+/** Drive the playground to a described configuration. Shared by lesson jumps,
+ *  shareable URLs, and self-checks — all of which speak the same state object. */
+function applyState(st) {
+  if (st.surf) {
+    const sf = SURFACES.find(x => x.id === st.surf);
+    if (sf) {
+      state.surf = sf;
+      surfButtons.select(SURFACES.indexOf(sf), { notify: false });
+      eng.setSurface(sf);
+      setSliderRanges(sf);
+      state.slice = sliceStart(sf); state.probe = probeStart(sf);
     }
-    if (st.axis) setAxis(st.axis);
-    if (typeof st.slice === 'number') { state.slice = st.slice; sliceSlider.set(st.slice); }
-    if (typeof st.probe === 'number') { state.probe = st.probe; probeSlider.set(st.probe); }
-    meter.reset();
-    eng.schedule();
-  },
-});
+  }
+  if (st.axis) setAxis(st.axis);
+  if (typeof st.slice === 'number') { state.slice = st.slice; sliceSlider.set(st.slice); }
+  if (typeof st.probe === 'number') { state.probe = st.probe; probeSlider.set(st.probe); }
+  meter.reset();
+  eng.schedule();
+  pushUrl();
+}
+
+/** A shareable snapshot of the current view (only the URL_SCHEMA keys). */
+const urlState = () => ({ surf: state.surf.id, axis: state.axis, slice: state.slice, probe: state.probe });
+const pushUrl = makeUrlSync(() => stateToParams(urlState()));
+
+mountLesson(LESSON, { slug: 'partial-derivatives', onJump: applyState });
+
+// A link with parameters opens the playground in that exact configuration.
+const linked = readState(URL_SCHEMA);
+if (Object.keys(linked).length) applyState(linked);
+
+s('copylink').onclick = async () => {
+  const url = `${location.origin}${location.pathname}?${stateToParams(urlState())}`;
+  try { await navigator.clipboard.writeText(url); shell.toast('Link copied', 'Opens this exact view', '🔗'); }
+  catch { shell.toast('Copy failed', url, '🔗'); }
+};

@@ -6,6 +6,8 @@ import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
 import { challengeMeter, logProgress } from '../../engine/challenge-meter.js';
 import { mountLesson } from '../../engine/lesson.js';
+import { readState, makeUrlSync, stateToParams } from '../../engine/deep-link.js';
+import { keyboardControl } from '../../engine/keyboard.js';
 import { FUNCTIONS, secantSlope, slopeError, clampProbe, clampStep, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "secant → tangent" ---- */
@@ -13,6 +15,7 @@ import { FUNCTIONS, secantSlope, slopeError, clampProbe, clampStep, LESSON } fro
 const TOL = 0.02;          // |secant − tangent| that clears the challenge
 const LOG_H_MIN = -3;      // h ranges over 10^-3 … 10^0.301, i.e. 0.001 … 2
 const LOG_H_MAX = Math.log10(2);
+const URL_SCHEMA = { fn: 'string', x0: 'number', h: 'number' };
 
 const g = new Grapher2D(document.getElementById('graph'));
 const shell = new ScoreShell(createConfetti(), { slug: 'secant-tangent' });
@@ -51,26 +54,29 @@ const fnButtons = buttonGroup('fbtns', FUNCTIONS, fn => {
   explored.add(fn.id);
   if (explored.size === FUNCTIONS.length) shell.badge('explorer', 'Curve Sampler', 'Tried every function', '🧭');
   render();
+  pushUrl();
 });
 
 const hSlider = slider('h', {
-  onInput: v => { state.logH = v; render(); },
+  onInput: v => { state.logH = v; render(); pushUrl(); },
 });
 
 s('reset').onclick = () => {
   state.x0 = state.fn.probe; state.logH = LOG_H_MAX;
   hSlider.set(LOG_H_MAX); meter.reset(); render();
+  pushUrl();
 };
 
 ticker('shrink', {
   intervalMs: 55,
   playLabel: '▸ Shrink h → 0',
   pauseLabel: '⏸ Pause',
-  onStart: () => { state.logH = LOG_H_MAX; hSlider.set(LOG_H_MAX); render(); },
+  onStart: () => { state.logH = LOG_H_MAX; hSlider.set(LOG_H_MAX); render(); pushUrl(); },
   onTick: () => {
     if (state.logH <= LOG_H_MIN + 1e-9) return false;
     state.logH = Math.max(LOG_H_MIN, state.logH - 0.035);
     hSlider.set(state.logH); render();
+    pushUrl();
   },
 });
 
@@ -81,11 +87,26 @@ function moveProbe(clientX) {
   const r = cv.getBoundingClientRect();
   state.x0 = clampProbe(state.fn, g.ux(clientX - r.left));
   render();
+  pushUrl();
 }
 cv.addEventListener('pointerdown', e => { dragging = true; cv.setPointerCapture(e.pointerId); moveProbe(e.clientX); });
 cv.addEventListener('pointermove', e => { if (dragging) moveProbe(e.clientX); });
 cv.addEventListener('pointerup', () => { dragging = false; });
 cv.addEventListener('pointercancel', () => { dragging = false; });
+
+keyboardControl(cv, {
+  nudge: (dx, dy, big) => {
+    const view = state.fn.view;
+    const d = (big ? 0.4 : 0.1) * (view.xmax - view.xmin);
+    state.x0 = clampProbe(state.fn, state.x0 + dx * d);
+    render(); pushUrl();
+  },
+  step: (delta, big) => {
+    state.logH = Math.max(LOG_H_MIN, Math.min(LOG_H_MAX, state.logH + delta * (big ? 0.3 : 0.1)));
+    hSlider.set(state.logH);
+    render(); pushUrl();
+  },
+});
 
 g.onresize = render;
 
@@ -182,24 +203,40 @@ render();
 
 mountNav('secant-tangent');
 
-mountLesson(LESSON, {
-  slug: 'secant-tangent',
-  onJump: st => {
-    if (st.fn) {
-      const fn = FUNCTIONS.find(f => f.id === st.fn);
-      if (fn) {
-        state.fn = fn;
-        fnButtons.select(FUNCTIONS.indexOf(fn), { notify: false });
-        g.setView(fn.view);
-        state.x0 = fn.probe;
-      }
+/** Drive the playground to a described configuration. Shared by lesson jumps,
+ *  shareable URLs, and self-checks — all of which speak the same state object. */
+function applyState(st) {
+  if (st.fn) {
+    const fn = FUNCTIONS.find(f => f.id === st.fn);
+    if (fn) {
+      state.fn = fn;
+      fnButtons.select(FUNCTIONS.indexOf(fn), { notify: false });
+      g.setView(fn.view);
+      state.x0 = fn.probe;
     }
-    if (typeof st.x0 === 'number') state.x0 = clampProbe(state.fn, st.x0);
-    if (typeof st.h === 'number') {
-      state.logH = Math.max(LOG_H_MIN, Math.min(LOG_H_MAX, Math.log10(st.h)));
-      hSlider.set(state.logH);
-    }
-    meter.reset();
-    render();
-  },
-});
+  }
+  if (typeof st.x0 === 'number') state.x0 = clampProbe(state.fn, st.x0);
+  if (typeof st.h === 'number') {
+    state.logH = Math.max(LOG_H_MIN, Math.min(LOG_H_MAX, Math.log10(st.h)));
+    hSlider.set(state.logH);
+  }
+  meter.reset();
+  render();
+  pushUrl();
+}
+
+/** A shareable snapshot of the current view (only the URL_SCHEMA keys). */
+const urlState = () => ({ fn: state.fn.id, x0: state.x0, h: Math.pow(10, state.logH) });
+const pushUrl = makeUrlSync(() => stateToParams(urlState()));
+
+mountLesson(LESSON, { slug: 'secant-tangent', onJump: applyState });
+
+// A link with parameters opens the playground in that exact configuration.
+const linked = readState(URL_SCHEMA);
+if (Object.keys(linked).length) applyState(linked);
+
+s('copylink').onclick = async () => {
+  const url = `${location.origin}${location.pathname}?${stateToParams(urlState())}`;
+  try { await navigator.clipboard.writeText(url); shell.toast('Link copied', 'Opens this exact view', '🔗'); }
+  catch { shell.toast('Copy failed', url, '🔗'); }
+};

@@ -141,6 +141,17 @@ export const LESSON = {
         near x = 10, centring at 0 is a poor plan.`,
       state: { fn: 'ln', N: 8, probe: 0.5 }, jump: 'Show me a series with a bad centre' },
 
+    { level: 'use', check: {
+      q: 'For eˣ centred at 0, you build the N = 1 Taylor polynomial: f(0) + f′(0)·x. Is that exactly the tangent line to eˣ at x = 0?',
+      options: [
+        { text: 'Yes — it matches both f(0) and f′(0), which is exactly what a tangent line does', correct: true,
+          why: 'Right. The N = 1 polynomial is f(0) + f′(0)x, matching height and slope at the centre — that pair is the definition of the tangent line.' },
+        { text: 'No — a tangent line needs to match curvature too', why: 'Curvature is the second derivative, which is what N = 2 fixes. A tangent line only ever promises the right height and slope, and N = 1 delivers both.' },
+        { text: 'No — only the N = 0 polynomial can be called a tangent line', why: 'N = 0 is just the flat line f(0) — right height, wrong slope everywhere except by coincidence. It is N = 1 that adds the slope and earns the name.' },
+      ],
+      state: { fn: 'exp', N: 1, probe: 1.5 },
+    } },
+
     { level: 'advanced', title: 'The error is roughly the first term you left out',
       body: `Truncating after N terms leaves a remainder, and Lagrange's form of it says that remainder
         looks like the next term with the derivative evaluated somewhere in between. Practically: the

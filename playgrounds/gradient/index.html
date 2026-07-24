@@ -55,13 +55,13 @@
   </header>
   <div class="studio">
     <div class="card graph-card">
-      <canvas id="map"></canvas>
+      <canvas id="map" role="img" aria-label="Contour map. Use arrow keys to move the probe, plus and minus to turn the direction dial." aria-describedby="readout"></canvas>
       <div class="graph-tag">drag anywhere on the map to move the probe</div>
       <div class="legend">
         <span><i class="swatch" style="background:var(--error)"></i> ∇f · steepest uphill</span>
         <span><i class="swatch" style="background:var(--approx)"></i> u · your direction</span>
       </div>
-      <div class="readout" id="readout"></div>
+      <div class="readout" id="readout" role="status" aria-live="polite"></div>
     </div>
     <div class="card panel">
       <div>
@@ -90,6 +90,7 @@
       <div class="row">
         <button class="action primary" id="snap">Snap to ∇f</button>
         <button class="action" id="reset">Reset probe</button>
+        <button class="action" id="copylink">Copy link</button>
       </div>
     </div>
   </div>

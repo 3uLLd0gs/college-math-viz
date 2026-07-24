@@ -55,13 +55,13 @@
   </header>
   <div class="studio">
     <div class="card graph-card">
-      <canvas id="scene"></canvas>
+      <canvas id="scene" role="img" aria-label="Related rates scene. Arrow keys and plus and minus move the state variable." aria-describedby="readout"></canvas>
       <div class="graph-tag">let time run · one arrow keeps its length, the other does not</div>
       <div class="legend">
         <span><i class="swatch" style="background:var(--approx)"></i> the rate you set</span>
         <span><i class="swatch" style="background:var(--error)"></i> the rate that follows</span>
       </div>
-      <div class="readout" id="readout"></div>
+      <div class="readout" id="readout" role="status" aria-live="polite"></div>
     </div>
     <div class="card panel">
       <div>
@@ -85,6 +85,7 @@
         <div class="row" style="margin-top:12px">
           <button class="action primary" id="play">▸ Let time run</button>
           <button class="action" id="reset">Reset</button>
+          <button class="action" id="copylink">Copy link</button>
         </div>
       </div>
       <div class="derived">

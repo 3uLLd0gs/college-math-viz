@@ -181,3 +181,56 @@ describe('open/closed state persists', () => {
     expect(document.querySelector('.lesson-levels .tbtn.on').textContent).toBe('Start here');
   });
 });
+
+const WITH_CHECK = {
+  title: 'T', intro: 'i',
+  steps: [
+    { level: 'use', title: 'prose', body: 'b' },
+    { level: 'use', check: {
+      q: 'What is the steepest slope?',
+      options: [
+        { text: '|∇f|', correct: true, why: 'Yes — cosine peaks at zero angle.' },
+        { text: 'zero', why: 'That is along a contour.' },
+      ],
+      state: { field: 'bowl' },
+    } },
+  ],
+};
+
+describe('self-check steps', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '<div class="wrap"><div class="studio"><div class="graph-card"></div></div></div>';
+    localStorage.clear();
+    Element.prototype.scrollIntoView = vi.fn();
+  });
+
+  it('renders the question and its options', () => {
+    const l = mountLesson(WITH_CHECK, { slug: 'd' });
+    l.el.querySelector('.lesson-toggle').click();
+    [...l.el.querySelectorAll('.lesson-levels .tbtn')].find(t => t.textContent === 'Using it').click();
+    expect(l.el.querySelector('.lesson-check-q').textContent).toContain('steepest');
+    expect(l.el.querySelectorAll('.lesson-opt')).toHaveLength(2);
+  });
+
+  it('marks the chosen option right or wrong and shows its explanation', () => {
+    const l = mountLesson(WITH_CHECK, { slug: 'd' });
+    l.el.querySelector('.lesson-toggle').click();
+    [...l.el.querySelectorAll('.lesson-levels .tbtn')].find(t => t.textContent === 'Using it').click();
+    const opts = [...l.el.querySelectorAll('.lesson-opt')];
+    opts[1].click();
+    expect(opts[1].classList.contains('wrong')).toBe(true);
+    expect(l.el.querySelector('.lesson-why').textContent).toContain('along a contour');
+    opts[0].click();
+    expect(opts[0].classList.contains('right')).toBe(true);
+  });
+
+  it('offers a See-it button that drives the playground', () => {
+    const onJump = vi.fn();
+    const l = mountLesson(WITH_CHECK, { slug: 'd', onJump });
+    l.el.querySelector('.lesson-toggle').click();
+    [...l.el.querySelectorAll('.lesson-levels .tbtn')].find(t => t.textContent === 'Using it').click();
+    l.el.querySelector('.lesson-opt').click();          // answer first
+    l.el.querySelector('.lesson-seeit').click();
+    expect(onJump).toHaveBeenCalledWith({ field: 'bowl' }, expect.anything());
+  });
+});

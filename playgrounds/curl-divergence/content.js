@@ -136,6 +136,17 @@ export const LESSON = {
         quantitative.`,
       state: { field: 'mixed', x: -0.2, y: 1.4, r: 0.32 }, jump: 'Judge this one by eye' },
 
+    { level: 'use', check: {
+      q: 'A field F is known to be the gradient of some scalar function, F = ∇f. What must its curl be?',
+      options: [
+        { text: 'Zero everywhere — curl(∇f) = 0 is an identity', correct: true,
+          why: 'Right. This follows from mixed partials being equal (Clairaut\'s theorem): the curl of any gradient field is identically zero, no matter what f is.' },
+        { text: 'Zero only at the critical points of f', why: 'The identity curl(∇f) = 0 holds at every point where f is twice differentiable — not just where ∇f itself happens to vanish.' },
+        { text: 'It depends on whether f has a maximum or a minimum', why: "curl(∇f) = 0 is an algebraic identity from mixed partials — it doesn't depend on f's max/min structure at all." },
+      ],
+      state: { field: 'blob', x: 0.9, y: -0.7, r: 0.32 },
+    } },
+
     { level: 'advanced', title: 'The curl of any gradient is zero',
       body: `<code>curl(∇f) = 0</code>, always — it follows from mixed partials being equal. So if a field
         has non-zero curl anywhere, it cannot be the gradient of any scalar, and no potential function

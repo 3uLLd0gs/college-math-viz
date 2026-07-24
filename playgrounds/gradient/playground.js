@@ -6,6 +6,8 @@ import { s, getCSS, fmtNum as fmt } from '../../engine/dom.js';
 import { buttonGroup, slider } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
 import { mountLesson } from '../../engine/lesson.js';
+import { readState, makeUrlSync, stateToParams } from '../../engine/deep-link.js';
+import { keyboardControl } from '../../engine/keyboard.js';
 import { FIELDS, grad, gradMag, steepestAngle, directional, angleGap, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "gradient & directional derivative" ---- */
@@ -21,6 +23,8 @@ const ALIGN_TOL_DEG = 4;
 // steepestAngle() only returns null at exactly zero, which a dragged probe
 // essentially never hits, so the playground needs its own floor.
 const FLAT_EPS = 0.05;
+// The keys a shareable gradient link may carry, with their types.
+const URL_SCHEMA = { field: 'string', x: 'number', y: 'number', thetaDeg: 'number' };
 
 const map = new ContourMap(document.getElementById('map'));
 const shell = new ScoreShell(createConfetti(), { slug: 'gradient' });
@@ -60,7 +64,7 @@ const fieldButtons = buttonGroup('fbtns', FIELDS, fd => {
 
 let dialTouched = false;
 const dial = slider('theta', {
-  onInput: deg => { state.theta = deg * Math.PI / 180; dialTouched = true; render(); },
+  onInput: deg => { state.theta = deg * Math.PI / 180; dialTouched = true; render(); pushUrl(); },
 });
 
 s('snap').onclick = () => {
@@ -71,9 +75,10 @@ s('snap').onclick = () => {
   dial.set(deg);
   shell.badge('cheat', 'Compass', 'Used snap-to-gradient at least once', '🧲');
   render();
+  pushUrl();
 };
 
-s('reset').onclick = () => { placeProbe(state.field); meter.reset(); render(); };
+s('reset').onclick = () => { placeProbe(state.field); meter.reset(); render(); pushUrl(); };
 
 /* drag the probe around the map */
 const cv = document.getElementById('map');
@@ -84,11 +89,23 @@ function moveProbe(clientX, clientY) {
   state.x = Math.max(-a, Math.min(a, map.ux(clientX - r.left)));
   state.y = Math.max(-a, Math.min(a, map.uy(clientY - r.top)));
   render();
+  pushUrl();
 }
 cv.addEventListener('pointerdown', e => { dragging = true; cv.setPointerCapture(e.pointerId); moveProbe(e.clientX, e.clientY); });
 cv.addEventListener('pointermove', e => { if (dragging) moveProbe(e.clientX, e.clientY); });
 cv.addEventListener('pointerup', () => { dragging = false; });
 cv.addEventListener('pointercancel', () => { dragging = false; });
+
+keyboardControl(cv, {
+  nudge: (dx, dy, big) => {
+    const d = (big ? 0.2 : 0.05) * state.field.a;
+    state.x = Math.max(-state.field.a, Math.min(state.field.a, state.x + dx * d));
+    state.y = Math.max(-state.field.a, Math.min(state.field.a, state.y + dy * d));
+    render(); pushUrl();
+  },
+  step: (delta, big) => { setTheta((state.theta * 180 / Math.PI) + delta * (big ? 15 : 3)); render(); pushUrl(); },
+  home: () => { placeProbe(state.field); setTheta(0); render(); pushUrl(); },
+});
 
 map.onresize = render;
 
@@ -192,36 +209,50 @@ render();
 
 mountNav('gradient');
 
-/**
- * Drive the playground to the configuration a lesson step is describing.
- * `snap` and `thetaOffsetDeg` are resolved AFTER the probe moves, since both are
- * relative to the gradient at the new position.
- */
-mountLesson(LESSON, {
-  slug: 'gradient',
-  onJump: st => {
-    if (st.field) {
-      const fd = FIELDS.find(f => f.id === st.field);
-      if (fd) {
-        state.field = fd;
-        map.setField(fd);
-        fieldButtons.select(FIELDS.indexOf(fd), { notify: false });
-        placeProbe(fd);
-      }
+/** Drive the playground to a described configuration. Shared by lesson jumps,
+ *  shareable URLs, and self-checks — all of which speak the same state object. */
+function applyState(st) {
+  if (st.field) {
+    const fd = FIELDS.find(f => f.id === st.field);
+    if (fd) {
+      state.field = fd;
+      map.setField(fd);
+      fieldButtons.select(FIELDS.indexOf(fd), { notify: false });
+      placeProbe(fd);
     }
-    if (typeof st.x === 'number') state.x = st.x;
-    if (typeof st.y === 'number') state.y = st.y;
+  }
+  if (typeof st.x === 'number') state.x = st.x;
+  if (typeof st.y === 'number') state.y = st.y;
 
-    const best = steepestAngle(state.field, state.x, state.y);
-    if (st.snap && best !== null) setTheta(best * 180 / Math.PI);
-    else if (typeof st.thetaOffsetDeg === 'number' && best !== null) {
-      setTheta(best * 180 / Math.PI + st.thetaOffsetDeg);
-    } else if (typeof st.thetaDeg === 'number') setTheta(st.thetaDeg);
+  const best = steepestAngle(state.field, state.x, state.y);
+  if (st.snap && best !== null) setTheta(best * 180 / Math.PI);
+  else if (typeof st.thetaOffsetDeg === 'number' && best !== null) setTheta(best * 180 / Math.PI + st.thetaOffsetDeg);
+  else if (typeof st.thetaDeg === 'number') setTheta(st.thetaDeg);
 
-    meter.reset();
-    render();
-  },
+  meter.reset();
+  render();
+  pushUrl();
+}
+
+/** A shareable snapshot of the current view (only the URL_SCHEMA keys). */
+const urlState = () => ({
+  field: state.field.id,
+  x: state.x, y: state.y,
+  thetaDeg: (state.theta * 180 / Math.PI) % 360,
 });
+const pushUrl = makeUrlSync(() => stateToParams(urlState()));
+
+mountLesson(LESSON, { slug: 'gradient', onJump: applyState });
+
+// A link with parameters opens the playground in that exact configuration.
+const linked = readState(URL_SCHEMA);
+if (Object.keys(linked).length) applyState(linked);
+
+s('copylink').onclick = async () => {
+  const url = `${location.origin}${location.pathname}?${stateToParams(urlState())}`;
+  try { await navigator.clipboard.writeText(url); shell.toast('Link copied', 'Opens this exact view', '🔗'); }
+  catch { shell.toast('Copy failed', url, '🔗'); }
+};
 
 function setTheta(deg) {
   const d = ((deg % 360) + 360) % 360;

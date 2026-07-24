@@ -46,14 +46,14 @@
   </header>
   <div class="studio">
     <div class="card graph-card">
-      <canvas id="graph"></canvas>
+      <canvas id="graph" role="img" aria-label="Approximation graph. Arrow keys move the probe along x, plus and minus add or remove terms." aria-describedby="readout"></canvas>
       <div class="graph-tag">approximation ⟶ drag the graph to probe any x</div>
       <div class="legend">
         <span><i class="swatch" style="background:var(--true)"></i> true f(x)</span>
         <span><i class="swatch" style="background:var(--approx)"></i> Taylor P<sub>N</sub>(x)</span>
         <span><i class="swatch" style="background:var(--error)"></i> error</span>
       </div>
-      <div class="readout" id="readout"></div>
+      <div class="readout" id="readout" role="status" aria-live="polite"></div>
     </div>
     <div class="card panel">
       <div>
@@ -69,6 +69,7 @@
         <div class="row" style="margin-top:12px">
           <button class="action primary" id="build">▸ Animate build</button>
           <button class="action" id="reset">Reset</button>
+          <button class="action" id="copylink">Copy link</button>
         </div>
       </div>
       <div class="formula">

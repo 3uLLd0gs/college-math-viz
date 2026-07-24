@@ -129,6 +129,17 @@ export const LESSON = {
         <code>h²</code> instead of <code>h</code> — the same trick as the midpoint rule.`,
       state: { fn: 'sin', x0: 0.7, h: 0.3 }, jump: 'Show me a moderate step' },
 
+    { level: 'use', check: {
+      q: 'You keep shrinking h on a computer, hoping the secant slope keeps getting closer to the true derivative. Does the smallest possible h always give the best answer?',
+      options: [
+        { text: 'No — below about h ≈ 10⁻⁸ floating-point rounding takes over and the estimate gets worse', correct: true,
+          why: 'Right. f(x+h) − f(x) subtracts two nearly-equal numbers; below roughly h ≈ 10⁻⁸ that subtraction loses more precision to rounding than it gains from shrinking truncation error, so the quotient degrades.' },
+        { text: 'Yes — the limit definition guarantees smaller h is always closer', why: 'True in exact arithmetic, but a computer stores only finitely many digits. Real floating-point behaviour departs from the idealised limit once h gets tiny.' },
+        { text: 'Yes, but only for polynomials', why: 'The floating-point breakdown is a property of the arithmetic, not of the function — it hits eˣ exactly as it hits x².' },
+      ],
+      state: { fn: 'exp', x0: 0.6, h: 0.001 },
+    } },
+
     { level: 'advanced', title: 'Not every curve has a tangent',
       body: `The derivative exists only if the quotient approaches the <em>same</em> number from both
         sides. At a corner it does not: approach <code>|x|</code> at zero from the right and you get
