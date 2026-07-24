@@ -25,6 +25,16 @@
   .n-head .n{font-family:"Fraunces",serif;font-weight:900;font-size:30px;color:var(--approx);line-height:1}
   .n-head .n small{font-family:"JetBrains Mono";font-size:12px;color:var(--muted);font-weight:400;letter-spacing:.06em}
   .tbtn{font-family:inherit;font-size:13px;letter-spacing:.04em}
+  .custom-row{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+  .custom-lab{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .custom-input{font-family:"JetBrains Mono",monospace;font-size:13px;color:var(--ink);
+    background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+  .custom-input:focus{outline:2px solid var(--accent);outline-offset:2px}
+  .custom-dom{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:7px}
+  .custom-num{width:64px;font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink);
+    background:var(--panel-2);border:1px solid var(--line);border-radius:7px;padding:6px 8px}
+  .custom-msg{font-size:11.5px;color:var(--error);min-height:15px;line-height:1.4}
+  .custom-pill{border-style:dashed}
 </style>
 </head>
 <body>
@@ -57,6 +67,17 @@
       <div>
         <div class="sect-lab">Integrand</div>
         <div class="fbtns" id="fbtns"></div>
+      </div>
+      <div class="custom-row">
+        <label class="custom-lab" for="customExpr">your f(x)</label>
+        <input id="customExpr" class="custom-input" type="text" autocomplete="off" spellcheck="false"
+               placeholder="e.g. x^3 - sin(x)" aria-label="Custom function f of x">
+        <span class="custom-dom">from
+          <input id="customA" class="custom-num" type="number" step="0.5" value="0" aria-label="Domain start">
+          to
+          <input id="customB" class="custom-num" type="number" step="0.5" value="2" aria-label="Domain end">
+        </span>
+        <div class="custom-msg" id="customMsg" role="status" aria-live="polite"></div>
       </div>
       <div>
         <div class="sect-lab">Sampling rule</div>

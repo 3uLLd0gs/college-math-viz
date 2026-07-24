@@ -87,6 +87,13 @@ customPill.hidden = true;
 customPill.addEventListener('click', () => { if (customFn) selectCustom(); });
 document.getElementById('fbtns').appendChild(customPill);
 
+// Field consts must be declared here — before the URL-driven applyState/readState
+// call at the bottom of this file — because a `?expr=` link calls activateCustom
+// on load, and activateCustom reflects into these fields.
+const customExprEl = document.getElementById('customExpr');
+const customAEl = document.getElementById('customA');
+const customBEl = document.getElementById('customB');
+
 function customView(f, a, b) {
   const N = 64; let lo = Infinity, hi = -Infinity;
   for (let i = 0; i <= N; i++) {
@@ -114,6 +121,9 @@ function activateCustom(src, a, b) {
   const { f, error } = compileCustom(src);
   if (!f) { setCustomMsg(error); return false; }
   setCustomMsg('');
+  if (customExprEl && customExprEl.value.trim() !== src) customExprEl.value = src;   // .value — inert, safe
+  if (customAEl) customAEl.value = String(a);
+  if (customBEl) customBEl.value = String(b);
   customFn = { id: 'custom', label: '◆ custom', tex: src, f, a, b, custom: true, view: customView(f, a, b) };
   customPill.hidden = false;
   selectCustom();
@@ -134,6 +144,17 @@ function deactivateCustom() {
   customActive = false;
   customPill.classList.remove('on');
 }
+
+function submitCustom() {
+  const src = customExprEl.value.trim();
+  if (!src) { setCustomMsg(''); return; }
+  activateCustom(src, customAEl.value, customBEl.value);
+}
+
+customExprEl.addEventListener('input', submitCustom);
+customExprEl.addEventListener('keydown', e => { if (e.key === 'Enter') submitCustom(); });
+customAEl.addEventListener('change', submitCustom);
+customBEl.addEventListener('change', submitCustom);
 
 document.getElementById('reset').onclick = () => { state.n = 4; nSlider.set(4); render(); pushUrl(); };
 
