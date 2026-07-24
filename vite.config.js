@@ -18,6 +18,7 @@ export default defineConfig({
         'vector-fields': resolve(__dirname, 'playgrounds/vector-fields/index.html'),
         'curl-divergence': resolve(__dirname, 'playgrounds/curl-divergence/index.html'),
         'greens-theorem': resolve(__dirname, 'playgrounds/greens-theorem/index.html'),
+        'differentiation-rules': resolve(__dirname, 'drills/differentiation-rules/index.html'),
       },
     },
   },
