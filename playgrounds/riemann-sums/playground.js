@@ -6,7 +6,7 @@ import { getCSS, fmtAxis as fmt, mountPresenter } from '../../engine/dom.js';
 import { buttonGroup, slider, ticker } from '../../engine/control-panel.js';
 import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js';
 import { mountLesson } from '../../engine/lesson.js';
-import { readState, makeUrlSync, stateToParams } from '../../engine/deep-link.js';
+import { readState, makeUrlSync, stateToParams, syncedUrl } from '../../engine/deep-link.js';
 import { keyboardControl } from '../../engine/keyboard.js';
 import { INTEGRANDS, RULES, riemannSum, rectangles, LESSON } from './content.js';
 
@@ -162,7 +162,7 @@ const linked = readState(URL_SCHEMA);
 if (Object.keys(linked).length) applyState(linked);
 
 document.getElementById('copylink').onclick = async () => {
-  const url = `${location.origin}${location.pathname}?${stateToParams(urlState())}`;
+  const url = `${location.origin}${syncedUrl(stateToParams(urlState()))}`;
   try { await navigator.clipboard.writeText(url); shell.toast('Link copied', 'Opens this exact view', '🔗'); }
   catch { shell.toast('Copy failed', url, '🔗'); }
 };

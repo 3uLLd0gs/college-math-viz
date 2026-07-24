@@ -33,14 +33,23 @@ export function paramsToState(params, schema) {
 export const readState = schema =>
   paramsToState(new URLSearchParams(window.location.search), schema);
 
+/** Merge freshly-computed schema params into the current URL's search string,
+   preserving any foreign params (e.g. ?present=1 from presenter mode) so the
+   auto-sync and the Copy-link button never strip each other's keys. Returns a
+   pathname-relative URL (pathname + '?' + merged query). */
+export function syncedUrl(params) {
+  const merged = new URLSearchParams(window.location.search);
+  for (const [k, v] of params.entries()) merged.set(k, v);
+  const qs = merged.toString();
+  return `${window.location.pathname}${qs ? '?' + qs : ''}`;
+}
+
 export function makeUrlSync(toParams, { delay = 180 } = {}) {
   let timer = null;
   return state => {
     clearTimeout(timer);
     timer = setTimeout(() => {
-      const qs = toParams(state).toString();
-      const url = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
-      window.history.replaceState(null, '', url);
+      window.history.replaceState(null, '', syncedUrl(toParams(state)));
     }, delay);
   };
 }
