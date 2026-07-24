@@ -34,22 +34,25 @@ export const readState = schema =>
   paramsToState(new URLSearchParams(window.location.search), schema);
 
 /** Merge freshly-computed schema params into the current URL's search string,
-   preserving any foreign params (e.g. ?present=1 from presenter mode) so the
-   auto-sync and the Copy-link button never strip each other's keys. Returns a
-   pathname-relative URL (pathname + '?' + merged query). */
-export function syncedUrl(params) {
+   preserving foreign params (e.g. ?present=1) so the auto-sync and Copy-link
+   never strip each other's keys. If `managed` (an array of key names owned by
+   this writer) is given, those keys are cleared first, so an optional schema
+   key that is currently absent (e.g. ?expr when a built-in is selected) is
+   dropped rather than left stale. Returns a pathname-relative URL. */
+export function syncedUrl(params, managed) {
   const merged = new URLSearchParams(window.location.search);
+  if (managed) for (const k of managed) merged.delete(k);
   for (const [k, v] of params.entries()) merged.set(k, v);
   const qs = merged.toString();
   return `${window.location.pathname}${qs ? '?' + qs : ''}`;
 }
 
-export function makeUrlSync(toParams, { delay = 180 } = {}) {
+export function makeUrlSync(toParams, { delay = 180, managed } = {}) {
   let timer = null;
   return state => {
     clearTimeout(timer);
     timer = setTimeout(() => {
-      window.history.replaceState(null, '', syncedUrl(toParams(state)));
+      window.history.replaceState(null, '', syncedUrl(toParams(state), managed));
     }, delay);
   };
 }
