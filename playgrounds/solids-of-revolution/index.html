@@ -36,6 +36,16 @@
   .methodbox .v{font-family:"Fraunces",serif;font-weight:700;font-size:16px;color:var(--gold);margin-top:3px;text-transform:capitalize}
   .methodbox .b{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:5px}
   .note{font-size:11.5px;color:var(--muted);line-height:1.55}
+  .custom-row{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+  .custom-lab{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .custom-input{font-family:"JetBrains Mono",monospace;font-size:13px;color:var(--ink);
+    background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+  .custom-input:focus{outline:2px solid var(--accent);outline-offset:2px}
+  .custom-dom{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:7px}
+  .custom-num{width:64px;font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink);
+    background:var(--panel-2);border:1px solid var(--line);border-radius:7px;padding:6px 8px}
+  .custom-msg{font-size:11.5px;color:var(--error);min-height:15px;line-height:1.4}
+  .custom-pill{border-style:dashed}
 </style>
 </head>
 <body>
@@ -69,6 +79,17 @@
         <div class="sect-lab">Region</div>
         <div class="fbtns" id="fbtns"></div>
       </div>
+      <div class="custom-row">
+        <label class="custom-lab" for="customExpr">your f(x)</label>
+        <input id="customExpr" class="custom-input" type="text" autocomplete="off" spellcheck="false"
+               placeholder="e.g. sqrt(x)" aria-label="Custom profile f of x">
+        <span class="custom-dom">from
+          <input id="customA" class="custom-num" type="number" step="0.5" value="0" aria-label="Domain start">
+          to
+          <input id="customB" class="custom-num" type="number" step="0.5" value="2" aria-label="Domain end">
+        </span>
+        <div class="custom-msg" id="customMsg" role="status" aria-live="polite"></div>
+      </div>
       <div>
         <div class="sect-lab">Axis of revolution</div>
         <div class="toggle" id="axes"></div>
@@ -95,7 +116,7 @@
         <div class="side ex"><span class="k">exact volume</span><span class="v" id="exact-val">—</span></div>
       </div>
       <div class="note" id="note"></div>
-      <div class="challenge">
+      <div class="challenge" id="challenge">
         <div class="lab">◆ Convergence challenge</div>
         <div class="goal" id="c-goal"></div>
         <div class="cmeter"><span>off by <b id="c-val">—</b></span><span>target <b id="c-tol">—</b></span></div>
