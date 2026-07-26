@@ -8,6 +8,7 @@ import { challengeMeter, logProgress } from '../../engine/challenge-meter.js';
 import { mountLesson } from '../../engine/lesson.js';
 import { readState, makeUrlSync, stateToParams, syncedUrl } from '../../engine/deep-link.js';
 import { keyboardControl } from '../../engine/keyboard.js';
+import { compileCustom, numericDerivative, viewFromDomain, wireCustomInput } from '../../engine/custom-fn.js';
 import { FUNCTIONS, secantSlope, slopeError, clampProbe, clampStep, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "secant → tangent" ---- */
@@ -15,7 +16,7 @@ import { FUNCTIONS, secantSlope, slopeError, clampProbe, clampStep, LESSON } fro
 const TOL = 0.02;          // |secant − tangent| that clears the challenge
 const LOG_H_MIN = -3;      // h ranges over 10^-3 … 10^0.301, i.e. 0.001 … 2
 const LOG_H_MAX = Math.log10(2);
-const URL_SCHEMA = { fn: 'string', x0: 'number', h: 'number' };
+const URL_SCHEMA = { fn: 'string', x0: 'number', h: 'number', expr: 'string' };
 
 const g = new Grapher2D(document.getElementById('graph'));
 const shell = new ScoreShell(createConfetti(), { slug: 'secant-tangent' });
@@ -44,6 +45,7 @@ const h = () => Math.pow(10, state.logH);
 const fmtH = v => (v >= 0.01 ? v.toFixed(3) : v.toExponential(1));
 
 const fnButtons = buttonGroup('fbtns', FUNCTIONS, fn => {
+  deactivateCustom();
   state.fn = fn;
   state.x0 = fn.probe;
   state.logH = LOG_H_MAX;
@@ -55,6 +57,53 @@ const fnButtons = buttonGroup('fbtns', FUNCTIONS, fn => {
   if (explored.size === FUNCTIONS.length) shell.badge('explorer', 'Curve Sampler', 'Tried every function', '🧭');
   render();
   pushUrl();
+});
+
+// --- custom function (Phase 4) -----------------------------------------------
+let customFn = null;
+let customActive = false;
+
+const customPill = document.createElement('button');
+customPill.type = 'button';
+customPill.id = 'customPill';
+customPill.className = 'fbtn custom-pill';
+customPill.textContent = '◆ custom';
+customPill.hidden = true;
+customPill.addEventListener('click', () => { if (customFn) selectCustom(); });
+s('fbtns').appendChild(customPill);
+
+function activateCustom(src) {
+  const { f, error } = compileCustom(src);
+  if (!f) { input.setMsg(error); return false; }
+  input.setMsg('');
+  input.setFields(src);
+  customFn = { id: 'custom', label: '◆ custom', tex: src, f, df: numericDerivative(f), probe: 0.8, view: viewFromDomain(f, -3, 3), custom: true };
+  customPill.hidden = false;
+  selectCustom();
+  return true;
+}
+
+function selectCustom() {
+  state.fn = customFn;
+  state.x0 = customFn.probe;
+  state.logH = LOG_H_MAX;
+  hSlider.set(LOG_H_MAX);
+  customActive = true;
+  fnButtons.select(-1, { notify: false });
+  customPill.classList.add('on');
+  g.setView(customFn.view);
+  meter.reset();
+  render();
+  pushUrl();
+}
+
+function deactivateCustom() {
+  customActive = false;
+  customPill.classList.remove('on');
+}
+
+const input = wireCustomInput({
+  exprEl: s('customExpr'), msgEl: s('customMsg'), onSubmit: (src) => activateCustom(src),
 });
 
 const hSlider = slider('h', {
@@ -206,9 +255,10 @@ mountNav('secant-tangent');
 /** Drive the playground to a described configuration. Shared by lesson jumps,
  *  shareable URLs, and self-checks — all of which speak the same state object. */
 function applyState(st) {
-  if (st.fn) {
+  if (st.fn && st.fn !== 'custom') {
     const fn = FUNCTIONS.find(f => f.id === st.fn);
     if (fn) {
+      deactivateCustom();
       state.fn = fn;
       fnButtons.select(FUNCTIONS.indexOf(fn), { notify: false });
       g.setView(fn.view);
@@ -220,14 +270,17 @@ function applyState(st) {
     state.logH = Math.max(LOG_H_MIN, Math.min(LOG_H_MAX, Math.log10(st.h)));
     hSlider.set(state.logH);
   }
+  if (typeof st.expr === 'string' && st.expr) activateCustom(st.expr);
   meter.reset();
   render();
   pushUrl();
 }
 
 /** A shareable snapshot of the current view (only the URL_SCHEMA keys). */
-const urlState = () => ({ fn: state.fn.id, x0: state.x0, h: Math.pow(10, state.logH) });
-const pushUrl = makeUrlSync(() => stateToParams(urlState()));
+const urlState = () => customActive
+  ? { fn: 'custom', x0: state.x0, h: Math.pow(10, state.logH), expr: customFn.tex }
+  : { fn: state.fn.id, x0: state.x0, h: Math.pow(10, state.logH) };
+const pushUrl = makeUrlSync(() => stateToParams(urlState()), { managed: Object.keys(URL_SCHEMA) });
 
 mountLesson(LESSON, { slug: 'secant-tangent', onJump: applyState, links: neighbours('secant-tangent') });
 
@@ -236,7 +289,7 @@ const linked = readState(URL_SCHEMA);
 if (Object.keys(linked).length) applyState(linked);
 
 s('copylink').onclick = async () => {
-  const url = `${location.origin}${syncedUrl(stateToParams(urlState()))}`;
+  const url = `${location.origin}${syncedUrl(stateToParams(urlState()), Object.keys(URL_SCHEMA))}`;
   try { await navigator.clipboard.writeText(url); shell.toast('Link copied', 'Opens this exact view', '🔗'); }
   catch { shell.toast('Copy failed', url, '🔗'); }
 };
