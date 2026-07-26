@@ -8,7 +8,7 @@ import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js'
 import { mountLesson } from '../../engine/lesson.js';
 import { readState, makeUrlSync, stateToParams, syncedUrl } from '../../engine/deep-link.js';
 import { keyboardControl } from '../../engine/keyboard.js';
-import { compileCustom } from '../../engine/custom-fn.js';
+import { compileCustom, viewFromDomain } from '../../engine/custom-fn.js';
 import { INTEGRANDS, RULES, riemannSum, rectangles, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "Riemann sums" ---- */
@@ -95,17 +95,6 @@ const customExprEl = document.getElementById('customExpr');
 const customAEl = document.getElementById('customA');
 const customBEl = document.getElementById('customB');
 
-function customView(f, a, b) {
-  const N = 64; let lo = Infinity, hi = -Infinity;
-  for (let i = 0; i <= N; i++) {
-    const y = f(a + (b - a) * i / N);
-    if (Number.isFinite(y)) { lo = Math.min(lo, y); hi = Math.max(hi, y); }
-  }
-  if (!Number.isFinite(lo) || !Number.isFinite(hi) || lo === hi) { lo = -1; hi = 1; }
-  const padX = (b - a) * 0.15 || 0.5, padY = (hi - lo) * 0.2 || 0.5;
-  return { xmin: a - padX, xmax: b + padX, ymin: Math.min(0, lo) - padY, ymax: hi + padY };
-}
-
 function setCustomMsg(text) {
   const el = document.getElementById('customMsg');
   if (el) el.textContent = text;   // textContent — never innerHTML for user input
@@ -125,7 +114,7 @@ function activateCustom(src, a, b) {
   if (customExprEl && customExprEl.value.trim() !== src) customExprEl.value = src;   // .value — inert, safe
   if (customAEl) customAEl.value = String(a);
   if (customBEl) customBEl.value = String(b);
-  customFn = { id: 'custom', label: '◆ custom', tex: src, f, a, b, custom: true, view: customView(f, a, b) };
+  customFn = { id: 'custom', label: '◆ custom', tex: src, f, a, b, custom: true, view: viewFromDomain(f, a, b) };
   customPill.hidden = false;
   selectCustom();
   return true;
