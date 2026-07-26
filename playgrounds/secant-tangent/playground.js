@@ -265,12 +265,15 @@ function applyState(st) {
       state.x0 = fn.probe;
     }
   }
+  // Apply a custom expression BEFORE x0/h so a shared ?expr=…&x0=… link's x0
+  // wins over the custom function's default probe (selectCustom resets x0 to
+  // the probe; the URL's x0, applied after, overrides it — matching built-ins).
+  if (typeof st.expr === 'string' && st.expr) activateCustom(st.expr);
   if (typeof st.x0 === 'number') state.x0 = clampProbe(state.fn, st.x0);
   if (typeof st.h === 'number') {
     state.logH = Math.max(LOG_H_MIN, Math.min(LOG_H_MAX, Math.log10(st.h)));
     hSlider.set(state.logH);
   }
-  if (typeof st.expr === 'string' && st.expr) activateCustom(st.expr);
   meter.reset();
   render();
   pushUrl();

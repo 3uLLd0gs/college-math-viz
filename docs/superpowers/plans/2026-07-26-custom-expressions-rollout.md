@@ -512,23 +512,23 @@ const pushUrl = makeUrlSync(() => stateToParams(urlState()), { managed: Object.k
   const url = `${location.origin}${syncedUrl(stateToParams(urlState()), Object.keys(URL_SCHEMA))}`;
 ```
 
-- In `applyState`, skip the built-in function lookup for `fn: 'custom'` and apply `expr` last. Preserve the existing `x0`/`h` handling; add the guard and the `expr` branch:
+- In `applyState`, skip the built-in function lookup for `fn: 'custom'` and apply `expr` **before** the `x0`/`h` handling. This matters: `selectCustom` resets `state.x0` to the custom function's probe, so a shared `?expr=…&x0=…` link's `x0` must be applied AFTER `activateCustom` to win — matching the built-in path (where `st.x0` also follows the `fn` block). Preserve the existing `x0`/`h` lines exactly; only add the guard, the `expr` branch, and the reorder:
 
 ```js
 function applyState(st) {
   if (st.fn && st.fn !== 'custom') {
     const fn = FUNCTIONS.find(f => f.id === st.fn);
-    if (fn) { deactivateCustom(); state.fn = fn; fnButtons.select(FUNCTIONS.indexOf(fn), { notify: false }); g.setView(fn.view); }
+    if (fn) { deactivateCustom(); state.fn = fn; fnButtons.select(FUNCTIONS.indexOf(fn), { notify: false }); g.setView(fn.view); state.x0 = fn.probe; }
   }
-  // ... keep the existing x0 / h (logH) handling exactly as it is ...
-  if (typeof st.expr === 'string' && st.expr) activateCustom(st.expr);
+  if (typeof st.expr === 'string' && st.expr) activateCustom(st.expr);   // BEFORE x0/h so the URL's x0 wins over the probe
+  // ... keep the existing x0 / h (logH) handling exactly as it is, AFTER the expr line ...
   meter.reset();
   render();
   pushUrl();
 }
 ```
 
-Read the current `applyState` body and splice the `fn !== 'custom'` guard into the existing `st.fn` block and the `st.expr` line before the trailing `render()/pushUrl()`; do not drop the existing `x0`/`h` lines.
+Read the current `applyState` body and splice the `fn !== 'custom'` guard into the existing `st.fn` block, then place the `st.expr` line BEFORE the existing `st.x0`/`st.h` lines; do not drop or rewrite those lines.
 
 - [ ] **Step 4: Full suite + build; commit**
 
