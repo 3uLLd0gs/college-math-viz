@@ -8,10 +8,11 @@ import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js'
 import { mountLesson } from '../../engine/lesson.js';
 import { readState, makeUrlSync, stateToParams, syncedUrl } from '../../engine/deep-link.js';
 import { keyboardControl } from '../../engine/keyboard.js';
+import { compileCustom2, numericPartials, wireCustomInput } from '../../engine/custom-fn.js';
 import { SURFACES, sliceStart, probeStart, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "partial derivatives" ---- */
-const URL_SCHEMA = { surf: 'string', axis: 'string', slice: 'number', probe: 'number' };
+const URL_SCHEMA = { surf: 'string', axis: 'string', slice: 'number', probe: 'number', expr: 'string' };
 const eng = new Surface3D(document.getElementById('scene'));
 const shell = new ScoreShell(createConfetti(), { slug: 'partial-derivatives' });
 let state = { surf: SURFACES[0], axis: 'x', slice: sliceStart(SURFACES[0]), probe: probeStart(SURFACES[0]) };
@@ -36,8 +37,56 @@ const surfButtons = buttonGroup('fbtns', SURFACES, sf => { pickSurface(sf); push
 const sliceSlider = slider('slice', { onInput: v => { state.slice = v; eng.schedule(); pushUrl(); } });
 const probeSlider = slider('probe', { onInput: v => { state.probe = v; eng.schedule(); pushUrl(); } });
 
+// --- custom surface (Phase 5) ------------------------------------------------
+let customSurf = null;
+let customActive = false;
+
+const customPill = document.createElement('button');
+customPill.type = 'button';
+customPill.id = 'customPill';
+customPill.className = 'fbtn custom-pill';
+customPill.textContent = '◆ custom';
+customPill.hidden = true;
+customPill.addEventListener('click', () => { if (customSurf) selectCustom(); });
+s('fbtns').appendChild(customPill);
+
+function activateCustom(src) {
+  const { f, error } = compileCustom2(src);
+  if (!f) { input.setMsg(error); return false; }
+  input.setMsg('');
+  input.setFields(src);
+  customSurf = { id: 'custom', label: '◆ custom', src, f, ...numericPartials(f), a: 3, custom: true };
+  customPill.hidden = false;
+  selectCustom();
+  return true;
+}
+
+function selectCustom() {
+  state.surf = customSurf;
+  state.slice = sliceStart(customSurf);
+  state.probe = probeStart(customSurf);
+  customActive = true;
+  surfButtons.select(-1, { notify: false });
+  customPill.classList.add('on');
+  eng.setSurface(customSurf);
+  setSliderRanges(customSurf);
+  meter.reset();
+  eng.schedule();
+  pushUrl();
+}
+
+function deactivateCustom() {
+  customActive = false;
+  customPill.classList.remove('on');
+}
+
+const input = wireCustomInput({
+  exprEl: s('customExpr'), msgEl: s('customMsg'), onSubmit: (src) => activateCustom(src),
+});
+
 const explored = new Set(['parab']);
 function pickSurface(sf) {
+  deactivateCustom();
   state.surf = sf; state.slice = sliceStart(sf); state.probe = probeStart(sf); meter.reset();
   eng.setSurface(sf); setSliderRanges(sf); shell.award(`explore:${sf.id}`, 5);
   explored.add(sf.id); if (explored.size === SURFACES.length) shell.badge('explorer', 'Cartographer', 'Explored every surface', '🗺️');
@@ -129,6 +178,8 @@ function updatePanel(sf, x0, y0, m) {
   const f0 = sf.f(x0, y0), sym = state.axis === 'x' ? '∂f/∂x' : '∂f/∂y';
   s('readout').innerHTML = 'at (' + fmt(x0) + ', ' + fmt(y0) + ') &nbsp;·&nbsp; f = <b>' + f0.toFixed(3) +
     '</b> &nbsp;·&nbsp; ' + sym + ' = <span class="pd">' + m.toFixed(3) + '</span>';
+  if (sf.custom) { s('challenge').style.display = 'none'; return; }
+  s('challenge').style.display = '';
   const ch = sf.challenge, av = Math.abs(m);
   meter.update({
     value: av, tol: ch.tol,
@@ -145,9 +196,10 @@ mountNav('partial-derivatives');
 /** Drive the playground to a described configuration. Shared by lesson jumps,
  *  shareable URLs, and self-checks — all of which speak the same state object. */
 function applyState(st) {
-  if (st.surf) {
+  if (st.surf && st.surf !== 'custom') {
     const sf = SURFACES.find(x => x.id === st.surf);
     if (sf) {
+      deactivateCustom();
       state.surf = sf;
       surfButtons.select(SURFACES.indexOf(sf), { notify: false });
       eng.setSurface(sf);
@@ -155,6 +207,7 @@ function applyState(st) {
       state.slice = sliceStart(sf); state.probe = probeStart(sf);
     }
   }
+  if (typeof st.expr === 'string' && st.expr) activateCustom(st.expr);   // before slice/probe
   if (st.axis) setAxis(st.axis);
   if (typeof st.slice === 'number') { state.slice = st.slice; sliceSlider.set(st.slice); }
   if (typeof st.probe === 'number') { state.probe = st.probe; probeSlider.set(st.probe); }
@@ -164,8 +217,10 @@ function applyState(st) {
 }
 
 /** A shareable snapshot of the current view (only the URL_SCHEMA keys). */
-const urlState = () => ({ surf: state.surf.id, axis: state.axis, slice: state.slice, probe: state.probe });
-const pushUrl = makeUrlSync(() => stateToParams(urlState()));
+const urlState = () => customActive
+  ? { surf: 'custom', axis: state.axis, slice: state.slice, probe: state.probe, expr: customSurf.src }
+  : { surf: state.surf.id, axis: state.axis, slice: state.slice, probe: state.probe };
+const pushUrl = makeUrlSync(() => stateToParams(urlState()), { managed: Object.keys(URL_SCHEMA) });
 
 mountLesson(LESSON, { slug: 'partial-derivatives', onJump: applyState, links: neighbours('partial-derivatives') });
 
@@ -174,7 +229,7 @@ const linked = readState(URL_SCHEMA);
 if (Object.keys(linked).length) applyState(linked);
 
 s('copylink').onclick = async () => {
-  const url = `${location.origin}${syncedUrl(stateToParams(urlState()))}`;
+  const url = `${location.origin}${syncedUrl(stateToParams(urlState()), Object.keys(URL_SCHEMA))}`;
   try { await navigator.clipboard.writeText(url); shell.toast('Link copied', 'Opens this exact view', '🔗'); }
   catch { shell.toast('Copy failed', url, '🔗'); }
 };
