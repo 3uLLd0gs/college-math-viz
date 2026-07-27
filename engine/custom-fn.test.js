@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { compileCustom } from './custom-fn.js';
+import { describe, it, expect, vi } from 'vitest';
+import { compileCustom, viewFromDomain, numericDerivative, wireCustomInput } from './custom-fn.js';
 
 describe('compileCustom', () => {
   it('compiles a valid expression to a numeric function', () => {
@@ -30,5 +30,75 @@ describe('compileCustom', () => {
   });
   it('rejects empty / whitespace input', () => {
     expect(compileCustom('   ').f).toBeNull();
+  });
+});
+
+describe('viewFromDomain', () => {
+  it('brackets the sampled range of f over [a,b] and includes y=0', () => {
+    const v = viewFromDomain(x => x * x, 0, 2);
+    expect(v.xmin).toBeLessThan(0);          // padded past a
+    expect(v.xmax).toBeGreaterThan(2);       // padded past b
+    expect(v.ymin).toBeLessThanOrEqual(0);   // includes 0
+    expect(v.ymax).toBeGreaterThan(4);       // above the max (4) plus pad
+  });
+  it('falls back to a [-1,1] band when f is non-finite everywhere', () => {
+    const v = viewFromDomain(() => NaN, 0, 2);
+    expect(v.ymin).toBeLessThan(0);
+    expect(v.ymax).toBeGreaterThan(0);
+    expect(Number.isFinite(v.xmin) && Number.isFinite(v.xmax)).toBe(true);
+  });
+});
+
+describe('numericDerivative', () => {
+  it('matches known derivatives to a tight tolerance', () => {
+    expect(numericDerivative(x => x * x)(3)).toBeCloseTo(6, 6);
+    expect(numericDerivative(Math.sin)(0.7)).toBeCloseTo(Math.cos(0.7), 6);
+  });
+  it('returns NaN where f is undefined on one side', () => {
+    expect(Number.isNaN(numericDerivative(Math.log)(0))).toBe(true);   // log(-eps) is NaN
+  });
+});
+
+describe('wireCustomInput', () => {
+  function setup(withDomain) {
+    document.body.innerHTML =
+      '<input id="e"><input id="a"><input id="b"><div id="m"></div>';
+    const onSubmit = vi.fn();
+    const api = wireCustomInput({
+      exprEl: document.getElementById('e'),
+      aEl: withDomain ? document.getElementById('a') : undefined,
+      bEl: withDomain ? document.getElementById('b') : undefined,
+      msgEl: document.getElementById('m'),
+      onSubmit,
+    });
+    return { onSubmit, api, e: document.getElementById('e'), a: document.getElementById('a'), m: document.getElementById('m') };
+  }
+  it('submits the trimmed expression on input, with a/b when present', () => {
+    const { onSubmit, e, a } = setup(true);
+    a.value = '1';
+    e.value = ' x^2 ';
+    e.dispatchEvent(new Event('input'));
+    expect(onSubmit).toHaveBeenCalledWith('x^2', '1', '');
+  });
+  it('does not submit an empty expression, and clears the message', () => {
+    const { onSubmit, e, m } = setup(true);
+    m.textContent = 'old';
+    e.value = '   ';
+    e.dispatchEvent(new Event('input'));
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(m.textContent).toBe('');
+  });
+  it('works without domain fields (a/b undefined)', () => {
+    const { onSubmit, e } = setup(false);
+    e.value = 'sin(x)';
+    e.dispatchEvent(new Event('input'));
+    expect(onSubmit).toHaveBeenCalledWith('sin(x)', undefined, undefined);
+  });
+  it('setFields writes .value and setMsg writes textContent', () => {
+    const { api, e, m } = setup(true);
+    api.setFields('cos(x)', 0, 3);
+    expect(e.value).toBe('cos(x)');
+    api.setMsg('nope');
+    expect(m.textContent).toBe('nope');
   });
 });

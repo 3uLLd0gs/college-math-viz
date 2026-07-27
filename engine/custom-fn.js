@@ -34,3 +34,53 @@ export function compileCustom(src) {
 
   return { f, error: '' };
 }
+
+/** A 2-D view rectangle bracketing f over [a,b]: samples for the y-range,
+   pads x and y, and always includes y=0. Falls back to a [-1,1] band when f
+   is non-finite everywhere. (Extracted from riemann-sums' inline customView.) */
+export function viewFromDomain(f, a, b) {
+  const N = 64; let lo = Infinity, hi = -Infinity;
+  for (let i = 0; i <= N; i++) {
+    const y = f(a + (b - a) * i / N);
+    if (Number.isFinite(y)) { lo = Math.min(lo, y); hi = Math.max(hi, y); }
+  }
+  if (!Number.isFinite(lo) || !Number.isFinite(hi) || lo === hi) { lo = -1; hi = 1; }
+  const padX = (b - a) * 0.15 || 0.5, padY = (hi - lo) * 0.2 || 0.5;
+  return { xmin: a - padX, xmax: b + padX, ymin: Math.min(0, lo) - padY, ymax: hi + padY };
+}
+
+/** Central-difference derivative of a numeric function. NaN-safe: if either
+   sample is non-finite (a domain edge), returns NaN rather than a bogus slope. */
+export function numericDerivative(f, eps = 1e-5) {
+  return x => {
+    const a = f(x + eps), b = f(x - eps);
+    if (!Number.isFinite(a) || !Number.isFinite(b)) return NaN;
+    return (a - b) / (2 * eps);
+  };
+}
+
+/** Wire a custom-function input row: `input`+Enter on the expression field and
+   `change` on the optional from/to number fields all call
+   `onSubmit(src, a, b)` (empty src clears the message and does not submit).
+   Returns setters the playground uses to reflect URL-loaded state back into the
+   fields (.value — inert) and to show inline errors (textContent). */
+export function wireCustomInput({ exprEl, aEl, bEl, msgEl, onSubmit }) {
+  const setMsg = text => { if (msgEl) msgEl.textContent = text; };
+  function submit() {
+    const src = exprEl.value.trim();
+    if (!src) { setMsg(''); return; }
+    onSubmit(src, aEl ? aEl.value : undefined, bEl ? bEl.value : undefined);
+  }
+  exprEl.addEventListener('input', submit);
+  exprEl.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+  if (aEl) aEl.addEventListener('change', submit);
+  if (bEl) bEl.addEventListener('change', submit);
+  return {
+    setMsg,
+    setFields(src, a, b) {
+      if (exprEl && exprEl.value.trim() !== src) exprEl.value = src;
+      if (aEl && a !== undefined) aEl.value = String(a);
+      if (bEl && b !== undefined) bEl.value = String(b);
+    },
+  };
+}
