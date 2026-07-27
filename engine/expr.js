@@ -69,6 +69,7 @@ export function parse(src) {
         return { t: 'call', name, a: arg };
       }
       if (name === 'x') return { t: 'var', name: 'x' };
+      if (name === 'y') return { t: 'var', name: 'y' };
       if (name in CONSTS) return { t: 'num', v: CONSTS[name] };
       throw new ExprError(`Unknown name: ${name}`);
     }

@@ -27,7 +27,7 @@ describe('expr safety', () => {
   it('rejects unknown functions and names', () => {
     expect(() => parse('alert(1)')).toThrow(ExprError);
     expect(() => parse('__proto__')).toThrow(ExprError);
-    expect(() => parse('y+1')).toThrow(ExprError);
+    expect(() => parse('z+1')).toThrow(ExprError);
   });
   it('rejects out-of-grammar characters and structure', () => {
     expect(() => parse('x.constructor')).toThrow(ExprError);
@@ -48,5 +48,16 @@ describe('expr safety', () => {
       expect(() => parse(`${name}(1)`)).toThrow(ExprError);
     }
     expect(() => parse('   ')).toThrow(ExprError);
+  });
+});
+
+describe('two-variable support', () => {
+  it('evaluates expressions in x and y', () => {
+    expect(compile('x*y')({ x: 2, y: 3 })).toBe(6);
+    expect(compile('y^2')({ x: 0, y: 3 })).toBe(9);
+    expect(compile('x^2 + y^2')({ x: 1, y: 2 })).toBe(5);
+  });
+  it('throws when y is used but not supplied (single-variable safety)', () => {
+    expect(() => compile('y')({ x: 1 })).toThrow(ExprError);
   });
 });

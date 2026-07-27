@@ -36,6 +36,13 @@
   .inset-wrap .cap{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
   .inset-wrap .cap b{color:var(--true);font-weight:500}
   #inset{display:block;width:100%;height:104px}
+  .custom-row{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+  .custom-lab{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .custom-input{font-family:"JetBrains Mono",monospace;font-size:13px;color:var(--ink);
+    background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+  .custom-input:focus{outline:2px solid var(--accent);outline-offset:2px}
+  .custom-msg{font-size:11.5px;color:var(--error);min-height:15px;line-height:1.4}
+  .custom-pill{border-style:dashed}
 </style>
 </head>
 <body>
@@ -68,6 +75,12 @@
       <div>
         <div class="sect-lab">Field z = f(x, y)</div>
         <div class="fbtns" id="fbtns"></div>
+      </div>
+      <div class="custom-row">
+        <label class="custom-lab" for="customExpr">your f(x, y)</label>
+        <input id="customExpr" class="custom-input" type="text" autocomplete="off" spellcheck="false"
+               placeholder="e.g. x^2 + y^2" aria-label="Custom scalar field f of x and y">
+        <div class="custom-msg" id="customMsg" role="status" aria-live="polite"></div>
       </div>
       <div>
         <div class="slabel"><span>direction θ</span> <b id="theta-val">0°</b></div>
