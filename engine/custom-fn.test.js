@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { compileCustom, viewFromDomain, numericDerivative, wireCustomInput } from './custom-fn.js';
+import { compileCustom2, numericPartials } from './custom-fn.js';
 
 describe('compileCustom', () => {
   it('compiles a valid expression to a numeric function', () => {
@@ -100,5 +101,39 @@ describe('wireCustomInput', () => {
     expect(e.value).toBe('cos(x)');
     api.setMsg('nope');
     expect(m.textContent).toBe('nope');
+  });
+});
+
+describe('compileCustom2', () => {
+  it('compiles a two-variable expression', () => {
+    const { f, error } = compileCustom2('x^2 + y^2');
+    expect(error).toBe('');
+    expect(f(1, 2)).toBe(5);
+  });
+  it('rejects hostile / unparseable input', () => {
+    for (const bad of ['alert(1)', '__proto__', 'x.constructor']) {
+      expect(compileCustom2(bad).f).toBeNull();
+      expect(compileCustom2(bad).error).not.toBe('');
+    }
+  });
+  it('rejects a function non-finite across the whole grid', () => {
+    const { f, error } = compileCustom2('ln(-1 - x^2 - y^2)');
+    expect(f).toBeNull();
+    expect(error).not.toBe('');
+  });
+});
+
+describe('numericPartials', () => {
+  it('matches analytic partials for x^2 + y^2', () => {
+    const { f } = compileCustom2('x^2 + y^2');
+    const { fx, fy } = numericPartials(f);
+    expect(fx(1, 2)).toBeCloseTo(2, 5);
+    expect(fy(1, 2)).toBeCloseTo(4, 5);
+  });
+  it('matches analytic partials for sin(x)*cos(y)', () => {
+    const { f } = compileCustom2('sin(x)*cos(y)');
+    const { fx, fy } = numericPartials(f);
+    expect(fx(0.5, 0.7)).toBeCloseTo(Math.cos(0.5) * Math.cos(0.7), 5);
+    expect(fy(0.5, 0.7)).toBeCloseTo(-Math.sin(0.5) * Math.sin(0.7), 5);
   });
 });

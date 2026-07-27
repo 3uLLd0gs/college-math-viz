@@ -84,3 +84,48 @@ export function wireCustomInput({ exprEl, aEl, bEl, msgEl, onSubmit }) {
     },
   };
 }
+
+// A 5×5 grid across [-2.5,2.5]² to sanity-check a two-variable function is a
+// real number SOMEWHERE (catches "never real" without rejecting ordinary poles).
+const GRID2 = [-2.5, -1.2, 0, 1.2, 2.5];
+
+/** Compile an untrusted f(x,y) to a NaN-safe two-argument numeric function.
+   Delegates all evaluation to engine/expr.js — never executes the string. */
+export function compileCustom2(src) {
+  let g;
+  try {
+    g = compile(src);
+  } catch (e) {
+    if (e instanceof ExprError) return { f: null, error: "Couldn't read that expression." };
+    throw e;
+  }
+  const f = (x, y) => {
+    try {
+      const v = g({ x, y });
+      return Number.isFinite(v) ? v : NaN;
+    } catch {
+      return NaN;
+    }
+  };
+  let anyFinite = false;
+  outer: for (const x of GRID2) for (const y of GRID2) {
+    if (Number.isFinite(f(x, y))) { anyFinite = true; break outer; }
+  }
+  if (!anyFinite) return { f: null, error: "That function isn't a real number anywhere here." };
+  return { f, error: '' };
+}
+
+/** Numeric partial derivatives of a two-variable function, via central
+   differences. NaN-safe when a sample is non-finite. */
+export function numericPartials(f, eps = 1e-5) {
+  return {
+    fx: (x, y) => {
+      const a = f(x + eps, y), b = f(x - eps, y);
+      return (Number.isFinite(a) && Number.isFinite(b)) ? (a - b) / (2 * eps) : NaN;
+    },
+    fy: (x, y) => {
+      const a = f(x, y + eps), b = f(x, y - eps);
+      return (Number.isFinite(a) && Number.isFinite(b)) ? (a - b) / (2 * eps) : NaN;
+    },
+  };
+}
