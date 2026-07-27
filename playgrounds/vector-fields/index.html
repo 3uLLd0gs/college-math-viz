@@ -32,6 +32,13 @@
   .kindbox .k{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
   .kindbox .v{font-family:"Fraunces",serif;font-weight:700;font-size:15px;color:var(--approx);margin-top:3px}
   .kindbox .b{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:5px}
+  .custom-row{margin-top:12px;display:flex;flex-direction:column;gap:7px}
+  .custom-lab{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .custom-input{font-family:"JetBrains Mono",monospace;font-size:12.5px;color:var(--ink);
+    background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:8px 11px}
+  .custom-input:focus{outline:2px solid var(--accent);outline-offset:2px}
+  .custom-msg{font-size:11.5px;color:var(--error);min-height:15px;line-height:1.4}
+  .custom-pill{border-style:dashed}
 </style>
 </head>
 <body>
@@ -65,6 +72,14 @@
         <div class="sect-lab">Field F(x, y)</div>
         <div class="fbtns" id="fbtns"></div>
       </div>
+      <div class="custom-row">
+        <label class="custom-lab">your F(x, y)</label>
+        <input id="customP" class="custom-input" type="text" autocomplete="off" spellcheck="false"
+               placeholder="P(x, y)  e.g. -y" aria-label="Custom field component P">
+        <input id="customQ" class="custom-input" type="text" autocomplete="off" spellcheck="false"
+               placeholder="Q(x, y)  e.g. x" aria-label="Custom field component Q">
+        <div class="custom-msg" id="customMsg" role="status" aria-live="polite"></div>
+      </div>
       <div class="facts">
         <div class="fact div"><div class="k">div F</div><div class="v" id="div-val">—</div></div>
         <div class="fact curl"><div class="k">curl F</div><div class="v" id="curl-val">—</div></div>
@@ -78,7 +93,7 @@
         <div class="slabel"><span>arrow density</span> <b id="dens-val"></b></div>
         <input type="range" id="density" min="9" max="27" value="17" step="2" aria-label="Arrow grid density">
       </div>
-      <div class="challenge">
+      <div class="challenge" id="challenge">
         <div class="lab">◆ Stagnation-point challenge</div>
         <div class="goal" id="c-goal"></div>
         <div class="cmeter"><span>|F| <b id="c-val">—</b></span><span>target <b id="c-tol">—</b></span></div>
