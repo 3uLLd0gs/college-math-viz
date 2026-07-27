@@ -129,3 +129,38 @@ export function numericPartials(f, eps = 1e-5) {
     },
   };
 }
+
+/** Numeric divergence and curl of a 2-D vector field F=(P,Q), built from
+   central-difference partials. NaN-safe (inherits numericPartials' guard). */
+export function vectorDiffOps(P, Q, eps = 1e-5) {
+  const { fx: Px, fy: Py } = numericPartials(P, eps);
+  const { fx: Qx, fy: Qy } = numericPartials(Q, eps);
+  return {
+    div: (x, y) => Px(x, y) + Qy(x, y),
+    curl: (x, y) => Qx(x, y) - Py(x, y),
+  };
+}
+
+/** Two-field custom input (P and Q). Submits `onSubmit(pSrc, qSrc)` only when
+   BOTH fields are non-empty; an empty field clears the message and does not
+   submit. `setFields`/`setMsg` mirror wireCustomInput (both write inert `.value`
+   / `textContent`). */
+export function wireCustomInput2({ pEl, qEl, msgEl, onSubmit }) {
+  const setMsg = text => { if (msgEl) msgEl.textContent = text; };
+  function submit() {
+    const p = pEl.value.trim(), q = qEl.value.trim();
+    if (!p || !q) { setMsg(''); return; }
+    onSubmit(p, q);
+  }
+  for (const el of [pEl, qEl]) {
+    el.addEventListener('input', submit);
+    el.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+  }
+  return {
+    setMsg,
+    setFields(p, q) {
+      if (pEl && pEl.value.trim() !== p) pEl.value = p;
+      if (qEl && qEl.value.trim() !== q) qEl.value = q;
+    },
+  };
+}

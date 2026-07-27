@@ -32,6 +32,13 @@
   .note{font-size:11.5px;color:var(--muted);line-height:1.5}
   .key{display:flex;gap:12px;font-size:11px;color:var(--muted);margin-top:2px}
   .key i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  .custom-row{margin-top:12px;display:flex;flex-direction:column;gap:7px}
+  .custom-lab{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .custom-input{font-family:"JetBrains Mono",monospace;font-size:12.5px;color:var(--ink);
+    background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:8px 11px}
+  .custom-input:focus{outline:2px solid var(--accent);outline-offset:2px}
+  .custom-msg{font-size:11.5px;color:var(--error);min-height:15px;line-height:1.4}
+  .custom-pill{border-style:dashed}
 </style>
 </head>
 <body>
@@ -66,6 +73,14 @@
         <div class="sect-lab">Field F(x, y)</div>
         <div class="fbtns" id="fbtns"></div>
       </div>
+      <div class="custom-row">
+        <label class="custom-lab">your F(x, y)</label>
+        <input id="customP" class="custom-input" type="text" autocomplete="off" spellcheck="false"
+               placeholder="P(x, y)  e.g. -y" aria-label="Custom field component P">
+        <input id="customQ" class="custom-input" type="text" autocomplete="off" spellcheck="false"
+               placeholder="Q(x, y)  e.g. x*y" aria-label="Custom field component Q">
+        <div class="custom-msg" id="customMsg" role="status" aria-live="polite"></div>
+      </div>
       <div class="sides">
         <div class="side"><span class="k">∮<sub>C</sub> F · dr</span><span class="v" id="line-val">—</span></div>
         <div class="side"><span class="k">∬<sub>R</sub> curl F dA</span><span class="v" id="area-val">—</span></div>
@@ -76,7 +91,7 @@
         <div class="slabel"><span>loop radius</span> <b id="rad-val">—</b></div>
         <input type="range" id="radius" min="0.2" max="1.4" value="0.7" step="0.01" aria-label="Loop radius">
       </div>
-      <div class="challenge">
+      <div class="challenge" id="challenge">
         <div class="lab">◆ Cancellation challenge</div>
         <div class="goal" id="c-goal"></div>
         <div class="cmeter"><span>|∮ F·dr| <b id="c-val">—</b></span><span>target <b id="c-tol">—</b></span></div>

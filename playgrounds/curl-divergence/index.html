@@ -36,6 +36,13 @@
   .defn .r + .r{margin-top:4px}
   .defn .r b{color:var(--ink);font-weight:500}
   .note{font-size:11.5px;color:var(--muted);line-height:1.55}
+  .custom-row{margin-top:12px;display:flex;flex-direction:column;gap:7px}
+  .custom-lab{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .custom-input{font-family:"JetBrains Mono",monospace;font-size:12.5px;color:var(--ink);
+    background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:8px 11px}
+  .custom-input:focus{outline:2px solid var(--accent);outline-offset:2px}
+  .custom-msg{font-size:11.5px;color:var(--error);min-height:15px;line-height:1.4}
+  .custom-pill{border-style:dashed}
 </style>
 </head>
 <body>
@@ -69,6 +76,14 @@
         <div class="sect-lab">Field F(x, y)</div>
         <div class="fbtns" id="fbtns"></div>
       </div>
+      <div class="custom-row">
+        <label class="custom-lab">your F(x, y)</label>
+        <input id="customP" class="custom-input" type="text" autocomplete="off" spellcheck="false"
+               placeholder="P(x, y)  e.g. x^2-y^2" aria-label="Custom field component P">
+        <input id="customQ" class="custom-input" type="text" autocomplete="off" spellcheck="false"
+               placeholder="Q(x, y)  e.g. 2*x*y" aria-label="Custom field component Q">
+        <div class="custom-msg" id="customMsg" role="status" aria-live="polite"></div>
+      </div>
       <div class="facts">
         <div class="fact dv"><div class="k">div F · spread</div><div class="v" id="div-val">—</div></div>
         <div class="fact cl"><div class="k">curl F · spin</div><div class="v" id="curl-val">—</div></div>
@@ -85,7 +100,7 @@
         <input type="range" class="mint" id="radius" min="0.08" max="0.7" value="0.32" step="0.01" aria-label="Radius of the test circle">
       </div>
       <div class="note" id="note"></div>
-      <div class="challenge">
+      <div class="challenge" id="challenge">
         <div class="lab">◆ Stillness challenge</div>
         <div class="goal" id="c-goal"></div>
         <div class="cmeter"><span>worst of the two <b id="c-val">—</b></span><span>target <b id="c-tol">—</b></span></div>
