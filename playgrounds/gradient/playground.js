@@ -8,6 +8,7 @@ import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js'
 import { mountLesson } from '../../engine/lesson.js';
 import { readState, makeUrlSync, stateToParams, syncedUrl } from '../../engine/deep-link.js';
 import { keyboardControl } from '../../engine/keyboard.js';
+import { compileCustom2, numericPartials, wireCustomInput } from '../../engine/custom-fn.js';
 import { FIELDS, grad, gradMag, steepestAngle, directional, angleGap, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "gradient & directional derivative" ---- */
@@ -24,7 +25,7 @@ const ALIGN_TOL_DEG = 4;
 // essentially never hits, so the playground needs its own floor.
 const FLAT_EPS = 0.05;
 // The keys a shareable gradient link may carry, with their types.
-const URL_SCHEMA = { field: 'string', x: 'number', y: 'number', thetaDeg: 'number' };
+const URL_SCHEMA = { field: 'string', x: 'number', y: 'number', thetaDeg: 'number', expr: 'string' };
 
 const map = new ContourMap(document.getElementById('map'));
 const shell = new ScoreShell(createConfetti(), { slug: 'gradient' });
@@ -52,6 +53,7 @@ placeProbe(state.field);
 map.setField(state.field);
 
 const fieldButtons = buttonGroup('fbtns', FIELDS, fd => {
+  deactivateCustom();
   state.field = fd;
   placeProbe(fd);
   map.setField(fd);
@@ -60,6 +62,54 @@ const fieldButtons = buttonGroup('fbtns', FIELDS, fd => {
   explored.add(fd.id);
   if (explored.size === FIELDS.length) shell.badge('explorer', 'Surveyor', 'Mapped every field', '🗺️');
   render();
+});
+
+// --- custom field (Phase 5) --------------------------------------------------
+let customField = null;
+let customActive = false;
+
+const customPill = document.createElement('button');
+customPill.type = 'button';
+customPill.id = 'customPill';
+customPill.className = 'fbtn custom-pill';
+customPill.textContent = '◆ custom';
+customPill.hidden = true;
+customPill.addEventListener('click', () => { if (customField) selectCustom(); });
+s('fbtns').appendChild(customPill);
+
+function activateCustom(src) {
+  const { f, error } = compileCustom2(src);
+  if (!f) { input.setMsg(error); return false; }
+  input.setMsg('');
+  input.setFields(src);
+  customField = {
+    id: 'custom', label: '◆ custom', src, f, ...numericPartials(f), a: 3, custom: true,
+    hint: 'point the arrow the way the field climbs fastest',
+  };
+  customPill.hidden = false;
+  selectCustom();
+  return true;
+}
+
+function selectCustom() {
+  state.field = customField;
+  customActive = true;
+  fieldButtons.select(-1, { notify: false });
+  customPill.classList.add('on');
+  map.setField(customField);
+  placeProbe(customField);
+  meter.reset();
+  render();
+  pushUrl();
+}
+
+function deactivateCustom() {
+  customActive = false;
+  customPill.classList.remove('on');
+}
+
+const input = wireCustomInput({
+  exprEl: s('customExpr'), msgEl: s('customMsg'), onSubmit: (src) => activateCustom(src),
 });
 
 let dialTouched = false;
@@ -212,15 +262,17 @@ mountNav('gradient');
 /** Drive the playground to a described configuration. Shared by lesson jumps,
  *  shareable URLs, and self-checks — all of which speak the same state object. */
 function applyState(st) {
-  if (st.field) {
+  if (st.field && st.field !== 'custom') {
     const fd = FIELDS.find(f => f.id === st.field);
     if (fd) {
+      deactivateCustom();
       state.field = fd;
       map.setField(fd);
       fieldButtons.select(FIELDS.indexOf(fd), { notify: false });
       placeProbe(fd);
     }
   }
+  if (typeof st.expr === 'string' && st.expr) activateCustom(st.expr);   // before x/y/theta
   if (typeof st.x === 'number') state.x = st.x;
   if (typeof st.y === 'number') state.y = st.y;
 
@@ -235,12 +287,10 @@ function applyState(st) {
 }
 
 /** A shareable snapshot of the current view (only the URL_SCHEMA keys). */
-const urlState = () => ({
-  field: state.field.id,
-  x: state.x, y: state.y,
-  thetaDeg: (state.theta * 180 / Math.PI) % 360,
-});
-const pushUrl = makeUrlSync(() => stateToParams(urlState()));
+const urlState = () => customActive
+  ? { field: 'custom', x: state.x, y: state.y, thetaDeg: (state.theta * 180 / Math.PI) % 360, expr: customField.src }
+  : { field: state.field.id, x: state.x, y: state.y, thetaDeg: (state.theta * 180 / Math.PI) % 360 };
+const pushUrl = makeUrlSync(() => stateToParams(urlState()), { managed: Object.keys(URL_SCHEMA) });
 
 mountLesson(LESSON, { slug: 'gradient', onJump: applyState, links: neighbours('gradient') });
 
@@ -249,7 +299,7 @@ const linked = readState(URL_SCHEMA);
 if (Object.keys(linked).length) applyState(linked);
 
 s('copylink').onclick = async () => {
-  const url = `${location.origin}${syncedUrl(stateToParams(urlState()))}`;
+  const url = `${location.origin}${syncedUrl(stateToParams(urlState()), Object.keys(URL_SCHEMA))}`;
   try { await navigator.clipboard.writeText(url); shell.toast('Link copied', 'Opens this exact view', '🔗'); }
   catch { shell.toast('Copy failed', url, '🔗'); }
 };
