@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { compileCustom, viewFromDomain, numericDerivative, wireCustomInput } from './custom-fn.js';
-import { compileCustom2, numericPartials } from './custom-fn.js';
+import { compileCustom2, numericPartials, vectorDiffOps, wireCustomInput2 } from './custom-fn.js';
 
 describe('compileCustom', () => {
   it('compiles a valid expression to a numeric function', () => {
@@ -135,5 +135,54 @@ describe('numericPartials', () => {
     const { fx, fy } = numericPartials(f);
     expect(fx(0.5, 0.7)).toBeCloseTo(Math.cos(0.5) * Math.cos(0.7), 5);
     expect(fy(0.5, 0.7)).toBeCloseTo(-Math.sin(0.5) * Math.sin(0.7), 5);
+  });
+});
+
+describe('vectorDiffOps', () => {
+  it('computes numeric divergence and curl (source field P=x, Q=y)', () => {
+    const { f: P } = compileCustom2('x'), { f: Q } = compileCustom2('y');
+    const { div, curl } = vectorDiffOps(P, Q);
+    expect(div(1, 1)).toBeCloseTo(2, 5);
+    expect(curl(1, 1)).toBeCloseTo(0, 5);
+  });
+  it('a vortex (P=-y, Q=x) has zero divergence and nonzero curl', () => {
+    const { f: P } = compileCustom2('-y'), { f: Q } = compileCustom2('x');
+    const { div, curl } = vectorDiffOps(P, Q);
+    expect(div(1, 1)).toBeCloseTo(0, 5);
+    expect(curl(1, 1)).toBeCloseTo(2, 5);
+  });
+});
+
+describe('wireCustomInput2', () => {
+  function setup() {
+    document.body.innerHTML = '<input id="p"><input id="q"><div id="m"></div>';
+    const onSubmit = vi.fn();
+    const api = wireCustomInput2({
+      pEl: document.getElementById('p'), qEl: document.getElementById('q'),
+      msgEl: document.getElementById('m'), onSubmit,
+    });
+    return { onSubmit, api, p: document.getElementById('p'), q: document.getElementById('q'), m: document.getElementById('m') };
+  }
+  it('submits both trimmed values when both are non-empty', () => {
+    const { onSubmit, p, q } = setup();
+    p.value = ' -y '; q.value = ' x ';
+    q.dispatchEvent(new Event('input'));
+    expect(onSubmit).toHaveBeenCalledWith('-y', 'x');
+  });
+  it('does not submit when either field is empty, and clears the message', () => {
+    const { onSubmit, p, q, m } = setup();
+    m.textContent = 'old';
+    p.value = 'x'; q.value = '';
+    p.dispatchEvent(new Event('input'));
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(m.textContent).toBe('');
+  });
+  it('setFields writes both .value and setMsg writes textContent', () => {
+    const { api, p, q, m } = setup();
+    api.setFields('sin(y)', 'cos(x)');
+    expect(p.value).toBe('sin(y)');
+    expect(q.value).toBe('cos(x)');
+    api.setMsg('nope');
+    expect(m.textContent).toBe('nope');
   });
 });
