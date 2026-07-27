@@ -8,13 +8,14 @@ import { challengeMeter, linearProgress } from '../../engine/challenge-meter.js'
 import { mountLesson } from '../../engine/lesson.js';
 import { readState, makeUrlSync, stateToParams, syncedUrl } from '../../engine/deep-link.js';
 import { keyboardControl } from '../../engine/keyboard.js';
+import { compileCustom2, vectorDiffOps, wireCustomInput2 } from '../../engine/custom-fn.js';
 import { FIELDS, readingsAt, stillness, canGoStill, LESSON } from './content.js';
 
 /* ---- PLAYGROUND: thin wiring specific to "curl & divergence" ---- */
 
 const DOMAIN = 2;
 const STILL_TOL = 0.12;       // |div| and |curl| both under this counts as still
-const URL_SCHEMA = { field: 'string', x: 'number', y: 'number', r: 'number' };
+const URL_SCHEMA = { field: 'string', x: 'number', y: 'number', r: 'number', exprP: 'string', exprQ: 'string' };
 const RING_POINTS = 44;
 const RING_PERIOD = 2600;     // ms before the tracer ring is re-seeded
 // A strongly divergent field grows the ring exponentially — e^(div·t) — so after
@@ -51,12 +52,59 @@ function useField(fd) {
 }
 
 const fieldButtons = buttonGroup('fbtns', FIELDS, fd => {
+  deactivateCustom();
   useField(fd);
   shell.award(`explore:${fd.id}`, 5);
   explored.add(fd.id);
   if (explored.size === FIELDS.length) shell.badge('explorer', 'Flow Reader', 'Studied every field', '🗺️');
   render();
   pushUrl();
+});
+
+// --- custom field (Phase 6) --------------------------------------------------
+let customField = null;
+let customActive = false;
+
+const customPill = document.createElement('button');
+customPill.type = 'button';
+customPill.id = 'customPill';
+customPill.className = 'fbtn custom-pill';
+customPill.textContent = '◆ custom';
+customPill.hidden = true;
+customPill.addEventListener('click', () => { if (customField) selectCustom(); });
+s('fbtns').appendChild(customPill);
+
+function activateCustom(pSrc, qSrc) {
+  const { f: P, error: eP } = compileCustom2(pSrc);
+  const { f: Q, error: eQ } = compileCustom2(qSrc);
+  if (!P || !Q) { input.setMsg(eP || eQ || "Couldn't read that field."); return false; }
+  input.setMsg('');
+  input.setFields(pSrc, qSrc);
+  customField = {
+    id: 'custom', label: '◆ custom', srcP: pSrc, srcQ: qSrc, P, Q, ...vectorDiffOps(P, Q),
+    a: 3, custom: true, blurb: 'your own field — demonstration only', note: 'your own field — demonstration only',
+  };
+  customPill.hidden = false;
+  selectCustom();
+  return true;
+}
+
+function selectCustom() {
+  useField(customField);              // spreads into state.field with a: DOMAIN, preserving P/Q/div/curl/custom
+  customActive = true;
+  fieldButtons.select(-1, { notify: false });
+  customPill.classList.add('on');
+  render();
+  pushUrl();
+}
+
+function deactivateCustom() {
+  customActive = false;
+  customPill.classList.remove('on');
+}
+
+const input = wireCustomInput2({
+  pEl: s('customP'), qEl: s('customQ'), msgEl: s('customMsg'), onSubmit: activateCustom,
 });
 
 const radius = slider('radius', { onInput: v => { state.r = v; seedRing(); render(); pushUrl(); } });
@@ -204,6 +252,8 @@ function render() {
     ` &nbsp;·&nbsp; curl F = <span class="cl">${fmt(curl)}</span>` +
     ` &nbsp;·&nbsp; wheel spins at <b>${fmt(omega)}</b> rad/s`;
 
+  if (fd.custom) { s('challenge').style.display = 'none'; return; }
+  s('challenge').style.display = '';
   if (!canGoStill(fd)) {
     meter.update({
       value: 9, tol: STILL_TOL,
@@ -231,10 +281,11 @@ mountNav('curl-divergence');
 /** Drive the playground to a described configuration. Shared by lesson jumps,
  *  shareable URLs, and self-checks — all of which speak the same state object. */
 function applyState(st) {
-  if (st.field) {
+  if (st.field && st.field !== 'custom') {
     const fd = FIELDS.find(f => f.id === st.field);
-    if (fd) { useField(fd); fieldButtons.select(FIELDS.indexOf(fd), { notify: false }); }
+    if (fd) { deactivateCustom(); useField(fd); fieldButtons.select(FIELDS.indexOf(fd), { notify: false }); }
   }
+  if (typeof st.exprP === 'string' && st.exprP && typeof st.exprQ === 'string' && st.exprQ) activateCustom(st.exprP, st.exprQ);
   if (typeof st.x === 'number') state.x = st.x;
   if (typeof st.y === 'number') state.y = st.y;
   if (typeof st.r === 'number') { state.r = st.r; radius.set(st.r); }
@@ -244,8 +295,10 @@ function applyState(st) {
 }
 
 /** A shareable snapshot of the current view (only the URL_SCHEMA keys). */
-const urlState = () => ({ field: state.field.id, x: state.x, y: state.y, r: state.r });
-const pushUrl = makeUrlSync(() => stateToParams(urlState()));
+const urlState = () => customActive
+  ? { field: 'custom', x: state.x, y: state.y, r: state.r, exprP: customField.srcP, exprQ: customField.srcQ }
+  : { field: state.field.id, x: state.x, y: state.y, r: state.r };
+const pushUrl = makeUrlSync(() => stateToParams(urlState()), { managed: Object.keys(URL_SCHEMA) });
 
 mountLesson(LESSON, { slug: 'curl-divergence', onJump: applyState, links: neighbours('curl-divergence') });
 
@@ -254,7 +307,7 @@ const linked = readState(URL_SCHEMA);
 if (Object.keys(linked).length) applyState(linked);
 
 s('copylink').onclick = async () => {
-  const url = `${location.origin}${syncedUrl(stateToParams(urlState()))}`;
+  const url = `${location.origin}${syncedUrl(stateToParams(urlState()), Object.keys(URL_SCHEMA))}`;
   try { await navigator.clipboard.writeText(url); shell.toast('Link copied', 'Opens this exact view', '🔗'); }
   catch { shell.toast('Copy failed', url, '🔗'); }
 };
