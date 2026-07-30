@@ -16,7 +16,7 @@ test('the Iterate control advances the step count and drives the residual down',
   await expect(page.locator('#n-val')).toHaveText('7');
   const after = (await page.locator('#err-val').textContent()) ?? '';
   expect(after).not.toBe(before);                // the residual changed as steps grew
-  expect(page.locator('#readout')).toContainText(/converg/);
+  await expect(page.locator('#readout')).toContainText(/converg/);
 });
 
 // content.js documents this as a textbook 2-cycle: x0=0 -> x1=1 -> x2=0 -> …

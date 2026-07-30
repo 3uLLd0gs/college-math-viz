@@ -688,7 +688,7 @@ test('the Iterate control advances the step count and drives the residual down',
   await expect(page.locator('#n-val')).toHaveText('7');
   const after = (await page.locator('#err-val').textContent()) ?? '';
   expect(after).not.toBe(before);                // the residual changed as steps grew
-  expect(page.locator('#readout')).toContainText(/converg/);
+  await expect(page.locator("#readout")).toContainText(/converg/);
 });
 
 test('the 2-cycle case reports cycling, not convergence', async ({ page }) => {
