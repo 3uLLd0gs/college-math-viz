@@ -205,13 +205,13 @@ export const LESSON = {
     axis, and use that as the next guess. When it works it is breathtakingly fast — and when it fails,
     it fails in three memorable ways this page lets you trigger on purpose.`,
   steps: [
-    { level: 'intuition', title: 'One tangent, one better guess',
+    { level: 'intro', title: 'One tangent, one better guess',
       body: `Start at <code>x₀</code> on <code>x² − 2</code>. Draw the tangent there and follow it down
         to the axis — that crossing is <code>x₁</code>, already closer to <code>√2</code>. That is the
         whole idea: replace the hard curve with its easy tangent line, and solve the line instead.`,
       state: { fn: 'quad', x0: 2, n: 1 }, jump: 'Show me the first step' },
 
-    { level: 'intuition', title: 'Repeat, and watch it race in',
+    { level: 'intro', title: 'Repeat, and watch it race in',
       body: `Feed <code>x₁</code> back in and repeat. Each tangent lands nearer the root than the last —
         the error roughly <em>squares</em> every step, so correct digits double. Three or four steps
         take you from a rough guess to machine precision.`,
@@ -494,7 +494,7 @@ function statusWord(seq, xn) {
   const flung = seq.length < state.n + 1;
   if (flung) return 'flung — the tangent was nearly flat';
   if (state.n >= 4 && seq.length >= 5) {
-    const a = seq[seq.length - 1], b = seq[seq.length - 3];
+    const a = seq[seq.length - 1], b = seq[seq.length - 2];   // adjacent iterates alternate in a period-2 cycle
     if (Math.abs(a - b) > 0.3 && Math.abs(state.fn.f(xn)) > 0.1) return 'cycling — it loops without converging';
   }
   if (Math.abs(state.fn.f(xn)) < state.fn.challenge.tol) return 'converged';

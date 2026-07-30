@@ -19,20 +19,17 @@ test('the Iterate control advances the step count and drives the residual down',
   expect(page.locator('#readout')).toContainText(/converg/);
 });
 
-// content.js documents this case as a textbook 2-cycle: x0=0 -> x1=1 -> x2=0
-// -> ... forever, |f(xn)| alternating 2 and 1 without ever approaching the
-// tolerance. The readout's status word for this run is 'converging' (not
-// 'converged', not 'cycling' — see task-5-report.md for the statusWord()
-// discrepancy this surfaced), so the meaningful, non-brittle assertion is on
-// the actual Newton behavior: the residual at step 8 is identical to the
-// residual at step 4 — real convergence would have shrunk it toward the
-// challenge tolerance (1e-4) over those four extra steps.
-test('the 2-cycle case never converges despite repeated iteration', async ({ page }) => {
+// content.js documents this as a textbook 2-cycle: x0=0 -> x1=1 -> x2=0 -> …
+// forever, |f(xn)| alternating without ever approaching the tolerance. The
+// readout must both REPORT the cycle ('cycling') and make no numerical progress
+// across extra steps — never 'converged'.
+test('the 2-cycle case reports cycling and never converges', async ({ page }) => {
   await page.goto('/playgrounds/newtons-method/?fn=cycle&x0=0&n=4');
   const errAt4 = (await page.locator('#err-val').textContent()) ?? '';
   await page.goto('/playgrounds/newtons-method/?fn=cycle&x0=0&n=8');
   const errAt8 = (await page.locator('#err-val').textContent()) ?? '';
   expect(errAt8).toBe(errAt4);                       // no progress at all across 4 more steps
+  await expect(page.locator('#readout')).toContainText('cycling');
   await expect(page.locator('#readout')).not.toContainText('converged');
   await expect(page.locator('.challenge')).toBeVisible();
 });

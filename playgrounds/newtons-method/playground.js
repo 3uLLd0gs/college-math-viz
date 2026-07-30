@@ -93,7 +93,7 @@ function statusWord(seq, xn) {
   const flung = seq.length < state.n + 1;
   if (flung) return 'flung — the tangent was nearly flat';
   if (state.n >= 4 && seq.length >= 5) {
-    const a = seq[seq.length - 1], b = seq[seq.length - 3];
+    const a = seq[seq.length - 1], b = seq[seq.length - 2];   // adjacent iterates alternate in a period-2 cycle
     if (Math.abs(a - b) > 0.3 && Math.abs(state.fn.f(xn)) > 0.1) return 'cycling — it loops without converging';
   }
   if (Math.abs(state.fn.f(xn)) < state.fn.challenge.tol) return 'converged';
