@@ -13,6 +13,7 @@ export default defineConfig({
         'riemann-sums': resolve(__dirname, 'playgrounds/riemann-sums/index.html'),
         'unit-circle': resolve(__dirname, 'playgrounds/unit-circle/index.html'),
         'secant-tangent': resolve(__dirname, 'playgrounds/secant-tangent/index.html'),
+        'newtons-method': resolve(__dirname, 'playgrounds/newtons-method/index.html'),
         'related-rates': resolve(__dirname, 'playgrounds/related-rates/index.html'),
         'gradient': resolve(__dirname, 'playgrounds/gradient/index.html'),
         'vector-fields': resolve(__dirname, 'playgrounds/vector-fields/index.html'),
