@@ -27,6 +27,13 @@ export const PLAYGROUNDS = [
     blurb: 'Shrink the step h and watch a secant line through two points collapse onto the tangent. The difference quotient becoming f′(x₀), live.',
   },
   {
+    slug: 'newtons-method', course: 'calc1',
+    title: "Newton's Method",
+    tag: 'Follow the tangent to the root',
+    blurb: 'Chase a root by sliding down tangent lines. Watch it converge in a few quadratic steps — then trigger the three classic ways it fails: the flat-tangent fling, the wrong basin, and the eternal cycle.',
+    prereq: 'secant-tangent',
+  },
+  {
     slug: 'related-rates', course: 'calc1',
     title: 'Related Rates',
     tag: 'One rate drives another',
