@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 const SLUGS = ['unit-circle', 'secant-tangent', 'related-rates', 'riemann-sums', 'taylor-series',
-  'solids-of-revolution', 'partial-derivatives', 'gradient', 'vector-fields', 'curl-divergence', 'greens-theorem'];
+  'solids-of-revolution', 'partial-derivatives', 'gradient', 'vector-fields', 'curl-divergence', 'greens-theorem',
+  'newtons-method'];
 
 // A handful of playgrounds render through a canvas engine (Surface3D,
 // ContourMap, VectorFieldView) whose `schedule()` defers the actual draw —
